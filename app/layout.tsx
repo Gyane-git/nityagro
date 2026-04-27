@@ -1,39 +1,67 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Header from  "@/components/nityagro-header";
-import Footer from "@/components/nityagro-footer"
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import LayoutWrapper from "@/components/LayoutWrapper";
 
 export const metadata: Metadata = {
-  title: "Nityagro",
-  description: "",
+  title: {
+    default: "YuemiNepal",
+    template: "%s | YuemiNepal",
+  },
+  description:
+    "Official Yuemi Ecosystem Nepal store for accessories, LED lights, and car infotainment systems.",
+
+  applicationName: "YuemiNepal",
+
+  metadataBase: new URL("https://yuemi.com.np"),
+
+  icons: {
+    icon: "/yumei_logo.png",
+  },
+
+  openGraph: {
+    title: "YuemiNepal",
+    description:
+      "Explore Yuemi Ecosystem Nepal products and smart automotive solutions.",
+    url: "https://yuemi.com.np",
+    siteName: "YuemiNepal",
+    locale: "en_US",
+    type: "website",
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "YuemiNepal",
+    description: "Official Yuemi Ecosystem Nepal store.",
+  },
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
+    <html lang="en">
+      <head>
+        <link rel="icon" href="/yumei_logo.png" />
 
-      <body className="min-h-full flex flex-col">
-        <Header />
-        {children}
-        <Footer />
+        {/* ✅ Structured Data for Google */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "YuemiNepal",
+              url: "https://yuemi.com.np",
+            }),
+          }}
+        />
+        <meta name="google-site-verification" content="4Pbvvp7u8ymUTbtietI_J_9ruHzdrzbDCRZofhLI2V4" />
+      </head>
+
+      <body className="antialiased">
+        <LayoutWrapper>{children}</LayoutWrapper>
       </body>
     </html>
   );
