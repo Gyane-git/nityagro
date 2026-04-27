@@ -53,22 +53,35 @@ const GiftIcon = () => (
   </svg>
 );
 
+/* Nav links */
 const NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "Products", href: "/products" },
   { label: "Our Philosophy", href: "/philosophy" },
-  { label: "Our Methods", href: "/methods", hasDropdown: true },
+  {
+    label: "Our Methods",
+    hasDropdown: true,
+    childLinks: [
+      { label: "Method 1", href: "/methods/method1" },
+      { label: "Method 2", href: "/methods/method2" },
+      { label: "Method 3", href: "/methods/method3" },
+    ],
+  },
 ];
 
 export default function Header() {
   const [methodsOpen, setMethodsOpen] = useState(false);
+  const [categoryOpen, setCategoryOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[#E6ECF0] bg-white">
       {/* top bar */}
       <div className="w-full bg-[#FFF8E7] h-10 px-8 flex items-center justify-between">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="flex items-center gap-2 text-sm text-[#00462C] font-medium">
+          <div
+            key={i}
+            className="flex items-center gap-2 text-sm text-[#00462C] font-medium"
+          >
             <GiftIcon />
             <span>
               <b>12% OFF</b> above - Code: <b>NEW12</b>
@@ -91,13 +104,35 @@ export default function Header() {
             />
           </a>
 
-          <button className="h-[44px] px-4 flex items-center gap-2 rounded-md hover:bg-[#F5F8F6] transition">
-            <GridIcon />
-            <span className="text-sm font-medium text-[#00462C]">
-              Browse All Categories
-            </span>
-            <ChevronDownIcon />
-          </button>
+          {/* Category dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setCategoryOpen(!categoryOpen)}
+              className="h-[44px] px-4 flex items-center gap-2 rounded-md hover:bg-[#F5F8F6] transition"
+            >
+              <GridIcon />
+              <span className="text-sm font-medium text-[#00462C]">
+                Browse All Categories
+              </span>
+              <ChevronDownIcon />
+            </button>
+
+            {categoryOpen && (
+              <div className="absolute top-full left-0 mt-2 w-[240px] bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
+                {["Oils", "Flours", "Spices", "Jaggery", "Dairy", "Sattu"].map(
+                  (item) => (
+                    <a
+                      key={item}
+                      href={`/category/${item.toLowerCase()}`}
+                      className="block px-5 py-3 text-sm text-[#00462C] hover:bg-[#F5F8F6] transition"
+                    >
+                      {item}
+                    </a>
+                  )
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* center */}
@@ -105,17 +140,33 @@ export default function Header() {
           {NAV_LINKS.map((link) => (
             <div key={link.label} className="relative">
               {link.hasDropdown ? (
-                <button
-                  onClick={() => setMethodsOpen(!methodsOpen)}
-                  className="w-[57px] h-[28px] flex items-center gap-1 text-[15px] font-medium text-[#00462C]"
-                >
-                  {link.label}
-                  <ChevronDownIcon />
-                </button>
+                <>
+                  <button
+                    onClick={() => setMethodsOpen(!methodsOpen)}
+                    className="flex items-center gap-1 text-[15px] font-medium text-[#00462C] hover:opacity-70"
+                  >
+                    {link.label}
+                    <ChevronDownIcon />
+                  </button>
+
+                  {methodsOpen && (
+                    <div className="absolute top-full left-0 mt-2 w-[220px] bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
+                      {link.childLinks.map((child) => (
+                        <a
+                          key={child.label}
+                          href={child.href}
+                          className="block px-5 py-3 text-sm text-[#00462C] hover:bg-[#F5F8F6] transition"
+                        >
+                          {child.label}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </>
               ) : (
                 <a
                   href={link.href}
-                  className="h-[28px] flex items-center text-[15px] font-medium text-[#00462C] hover:opacity-70"
+                  className="text-[15px] font-medium text-[#00462C] hover:opacity-70"
                 >
                   {link.label}
                 </a>
@@ -126,9 +177,17 @@ export default function Header() {
 
         {/* right */}
         <div className="flex items-center gap-5 text-[#00462C]">
-          <button><SearchIcon /></button>
-          <button><WishlistIcon /></button>
-          <button><CartIcon /></button>
+          <button>
+            <SearchIcon />
+          </button>
+
+          <button>
+            <WishlistIcon />
+          </button>
+
+          <button>
+            <CartIcon />
+          </button>
 
           <button className="flex items-center gap-2">
             <UserIcon />
