@@ -4,34 +4,34 @@ import LayoutWrapper from "@/components/LayoutWrapper";
 
 export const metadata: Metadata = {
   title: {
-    default: "YuemiNepal",
-    template: "%s | YuemiNepal",
+    default: "Nityagro",
+    template: "%s | Nityagro",
   },
   description:
-    "Official Yuemi Ecosystem Nepal store for accessories, LED lights, and car infotainment systems.",
+    "Official Nityagro store.",
 
-  applicationName: "YuemiNepal",
+  applicationName: "Nityagro",
 
-  metadataBase: new URL("https://yuemi.com.np"),
+  metadataBase: new URL("https://nityagro.com"),
 
   icons: {
-    icon: "/yumei_logo.png",
+    icon: "/nityagro_logo.png",
   },
 
   openGraph: {
-    title: "YuemiNepal",
+    title: "Nityagro",
     description:
-      "Explore Yuemi Ecosystem Nepal products and smart automotive solutions.",
-    url: "https://yuemi.com.np",
-    siteName: "YuemiNepal",
+      "Explore Nityagro's official store for premium agricultural products. Discover a wide range of high-quality seeds, fertilizers, and farming tools designed to boost your agricultural success. Shop now for the best in farming essentials.",
+    url: "https://nityagro.com",
+    siteName: "Nityagro",
     locale: "en_US",
     type: "website",
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "YuemiNepal",
-    description: "Official Yuemi Ecosystem Nepal store.",
+    title: "Nityagro",
+    description: "Official Nityagro store.",
   },
 };
 
@@ -52,8 +52,8 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebSite",
-              name: "YuemiNepal",
-              url: "https://yuemi.com.np",
+              name: "Nityagro",
+              url: "https://nityagro.com",
             }),
           }}
         />
