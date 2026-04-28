@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
+import { ALL_PRODUCTS } from "./productsData";
 
 // ─── Icons ─────────────────────────────────────────────────────────────────
 const CartIcon = () => (
@@ -25,30 +27,6 @@ const ChevronRight = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6" /></svg>
 );
 
-// ─── Mock product data (35 products) ───────────────────────────────────────
-const generateProducts = () => {
-  const base = [
-    { name: "Red Chilli Powder",     category: "Spices",  image: "/products/red-chilli.png",      badge: "Best Seller", discount: "BES\n30%\nOFF" },
-    { name: "Gran (Chickpea) Flour", category: "Flours",  image: "/products/chickpea-flour.png",   badge: null,          discount: "BES\n30%\nOFF" },
-    { name: "Jaggery Powder",        category: "Jaggery", image: "/products/jaggery1.png",          badge: "Best Seller", discount: null },
-    { name: "Red Chilli Powder",     category: "Spices",  image: "/products/red-chilli1.png",     badge: null,          discount: null },
-    { name: "Yellow Mustard Oil",    category: "Oils",    image: "/products/mustard-oil.png",     badge: null,          discount: null },
-    { name: "Sattu Flour",           category: "Sattu",   image: "/products/sattu-flour.png",      badge: null,          discount: "BES\n30%\nOFF" },
-    { name: "Daliya Flour",          category: "Daliya",  image: "/products/daliya-flour.png",     badge: null,          discount: "BES\n30%\nOFF" },
-    { name: "Jaggery Powder",        category: "Jaggery", image: "/products/jaggery.png",          badge: "Best Seller", discount: null },
-    { name: "Red Chilli Powder",     category: "Spices",  image: "/products/red-chilli-2.png",     badge: null,          discount: null },
-    { name: "Yellow Mustard Oil",    category: "Oils",    image: "/products/mustard-oil-2.png",    badge: null,          discount: null },
-  ];
-  return Array.from({ length: 35 }, (_, i) => ({
-    id: i + 1,
-    ...base[i % base.length],
-    price: 250,
-    rating: [4, 4, 3, 4][i % 4],
-    reviews: 711,
-  }));
-};
-
-const ALL_PRODUCTS = generateProducts();
 const PER_PAGE = 8; // 4 cols × 2 rows visible
 
 // ─── Star Rating ───────────────────────────────────────────────────────────
@@ -108,32 +86,39 @@ function ProductCard({ product }) {
         </div>
       )}
 
-      {/* Image */}
-      <div
-        className="relative w-full bg-gray-50 flex items-center justify-center"
-        style={{ height: "210px", flexShrink: 0 }}
+      <Link
+        href={`/products/${product.id}`}
+        className="flex flex-col flex-1 min-h-0"
       >
-        <Image
-          src={product.image}
-          alt={product.name}
-          fill
-          className="object-contain p-4"
-          sizes="259px"
-        />
-      </div>
-
-      {/* Info */}
-      <div className="flex flex-col flex-1 px-3 pt-2.5 pb-3 justify-between">
-        <div className="flex flex-col gap-1">
-          <StarRating rating={product.rating} reviews={product.reviews} />
-          <p className="text-gray-800 text-sm font-medium leading-snug line-clamp-2">
-            {product.name}
-          </p>
-          <p className="text-gray-900 font-bold" style={{ fontSize: "15px" }}>
-            NPR {product.price}
-          </p>
+        {/* Image */}
+        <div
+          className="relative w-full bg-gray-50 flex items-center justify-center"
+          style={{ height: "210px", flexShrink: 0 }}
+        >
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            className="object-contain p-4"
+            sizes="259px"
+          />
         </div>
 
+        {/* Info */}
+        <div className="flex flex-col flex-1 px-3 pt-2.5 pb-3">
+          <div className="flex flex-col gap-1">
+            <StarRating rating={product.rating} reviews={product.reviews} />
+            <p className="text-gray-800 text-sm font-medium leading-snug line-clamp-2">
+              {product.name}
+            </p>
+            <p className="text-gray-900 font-bold" style={{ fontSize: "15px" }}>
+              NPR {product.price}
+            </p>
+          </div>
+        </div>
+      </Link>
+
+      <div className="px-3 pb-3">
         <button
           onClick={() => { setAdded(true); setTimeout(() => setAdded(false), 1400); }}
           className="mt-2 w-full flex items-center justify-center gap-2 text-white font-semibold text-sm py-2.5 rounded transition-all duration-200 active:scale-95"

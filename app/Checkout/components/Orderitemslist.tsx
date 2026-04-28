@@ -19,7 +19,7 @@ const items: OrderItem[] = [
     unitPrice: 125.00,
     qty: 1,
     total: 1250.00,
-    image: "/products/yellow-mustard-oil.png",
+    image: "/products/mustard-oil.png",
   },
   {
     id: 2,
@@ -28,7 +28,7 @@ const items: OrderItem[] = [
     unitPrice: 125.00,
     qty: 1,
     total: 1250.00,
-    image: "/products/jaggery-powder.png",
+    image: "/products/jaggery1.png",
   },
 ];
 

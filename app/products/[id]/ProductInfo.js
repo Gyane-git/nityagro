@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+;
+import { useRouter } from "next/navigation";
 
 // ─── Icons ──────────────────────────────────────────────────────────────────
 const StarIcon = ({ filled }) => (
@@ -36,6 +38,7 @@ export default function ProductInfo({ product }) {
   const [qty, setQty] = useState(1);
   const [selectedWeight, setSelectedWeight] = useState("100 gm");
   const [added, setAdded] = useState(false);
+  const router = useRouter();
 
   const p = product ?? {
     name: "Yellow Mustard Oil",
@@ -157,7 +160,7 @@ export default function ProductInfo({ product }) {
             height: "44px",
             width: "220px",
           }}
-        >
+          onClick={() => router.push("/Checkout")}   >
           Buy Now
         </button>
       </div>

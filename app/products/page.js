@@ -1,35 +1,24 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import Banner from "./Banner";
 import Sidebar from "./Sidebar";
 import ProductList from "./ProductList";
+import { ALL_PRODUCTS } from "./productsData";
 
 // ─── Breadcrumb ────────────────────────────────────────────────────────────
 function Breadcrumb() {
   return (
     <nav className="flex items-center gap-1 text-xs text-gray-500 mb-5">
-      <a href="/" className="hover:text-[#00462C] transition-colors">
+      <Link href="/" className="hover:text-[#00462C] transition-colors">
         Home
-      </a>
+      </Link>
       <span className="text-gray-400">›</span>
       <span className="font-semibold text-gray-700">Products</span>
     </nav>
   );
 }
-
-// ─── All mock products (same as ProductList internal data) ─────────────────
-const BASE = [
-  { name: "Red Chilli Powder",     category: "Spices",  image: "/products/red-chilli.png",     badge: "Best Seller", discount: "BES\n30%\nOFF", price: 250, rating: 4, reviews: 711 },
-  { name: "Gran (Chickpea) Flour", category: "Flours",  image: "/products/chickpea-flour.png", badge: null,          discount: "BES\n30%\nOFF", price: 250, rating: 4, reviews: 711 },
-  { name: "Jaggery Powder",        category: "Jaggery", image: "/products/jaggery.png",        badge: "Best Seller", discount: null,            price: 250, rating: 3, reviews: 711 },
-  { name: "Red Chilli Powder",     category: "Spices",  image: "/products/red-chilli-2.png",   badge: null,          discount: null,            price: 250, rating: 4, reviews: 711 },
-];
-
-const ALL_PRODUCTS = Array.from({ length: 35 }, (_, i) => ({
-  id: i + 1,
-  ...BASE[i % BASE.length],
-}));
 
 // ─── Page ──────────────────────────────────────────────────────────────────
 export default function ProductsPage() {

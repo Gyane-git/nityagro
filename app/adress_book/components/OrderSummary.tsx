@@ -1,3 +1,6 @@
+"use client";
+import { useRouter } from "next/navigation";
+
 // components/OrderSummary.tsx
 
 export default function OrderSummary() {
@@ -6,6 +9,7 @@ export default function OrderSummary() {
     { label: "Discount",        value: "- NPR 350.00", color: "text-gray-800" },
     { label: "Delivery Charge", value: "NPR 200.00",   color: "text-gray-800" },
   ];
+  const router = useRouter();
 
   return (
     <div
@@ -50,6 +54,7 @@ export default function OrderSummary() {
           height: "48px",
           boxShadow: "0 4px 16px rgba(0,70,44,0.20)",
         }}
+        onClick ={() => router.push("/Checkout/payment")}        
       >
         Proceed to Pay
       </button>

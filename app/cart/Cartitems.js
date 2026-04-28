@@ -28,7 +28,7 @@ const ChevronDownIcon = () => (
 // ─── Initial cart items ──────────────────────────────────────────────────────
 const INITIAL_ITEMS = [
   { id: 1, name: "Yellow Mustard Oil", weight: "100 gm", price: 125, qty: 1, image: "/products/red-chilli.png" },
-  { id: 2, name: "Yellow Mustard Oil", weight: "100 gm", price: 125, qty: 1, image: "/products/jaggery.png" },
+  { id: 2, name: "Yellow Mustard Oil", weight: "100 gm", price: 125, qty: 1, image: "/products/jaggery1.png" },
   { id: 3, name: "Yellow Mustard Oil", weight: "100 gm", price: 125, qty: 1, image: "/products/mustard-oil.png" },
 ];
 

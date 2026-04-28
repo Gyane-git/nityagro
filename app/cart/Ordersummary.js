@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const PromoIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -25,6 +26,8 @@ export default function OrderSummary() {
   const [promo, setPromo] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [delivery, setDelivery] = useState("");
+
+  const router = useRouter();
 
   const itemsTotal   = 1250;
   const discount     = 350;
@@ -156,6 +159,7 @@ export default function OrderSummary() {
           height: "48px",
           boxShadow: "0 4px 16px rgba(0,70,44,0.25)",
         }}
+        onClick={() => router.push("/Checkout")}
       >
         Proceed to Checkout
       </button>

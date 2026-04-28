@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 
 const CartIcon = () => (
@@ -70,37 +71,47 @@ function ProductCard({ product }) {
         </div>
       )}
 
-      {/* Image */}
-      <div
-        className="relative w-full bg-gray-50"
-        style={{ height: "160px", flexShrink: 0 }}
-      >
-        <Image
-          src={product.image}
-          alt={product.name}
-          fill
-          className="object-contain p-3"
-          sizes="190px"
-        />
-      </div>
-
-      {/* Info */}
-      <div className="flex flex-col px-3 pt-2 pb-3 gap-1.5">
-        <div className="flex items-center gap-0.5">
-          {[1, 2, 3, 4, 5].map((s) => (
-            <StarIcon key={s} filled={s <= product.rating} />
-          ))}
-          <span className="text-xs text-gray-500 ml-1">({product.reviews})</span>
+      <Link href={`/products/${product.id}`} className="flex flex-col">
+        {/* Image */}
+        <div
+          className="relative w-full bg-gray-50"
+          style={{ height: "160px", flexShrink: 0 }}
+        >
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            className="object-contain p-3"
+            sizes="190px"
+          />
         </div>
-        <p className="text-gray-800 font-medium leading-snug" style={{ fontSize: "13px" }}>
-          {product.name}
-        </p>
-        <p className="font-bold text-gray-900" style={{ fontSize: "14px" }}>
-          NPR {product.price}
-        </p>
 
+        {/* Info */}
+        <div className="flex flex-col px-3 pt-2 gap-1.5">
+          <div className="flex items-center gap-0.5">
+            {[1, 2, 3, 4, 5].map((s) => (
+              <StarIcon key={s} filled={s <= product.rating} />
+            ))}
+            <span className="text-xs text-gray-500 ml-1">({product.reviews})</span>
+          </div>
+          <p
+            className="text-gray-800 font-medium leading-snug"
+            style={{ fontSize: "13px" }}
+          >
+            {product.name}
+          </p>
+          <p className="font-bold text-gray-900" style={{ fontSize: "14px" }}>
+            NPR {product.price}
+          </p>
+        </div>
+      </Link>
+
+      <div className="px-3 pb-3">
         <button
-          onClick={() => { setAdded(true); setTimeout(() => setAdded(false), 1400); }}
+          onClick={() => {
+            setAdded(true);
+            setTimeout(() => setAdded(false), 1400);
+          }}
           className="mt-1 w-full flex items-center justify-center gap-1.5 text-white font-semibold py-2 rounded transition-all duration-200 active:scale-95"
           style={{
             background: added ? "#2d7a4f" : "#00462C",
@@ -124,9 +135,9 @@ export default function FrequentlyBoughtTogether() {
         <h2 className="font-bold" style={{ color: "#00462C", fontSize: "20px" }}>
           Frequently Bought Together
         </h2>
-        <a href="/products" className="text-sm font-semibold" style={{ color: "#00462C" }}>
+        <Link href="/products" className="text-sm font-semibold" style={{ color: "#00462C" }}>
           View All
-        </a>
+        </Link>
       </div>
 
       {/* Cards — horizontal scroll */}
