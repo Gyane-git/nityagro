@@ -3,7 +3,11 @@ import { useRouter } from "next/navigation";
 
 // components/OrderSummary.tsx
 
-export default function OrderSummary() {
+type OrderSummaryProps = {
+  onProceed?: () => void;
+};
+
+export default function OrderSummary({ onProceed }: OrderSummaryProps) {
   const items = [
     { label: "Item(s) total",   value: "NPR 1250.00",  color: "text-gray-800" },
     { label: "Discount",        value: "- NPR 350.00", color: "text-gray-800" },
@@ -54,7 +58,7 @@ export default function OrderSummary() {
           height: "48px",
           boxShadow: "0 4px 16px rgba(0,70,44,0.20)",
         }}
-        onClick ={() => router.push("/Checkout/payment")}        
+        onClick={onProceed ?? (() => router.push("/Checkout/payment"))}
       >
         Proceed to Pay
       </button>
