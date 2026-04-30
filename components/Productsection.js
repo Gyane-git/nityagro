@@ -1,7 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
+import { ALL_PRODUCTS } from "@/app/products/productsData";
+import useCartStore from "@/store/cartStore";
+import useToastStore from "@/store/toastStore";
 
 
 // ─── Category Icons (inline SVG) ───────────────────────────────────────────
@@ -95,8 +99,21 @@ function StarRating({ rating, reviews }) {
 // ─── Product Card ──────────────────────────────────────────────────────────
 function ProductCard({ product }) {
   const [added, setAdded] = useState(false);
+  const detailProduct =
+    ALL_PRODUCTS.find((item) => item.name === product.name) || ALL_PRODUCTS[0];
+  const addToCart = useCartStore((state) => state.addToCart);
+  const showToast = useToastStore((state) => state.showToast);
 
   const handleAdd = () => {
+    addToCart({
+      id: detailProduct.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      qty: 1,
+      weight: "100 gm",
+    });
+    showToast(`${product.name} added to cart`);
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
   };
@@ -142,30 +159,35 @@ function ProductCard({ product }) {
         </div>
       )}
 
-      {/* Image */}
-      <div className="relative w-full h-[220px] bg-gray-50 flex items-center justify-center">
-        <Image src={product.image} alt={product.name} fill className="object-contain p-4" />
-      </div>
-
-      {/* Info */}
-      <div className="flex flex-col flex-1 px-3 py-3 justify-between">
-        <div>
-          <StarRating rating={product.rating} reviews={product.reviews} />
-
-          <p className="text-sm font-medium text-gray-800 line-clamp-2 mt-1">
-            {product.name}
-          </p>
-
-          <p className="text-base font-bold text-gray-900 mt-1">
-            NPR {product.price}
-          </p>
+      <Link href={`/products/${detailProduct.id}`} className="flex flex-col flex-1 min-h-0">
+        {/* Image */}
+        <div className="relative w-full h-[220px] bg-gray-50 flex items-center justify-center">
+          <Image src={product.image} alt={product.name} fill className="object-contain p-4" />
         </div>
 
+        {/* Info */}
+        <div className="flex flex-col flex-1 px-3 py-3">
+          <div>
+            <StarRating rating={product.rating} reviews={product.reviews} />
+
+            <p className="text-sm font-medium text-gray-800 line-clamp-2 mt-1">
+              {product.name}
+            </p>
+
+            <p className="text-base font-bold text-gray-900 mt-1">
+              NPR {product.price}
+            </p>
+          </div>
+        </div>
+      </Link>
+
+      <div className="px-3 pb-3">
         <button
           onClick={handleAdd}
-          className="mt-3 w-full py-2.5 rounded text-white font-semibold"
+          className="w-full py-2.5 rounded text-white font-semibold flex items-center justify-center gap-2"
           style={{ background: added ? "#2d7a4f" : "#00462C" }}
         >
+          <CartIcon />
           {added ? "Added!" : "Add"}
         </button>
       </div>
@@ -228,7 +250,7 @@ export default function ProductSection() {
             paddingBottom: "13px",
           }}
         >
-          {CATEGORIES.map(({ id, label, image, Icon }) => {
+          {CATEGORIES.map(({ id, label, image }) => {
             const isActive = activeCategory === id;
             return (
               <button
@@ -300,12 +322,13 @@ export default function ProductSection() {
               ? "All Products"
               : CATEGORIES.find((c) => c.id === activeCategory)?.label}
           </h2>
-          <button
+          <Link
+            href="/products"
             className="font-semibold text-sm hover:underline transition-colors"
             style={{ color: "#00462C" }}
           >
             View All
-          </button>
+          </Link>
         </div>
 
         {/* ── Product Cards Grid ── */}

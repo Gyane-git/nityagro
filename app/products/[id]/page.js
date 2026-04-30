@@ -37,12 +37,10 @@ export default async function ProductDetailPage({ params }) {
 
   return (
     <main className="min-h-screen bg-white">
-        <div className="mx-auto px-6 py-6"
-        style={{ maxWidth: "1440px" }}> 
-      {/* ── Banner — full width, no max-width ── */}
-      <Banner />
+      <div className="mx-auto px-6 py-6" style={{ maxWidth: "1440px" }}>
+        {/* ── Banner ── */}
+        <Banner />
 
-      <div className="mx-auto px-6" style={{ maxWidth: "1020px" }}>
         {/* ── Breadcrumb ── */}
         <Breadcrumb productName={product.name} />
 
@@ -69,7 +67,6 @@ export default async function ProductDetailPage({ params }) {
 
         {/* Bottom spacing */}
         <div className="h-16" />
-      </div>
       </div>
     </main>
   );

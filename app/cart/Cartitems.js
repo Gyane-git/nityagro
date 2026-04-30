@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import useCartStore from "@/store/cartStore";
 
 // ─── Icons ──────────────────────────────────────────────────────────────────
 const TrashIcon = () => (
@@ -24,13 +26,6 @@ const ChevronDownIcon = () => (
     <polyline points="6 9 12 15 18 9" />
   </svg>
 );
-
-// ─── Initial cart items ──────────────────────────────────────────────────────
-const INITIAL_ITEMS = [
-  { id: 1, name: "Yellow Mustard Oil", weight: "100 gm", price: 125, qty: 1, image: "/products/red-chilli.png" },
-  { id: 2, name: "Yellow Mustard Oil", weight: "100 gm", price: 125, qty: 1, image: "/products/jaggery1.png" },
-  { id: 3, name: "Yellow Mustard Oil", weight: "100 gm", price: 125, qty: 1, image: "/products/mustard-oil.png" },
-];
 
 // ─── Qty spinner ─────────────────────────────────────────────────────────────
 function QtySpinner({ value, onChange }) {
@@ -135,10 +130,21 @@ function CartRow({ item, checked, onCheck, onQtyChange, onRemove }) {
 
 // ─── Main CartItems component ─────────────────────────────────────────────────
 export default function CartItems({ onCartChange }) {
-  const [items, setItems] = useState(INITIAL_ITEMS);
+  const items = useCartStore((state) => state.items);
+  const updateQty = useCartStore((state) => state.updateQty);
+  const removeItem = useCartStore((state) => state.removeItem);
+  const clearCart = useCartStore((state) => state.clearCart);
   const [checkedIds, setCheckedIds] = useState([]);
 
-  const allChecked = items.length > 0 && checkedIds.length === items.length;
+  useEffect(() => {
+    onCartChange?.(items);
+  }, [items, onCartChange]);
+
+  const validCheckedIds = checkedIds.filter((id) =>
+    items.some((item) => item.id === id)
+  );
+
+  const allChecked = items.length > 0 && validCheckedIds.length === items.length;
 
   const toggleSelectAll = () => {
     if (allChecked) setCheckedIds([]);
@@ -152,22 +158,17 @@ export default function CartItems({ onCartChange }) {
   };
 
   const handleQtyChange = (id, qty) => {
-    const updated = items.map((i) => (i.id === id ? { ...i, qty } : i));
-    setItems(updated);
-    onCartChange?.(updated);
+    updateQty(id, qty);
   };
 
   const handleRemove = (id) => {
-    const updated = items.filter((i) => i.id !== id);
-    setItems(updated);
+    removeItem(id);
     setCheckedIds((prev) => prev.filter((x) => x !== id));
-    onCartChange?.(updated);
   };
 
   const handleClearCart = () => {
-    setItems([]);
+    clearCart();
     setCheckedIds([]);
-    onCartChange?.([]);
   };
 
   return (
@@ -214,20 +215,20 @@ export default function CartItems({ onCartChange }) {
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
             <p className="text-gray-400 text-sm font-medium">Your cart is empty.</p>
-            <a
+            <Link
               href="/products"
               className="text-sm font-semibold underline"
               style={{ color: "#00462C" }}
             >
               Browse Products
-            </a>
+            </Link>
           </div>
         ) : (
           items.map((item) => (
             <CartRow
               key={item.id}
               item={item}
-              checked={checkedIds.includes(item.id)}
+              checked={validCheckedIds.includes(item.id)}
               onCheck={() => toggleCheck(item.id)}
               onQtyChange={handleQtyChange}
               onRemove={handleRemove}
@@ -238,7 +239,7 @@ export default function CartItems({ onCartChange }) {
 
       {/* ── Footer: Continue Shopping + Clear Cart ── */}
       <div className="flex items-center justify-between px-6 py-5 mt-2">
-        <a
+        <Link
           href="/products"
           className="inline-flex items-center justify-center border-2 rounded-lg font-semibold text-sm transition-all hover:bg-gray-50"
           style={{
@@ -249,7 +250,7 @@ export default function CartItems({ onCartChange }) {
           }}
         >
           Continue Shopping
-        </a>
+        </Link>
 
         <button
           onClick={handleClearCart}

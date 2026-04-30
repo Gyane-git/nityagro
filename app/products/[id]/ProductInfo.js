@@ -3,6 +3,8 @@
 import { useState } from "react";
 ;
 import { useRouter } from "next/navigation";
+import useCartStore from "@/store/cartStore";
+import useToastStore from "@/store/toastStore";
 
 // ─── Icons ──────────────────────────────────────────────────────────────────
 const StarIcon = ({ filled }) => (
@@ -39,6 +41,8 @@ export default function ProductInfo({ product }) {
   const [selectedWeight, setSelectedWeight] = useState("100 gm");
   const [added, setAdded] = useState(false);
   const router = useRouter();
+  const addToCart = useCartStore((state) => state.addToCart);
+  const showToast = useToastStore((state) => state.showToast);
 
   const p = product ?? {
     name: "Yellow Mustard Oil",
@@ -48,6 +52,15 @@ export default function ProductInfo({ product }) {
   };
 
   const handleAdd = () => {
+    addToCart({
+      id: p.id,
+      name: p.name,
+      price: p.price,
+      image: p.image || p.images?.[0] || "/products/mustard-oil.png",
+      qty,
+      weight: selectedWeight,
+    });
+    showToast(`${p.name} added to cart`);
     setAdded(true);
     setTimeout(() => setAdded(false), 1400);
   };

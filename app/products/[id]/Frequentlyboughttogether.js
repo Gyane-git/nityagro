@@ -3,6 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import useCartStore from "@/store/cartStore";
+import useToastStore from "@/store/toastStore";
 
 const CartIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -28,6 +30,22 @@ const PRODUCTS = [
 
 function ProductCard({ product }) {
   const [added, setAdded] = useState(false);
+  const addToCart = useCartStore((state) => state.addToCart);
+  const showToast = useToastStore((state) => state.showToast);
+
+  const handleAdd = () => {
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      qty: 1,
+      weight: "100 gm",
+    });
+    showToast(`${product.name} added to cart`);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1400);
+  };
 
   return (
     <div
@@ -108,10 +126,7 @@ function ProductCard({ product }) {
 
       <div className="px-3 pb-3">
         <button
-          onClick={() => {
-            setAdded(true);
-            setTimeout(() => setAdded(false), 1400);
-          }}
+          onClick={handleAdd}
           className="mt-1 w-full flex items-center justify-center gap-1.5 text-white font-semibold py-2 rounded transition-all duration-200 active:scale-95"
           style={{
             background: added ? "#2d7a4f" : "#00462C",
