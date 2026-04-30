@@ -14,9 +14,10 @@ export const metadata: Metadata = {
 
   metadataBase: new URL("https://nityagro.com"),
 
-  icons: {
-    icon: "/nityagro_logo.png",
-  },
+  // temporary change
+  // icons: {
+  //   icon: "/nityagro_logo.png",
+  // },
 
   openGraph: {
     title: "Nityagro",
@@ -43,7 +44,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/yumei_logo.png" />
+
+        {/* temporary change */}
+        {/* <link rel="icon" href="/yumei_logo.png" /> */}
 
         {/* ✅ Structured Data for Google */}
         <script

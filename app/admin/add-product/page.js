@@ -15,13 +15,14 @@ export default function ProductUploadPage() {
   };
 
   const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [formData, setFormData] = useState({
     productCode: generateProductCode(),
     name: "",
     categoryId: "",
     categoryName: "",
-    brandName: "Yuemi",
-    brandId:1,
+    brandId: "",
+    brandName: "",
     deliveryTargetDays: "",
     status: 1,
     weeklyProduct: false,
@@ -57,6 +58,20 @@ export default function ProductUploadPage() {
     fetchCategories();
   }, []);
 
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const res = await fetch("/api/brands");
+        const data = await res.json();
+        console.log(data);
+        if (data.success) setBrands(data.data.brands);
+      } catch (err) {
+        console.error("Failed to fetch brands", err);
+      }
+    };
+    fetchBrands();
+  }, []);
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -72,6 +87,16 @@ export default function ProductUploadPage() {
       ...prev,
       categoryId: selectedId,
       categoryName: selectedCat?.category || "",
+    }));
+  };
+
+  const handleBrandChange = (e) => {
+    const selectedId = e.target.value;
+    const selectedBrand = brands.find((b) => b.id.toString() === selectedId);
+    setFormData((prev) => ({
+      ...prev,
+      brandId: selectedId,
+      brandName: selectedBrand?.brand || "",
     }));
   };
 
@@ -109,8 +134,8 @@ export default function ProductUploadPage() {
       name: "",
       categoryId: "",
       categoryName: "",
-      brandName: "Yuemi",
-      brandId:1,
+      brandId: "",
+      brandName: "",
       status: "1",
       deliveryTargetDays: "",
       weeklyProduct: false,
@@ -148,9 +173,9 @@ export default function ProductUploadPage() {
     try {
       const res = await fetch("/api/products", { method: "POST", body: data });
       const result = await res.json();
-      console.log(result)
+      console.log(result);
       if (res.ok) {
-        handleReset()
+        handleReset();
         toast.success("Product uploaded successfully!");
       } else {
         toast.error(result.message || "Something went wrong!");
@@ -158,7 +183,7 @@ export default function ProductUploadPage() {
     } catch (error) {
       console.error(error);
       toast.error("Upload failed!");
-    }finally{
+    } finally {
       // handleReset()
     }
   };
@@ -168,18 +193,14 @@ export default function ProductUploadPage() {
       <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6 p-6 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">Add New Product</h1>
-          <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-            + Switch to Bulk Upload
-          </button>
+          <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">+ Switch to Bulk Upload</button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             {/* Basic Information */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Basic Information
-              </h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -210,9 +231,7 @@ export default function ProductUploadPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Category
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                   <select
                     name="categoryId"
                     value={formData.categoryId}
@@ -229,9 +248,19 @@ export default function ProductUploadPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Delivery Target Days
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Brand</label>
+                  <select name="brandId" value={formData.brandId} onChange={handleBrandChange} className="w-full px-3 py-2 text-gray-900 border border-gray-300 rounded-md">
+                    <option value="">Select brand</option>
+                    {brands.map((brand) => (
+                      <option key={brand.id} value={brand.id}>
+                        {brand.brand}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Target Days</label>
                   <input
                     type="number"
                     name="deliveryTargetDays"
@@ -309,13 +338,7 @@ export default function ProductUploadPage() {
                   <span>Flash Sale Product</span>
                 </label>
                 <label className="flex text-gray-900 items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    name="todayDeals"
-                    checked={formData.todayDeals}
-                    onChange={handleInputChange}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  />
+                  <input type="checkbox" name="todayDeals" checked={formData.todayDeals} onChange={handleInputChange} className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
                   <span>Today Deals</span>
                 </label>
                 <label className="flex text-gray-900 items-center space-x-2">
@@ -361,10 +384,7 @@ export default function ProductUploadPage() {
                 placeholder="Enter key specifications..."
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
-              <span className="mx-auto mb-4 w-16 h-16 opacity-30">
-                {" "}
-                Packaging Details
-              </span>
+              <span className="mx-auto mb-4 w-16 h-16 opacity-30"> Packaging Details</span>
               <textarea
                 name="packaging"
                 value={formData.packaging}
@@ -398,9 +418,7 @@ export default function ProductUploadPage() {
           {/* Right Column */}
           <div className="space-y-6">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-4">
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">
-                Pricing & Inventory
-              </h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">Pricing & Inventory</h2>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 <input
                   type="number"
@@ -462,45 +480,19 @@ export default function ProductUploadPage() {
                 </label>
               </div> */}
               <div>
-                <input
-                  required
-                  type="file"
-                  id="mainImage"
-                  accept="image/*"
-                  onChange={handleMainImageChange}
-                  className="hidden"
-                />
-                <label
-                  htmlFor="mainImage"
-                  className="cursor-pointer flex flex-col items-center border-2 border-dashed border-gray-400 rounded-lg p-6 hover:border-blue-400 transition-colors"
-                >
+                <input required type="file" id="mainImage" accept="image/*" onChange={handleMainImageChange} className="hidden" />
+                <label htmlFor="mainImage" className="cursor-pointer flex flex-col items-center border-2 border-dashed border-gray-400 rounded-lg p-6 hover:border-blue-400 transition-colors">
                   <Upload className="mx-auto h-12 w-12 text-gray-900" />
-                  <p>
-                    {formData.mainImage?.name || "Choose MainImage Required !"}
-                  </p>
+                  <p>{formData.mainImage?.name || "Choose MainImage Required !"}</p>
                 </label>
               </div>
 
               <div>
-                <input
-                  type="file"
-                  id="productImages"
-                  multiple
-                  accept="image/*"
-                  onChange={handleMultipleImageChange}
-                  className="hidden"
-                />
+                <input type="file" id="productImages" multiple accept="image/*" onChange={handleMultipleImageChange} className="hidden" />
 
-                <label
-                  htmlFor="productImages"
-                  className="cursor-pointer flex flex-col items-center border-2 border-dashed border-gray-400 rounded-lg p-6 hover:border-blue-400"
-                >
+                <label htmlFor="productImages" className="cursor-pointer flex flex-col items-center border-2 border-dashed border-gray-400 rounded-lg p-6 hover:border-blue-400">
                   <Upload className="h-12 w-12 text-gray-600" />
-                  <p>
-                    {formData.productImages.length > 0
-                      ? `${formData.productImages.length} images selected`
-                      : "Choose images "}
-                  </p>
+                  <p>{formData.productImages.length > 0 ? `${formData.productImages.length} images selected` : "Choose images "}</p>
                 </label>
               </div>
             </div>
@@ -509,16 +501,10 @@ export default function ProductUploadPage() {
 
         {/* Action Buttons */}
         <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex justify-end gap-3">
-          <button
-            onClick={handleReset}
-            className="px-6 py-2.5 border border-gray-600 rounded-md bg-gray-300 hover:bg-gray-600 flex items-center gap-2"
-          >
+          <button onClick={handleReset} className="px-6 py-2.5 border border-gray-600 rounded-md bg-gray-300 hover:bg-gray-600 flex items-center gap-2">
             <RotateCcw className="w-4 h-4" /> Reset
           </button>
-          <button
-            onClick={handleSubmit}
-            className="px-6 py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
-          >
+          <button onClick={handleSubmit} className="px-6 py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2">
             <Save className="w-4 h-4" /> Save Product
           </button>
         </div>

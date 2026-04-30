@@ -39,14 +39,14 @@ function StatCard({ title, value, subtitle, icon: Icon, tone = "orange" }) {
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-      <div className={`absolute -top-10 -right-10 h-28 w-28 rounded-full bg-gradient-to-br ${tones[tone]} opacity-10`} />
+      <div className={`absolute -top-10 -right-10 h-28 w-28 rounded-full bg-linear-to-br ${tones[tone]} opacity-10`} />
       <div className="relative flex items-start justify-between">
         <div>
           <p className="text-xs uppercase tracking-wider text-gray-500">{title}</p>
           <p className="mt-2 text-2xl font-bold text-gray-900">{value}</p>
           <p className="mt-1 text-xs text-gray-500">{subtitle}</p>
         </div>
-        <div className={`rounded-xl bg-gradient-to-br ${tones[tone]} p-2.5 text-white shadow`}>
+        <div className={`rounded-xl bg-linear-to-br ${tones[tone]} p-2.5 text-white shadow`}>
           <Icon size={18} />
         </div>
       </div>
