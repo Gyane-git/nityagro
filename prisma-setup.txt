@@ -1,0 +1,25 @@
+Prisma + Next.js + MySQL Setup (Short Note)
+1. Project Setup
+- Next.js project created
+- Installed Prisma and client
+- npx prisma init used
+2. MySQL Setup (XAMPP)
+- MySQL started via XAMPP
+- Database created: nityagro_db
+3. Prisma Schema
+- Prisma client configured
+- MySQL datasource connected using env DATABASE_URL
+- User model created
+4. Environment Config
+DATABASE_URL = mysql://root:@127.0.0.1:3306/nityagro_db
+5. Prisma Singleton Setup
+- /lib/prisma.ts created
+- Prevents multiple DB connections in Next.js dev mode
+6. Migration & Generate
+- npx prisma generate
+- npx prisma migrate dev --name init
+- Tables created in MySQL
+
+
+
+npx prisma studio
