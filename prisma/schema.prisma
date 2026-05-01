@@ -8,10 +8,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        BigInt      @id @default(autoincrement())
+model Users {
+  userId        BigInt      @id @default(autoincrement())
   name      String
   email     String   @unique
+  role  String
+  rolePermission  String?
+  status   Boolean   @default(false)
   password  String
   phone     String?
   address   String?
@@ -22,6 +25,15 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+
+ orders Orders[]
+    crdCartListers CartList[]
+    wishlist Wishlist[]
+     productReview ProductReview[]
+      orderCancellation OrderCancellation[]
+       orderReturn OrderReturn[]
+categories Categories[]
+products Products[]
   productReviews productReview[]
   orderReturns orderReturn[]
   orderCancellations orderCancellation[]
@@ -29,12 +41,16 @@ model User {
   deliveryDetails deliveryDetails[]
   paymentDetails paymentDetails[]
   inquiry inquiry[]
+   testimonials Testimonials[]
+    setShippingCost SetShippingCost[]
+  @@map("users")
 
 }
 
-model categories {
-  id        BigInt      @id @default(autoincrement())
+model Categories {
+  categoryId        BigInt      @id @default(autoincrement())
   categoryName  String
+  userId BigInt
   slug   String?
   categoryDescription String?
   categoryImage String?
@@ -43,12 +59,21 @@ model categories {
   categoryStatus Boolean @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  products Products[]
+
+       users Users @relation(fields: [userId], references: [userId])
+
+
+   @@map("categories")
   
 }
 
-model products {
-  id        BigInt      @id @default(autoincrement())
+model Products {
+  productId        BigInt      @id @default(autoincrement())
   productCode String   @unique
+  categoryId BigInt
+   userId BigInt
   productName  String
   slug   String?
   productVariation String?
@@ -67,46 +92,72 @@ model products {
   specialOffer Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+   orders Orders[]
+    crdCartListers CartList[]
+    wishlist Wishlist[]
+     productReview ProductReview[]
+      orderCancellation OrderCancellation[]
+       orderReturn OrderReturn[]
+         productImage ProductImage[]
+   categories Categories @relation(fields: [categoryId], references: [categoryId])
+     users Users @relation(fields: [userId], references: [userId])
+  @@map("products")
 }
 
-model cartList {
-  id        BigInt      @id @default(autoincrement())
+
+model CartList {
+  cartId        BigInt      @id @default(autoincrement())
   userId BigInt
   productId BigInt
   quantity BigInt
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id])
-  product products @relation(fields: [productId], references: [id])
+
+  product Products @relation(fields: [productId], references: [productId])
+  users Users @relation(fields: [userId], references: [userId])
+
+   @@map("cartList")
 }
 
-model wishlist {
-  id        BigInt      @id @default(autoincrement())
+model Wishlist {
+  wishId        BigInt      @id @default(autoincrement())
   userId BigInt
+  productId BigInt
   productId BigInt
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id])
-  product products @relation(fields: [productId], references: [id])
+  product Products @relation(fields: [productId], references: [productId])
+  users Users @relation(fields: [userId], references: [userId])
+   @@map("wishlist")
 }
 
 
-model orders {
-  id        BigInt      @id @default(autoincrement())
+model Orders {
+  orderId        BigInt      @id @default(autoincrement())
   userId BigInt
+  productId BigInt
   totalAmount Float
   orderStatus String?
   paymentStatus String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id])
+ deliveryDetails DeliveryDetails[]
+  shippingDetails ShippingDetails[]
+  orderCancellation OrderCancellation[]
+   orderReturn OrderReturn[]
+    paymentDetails PaymentDetails[]
+
+  product Products @relation(fields: [productId], references: [productId])
+  users Users @relation(fields: [userId], references: [userId])
+   @@map("orders")
 }
 
-model banner {
-  id        BigInt      @id @default(autoincrement())
+model Banner {
+  bannerId        BigInt      @id @default(autoincrement())
   bannerName  String
   slug   String?
   bannerDescription String?
@@ -115,18 +166,20 @@ model banner {
   bannerStatus Boolean @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+   @@map("banner")
 }
 
-model faqs {
-  id        BigInt      @id @default(autoincrement())
+model Faqs {
+  faqsId        BigInt      @id @default(autoincrement())
   question  String
   answer   String?
   faqStatus Boolean @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  @@map("faqs")
 }
 
-model contactSettings{
+model ContactSettings{
   id        BigInt      @id @default(autoincrement())
   customerName  String
   customerEmail   String?
@@ -144,11 +197,13 @@ model contactSettings{
   contactStatus Boolean @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+   @@map("contactSettings")
 }
 
-model testimonials {
-  id        BigInt      @id @default(autoincrement())
+model Testimonials {
+  testimonialsId        BigInt      @id @default(autoincrement())
   name  String
+  userId BigInt
   title String?
   message String?
   image String?
@@ -157,10 +212,15 @@ model testimonials {
   testimonialStatus Boolean @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  
+  users Users @relation(fields: [userId], references: [userId])
+
+   @@map("testimonials")
 }
 
-model popupBanner {
-  id        BigInt      @id @default(autoincrement())
+model PopupBanner {
+  popupBannerId        BigInt      @id @default(autoincrement())
   popupName  String?
   popupDescription String?
   popupImage String?
@@ -168,10 +228,11 @@ model popupBanner {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@map("popupBanner")
 }
 
-model companyInfo {
-  id        BigInt      @id @default(autoincrement())
+model CompanyInfo {
+  companyInfoId        BigInt      @id @default(autoincrement())
   privacyPolicy  String
   companyInfo String?
   companyDescription String?
@@ -182,12 +243,14 @@ model companyInfo {
   companyMission String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+    @@map("companyInfo")
 }
 
-model productReview {
-  id        BigInt      @id @default(autoincrement())
+model ProductReview {
+  productReviewId        BigInt      @id @default(autoincrement())
   productId BigInt
-  userId BigInt
+  productId BigInt
+   userId BigInt
   rating BigInt
   review String?
   productReviewImage String?
@@ -195,27 +258,34 @@ model productReview {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  product products @relation(fields: [productId], references: [id])
-  user User @relation(fields: [userId], references: [id])
+  product Products @relation(fields: [productId], references: [productId])
+  users Users @relation(fields: [userId], references: [userId])
+
+  @@map("productReview")
 }
 
-model orderReturn {
-  id        BigInt      @id @default(autoincrement())
+model OrderReturn {
+  orderReturnId        BigInt      @id @default(autoincrement())
   orderId BigInt
   userId BigInt
+  productId BigInt
   reason String?
   returnImage String?
   returnStatus Boolean @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id])
+  orders Orders @relation(fields: [orderId], references: [orderId])
+  product Products @relation(fields: [productId], references: [productId])
+  users Users @relation(fields: [userId], references: [userId])
+   @@map("orderReturn")
 }
 
-model orderCancellation {
-  id        BigInt      @id @default(autoincrement())
+model OrderCancellation {
+  orderCancellationId        BigInt      @id @default(autoincrement())
   orderId BigInt
   userId BigInt
+  productId BigInt
   adminCancellationReason String?
   cancellationReason String?
   cancellationImage String?
@@ -223,19 +293,24 @@ model orderCancellation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id])
+     orders Orders @relation(fields: [orderId], references: [orderId])
+
+  product Products @relation(fields: [productId], references: [productId])
+  users Users @relation(fields: [userId], references: [userId])
+   @@map("orderCancellation")
 }
 
-model newsletterSubscription {
-  id        BigInt      @id @default(autoincrement())
+model NewsletterSubscription {
+  newsletterSubscriptionId        BigInt      @id @default(autoincrement())
   email String   @unique
   subscriptionStatus Boolean @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  @@map("newsletterSubscription")
 }
 
-model promoCode {
-  id        BigInt      @id @default(autoincrement())
+model PromoCode {
+  promoCodeId        BigInt      @id @default(autoincrement())
   code String   @unique
   discountPercentage Float
   validFrom DateTime
@@ -243,12 +318,13 @@ model promoCode {
   promoStatus Boolean @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+   @@map("promoCode")
 }
 
-model shippingDetails {
-  id        BigInt      @id @default(autoincrement())
+model ShippingDetails {
+  shippingDetailsId        BigInt      @id @default(autoincrement())
   orderId BigInt
-  userId BigInt
+  productId BigInt
   shippingCourier String?
   trackingNumber String?
   shippingDate DateTime?
@@ -257,28 +333,37 @@ model shippingDetails {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id])
+   deliveryDetails DeliveryDetails[]
+     orders Orders @relation(fields: [orderId], references: [orderId])
+
+  product Products @relation(fields: [productId], references: [productId])
+
+   @@map("shippingDetails")
 }
 
-model deliveryDetails {
-  id        BigInt      @id @default(autoincrement())
+model DeliveryDetails {
+  deliveryDetailsId        BigInt      @id @default(autoincrement())
   orderId BigInt
-  userId BigInt
+  shippingDetailsId BigInt
   deliveryDate DateTime?
   paymentMode String?
   transactionId String?
-  deliveryCourier String?
+
   trackingNumber String?
   deliveryStatus String?
   deliveryRemark String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id])
+   
+    orders Orders @relation(fields: [orderId], references: [orderId])
+   shippingDetailsId ShippingDetailsId @relation(fields: [shippingDetailsId], references: [shippingDetailsId])
+   shippingDetailsId ShippingDetailsId @relation(fields: [shippingDetailsId], references: [shippingDetailsId])
+   @@map("deliveryDetails")
 }
 
-model paymentDetails {
-  id        BigInt      @id @default(autoincrement())
+model PaymentDetails {
+  paymentDetailsId        BigInt      @id @default(autoincrement())
   orderId BigInt
   userId BigInt
   paymentMode String?
@@ -289,11 +374,13 @@ model paymentDetails {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id])
+  orders Orders @relation(fields: [orderId], references: [orderId])
+  users Users @relation(fields: [userId], references: [userId])
+  @@map("paymentDetails")
 }
 
-model inquiry {
-  id        BigInt      @id @default(autoincrement())
+model Inquiry {
+  inquiryId        BigInt      @id @default(autoincrement())
   name String
   email String
   phone String?
@@ -302,20 +389,24 @@ model inquiry {
   inquiryStatus Boolean @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("inquiry")
 }
 
-model productImage {
-  id        BigInt      @id @default(autoincrement())
+model ProductImage {
+  productImageId        BigInt      @id @default(autoincrement())
   productId BigInt
   imageUrl String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  product products @relation(fields: [productId], references: [id])
+  product products @relation(fields: [productId], references: [productId])
+   @@map("productImage")
 }
 
-model setShippingCost {
-  id        BigInt      @id @default(autoincrement())
+model SetShippingCost {
+  setShippingCostId        BigInt      @id @default(autoincrement())
+  userId     BigInt
   minOrderAmount Float
   maxOrderAmount Float
   shippingAdress String?
@@ -323,6 +414,15 @@ model setShippingCost {
   shippingCost Float
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  users Users @relation(fields: [userId], references: [userId])
+   @@map("setShippingCost")
+}
+model AuditLog {
+  auditLogId        BigInt      @id @default(autoincrement())
+  userId     BigInt
+  
+   @@map("auditLog")
 }
 
 
