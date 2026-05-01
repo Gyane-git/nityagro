@@ -83,7 +83,7 @@ model Products {
   nutritionInfo String?
   cookingInstruction String?
   storageInstruction String?
-  productImage String?
+  pImage String?
   productStatus Boolean @default(true)
   actualPrice Float
   SellingPrice Float
