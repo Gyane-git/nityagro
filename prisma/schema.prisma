@@ -17,7 +17,6 @@ model Users {
   status   Boolean   @default(false)
   password  String
   phone     String?
-  address   String?
   city      String?
   state     String?
   zipCode   String?
@@ -34,15 +33,18 @@ model Users {
        orderReturn OrderReturn[]
 categories Categories[]
 products Products[]
-  productReviews productReview[]
-  orderReturns orderReturn[]
-  orderCancellations orderCancellation[]
-  shippingDetails shippingDetails[]
-  deliveryDetails deliveryDetails[]
-  paymentDetails paymentDetails[]
-  inquiry inquiry[]
+  productReviews ProductReview[]
+  orderReturns OrderReturn[]
+  orderCancellations OrderCancellation[]
+  shippingDetails ShippingDetails[]
+  deliveryDetails  DeliveryDetails[]
+  paymentDetails PaymentDetails[]
+  inquiry Inquiry[]
    testimonials Testimonials[]
     setShippingCost SetShippingCost[]
+    address Address[]
+
+      auditLog AuditLog[]
   @@map("users")
 
 }
@@ -99,7 +101,7 @@ model Products {
      productReview ProductReview[]
       orderCancellation OrderCancellation[]
        orderReturn OrderReturn[]
-         productImage ProductImage[]
+      productImage ProductImage[]
    categories Categories @relation(fields: [categoryId], references: [categoryId])
      users Users @relation(fields: [userId], references: [userId])
   @@map("products")
@@ -125,11 +127,10 @@ model Wishlist {
   wishId        BigInt      @id @default(autoincrement())
   userId BigInt
   productId BigInt
-  productId BigInt
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  product Products @relation(fields: [productId], references: [productId])
+  products Products @relation(fields: [productId], references: [productId])
   users Users @relation(fields: [userId], references: [userId])
    @@map("wishlist")
 }
@@ -249,7 +250,6 @@ model CompanyInfo {
 model ProductReview {
   productReviewId        BigInt      @id @default(autoincrement())
   productId BigInt
-  productId BigInt
    userId BigInt
   rating BigInt
   review String?
@@ -357,8 +357,8 @@ model DeliveryDetails {
 
    
     orders Orders @relation(fields: [orderId], references: [orderId])
-   shippingDetailsId ShippingDetailsId @relation(fields: [shippingDetailsId], references: [shippingDetailsId])
-   shippingDetailsId ShippingDetailsId @relation(fields: [shippingDetailsId], references: [shippingDetailsId])
+   shippingDetails ShippingDetails @relation(fields: [shippingDetailsId], references: [shippingDetailsId])
+   
    @@map("deliveryDetails")
 }
 
@@ -400,7 +400,7 @@ model ProductImage {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  product products @relation(fields: [productId], references: [productId])
+  products Products @relation(fields: [productId], references: [productId])
    @@map("productImage")
 }
 
@@ -418,10 +418,33 @@ model SetShippingCost {
   users Users @relation(fields: [userId], references: [userId])
    @@map("setShippingCost")
 }
+
+model Address {
+  addressId        BigInt      @id @default(autoincrement())
+  userId     BigInt
+  province String
+  district String
+  city String
+  ward String
+  locality String?
+  zipCode String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users Users @relation(fields: [userId], references: [userId])
+   @@map("address")
+}
+
 model AuditLog {
   auditLogId        BigInt      @id @default(autoincrement())
   userId     BigInt
-  
+  action String
+  description String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users Users @relation(fields: [userId], references: [userId])
    @@map("auditLog")
 }
 
