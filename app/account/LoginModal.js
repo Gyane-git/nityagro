@@ -35,8 +35,8 @@ const inputClass =
   "w-full border border-gray-200 rounded-lg px-4 text-sm text-gray-700 placeholder-gray-400 outline-none transition-all focus:border-[#266A3F] focus:ring-1 focus:ring-[#266A3F]/20 bg-gray-50";
 
 export default function LoginModal({ isOpen, onClose, onSignup, onForgot }) {
-  const [tab, setTab] = useState("password"); // "password" | "phone"
-  const [phone, setPhone] = useState("");
+  const [tab, setTab] = useState("password"); // "password" | "email"
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [showPw, setShowPw] = useState(false);
@@ -44,18 +44,18 @@ export default function LoginModal({ isOpen, onClose, onSignup, onForgot }) {
   const handleLogin = (e) => {
     e.preventDefault();
     // Add your auth logic here
-    console.log("Login:", { tab, phone, password, otp });
+    console.log("Login:", { tab, email, password, otp });
   };
 
   return (
     <AuthModal isOpen={isOpen} onClose={onClose}>
       <div className="flex flex-col" style={{ padding: "32px 36px 28px" }}>
 
-        {/* ── Tabs: Password | Phone Number ── */}
+        {/* ── Tabs: Password |  Email ── */}
         <div className="flex border-b border-gray-200 mb-6">
           {[
             { key: "password", label: "Password" },
-            { key: "phone",    label: "Phone Number" },
+            { key: "email",    label: "Email" },
           ].map(({ key, label }) => (
             <button
               key={key}
@@ -78,14 +78,14 @@ export default function LoginModal({ isOpen, onClose, onSignup, onForgot }) {
 
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
 
-          {/* ── Phone field (both tabs) ── */}
+          {/* ── email field (both tabs) ── */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-gray-800">Phone</label>
+            <label className="text-sm font-semibold text-gray-800">Email</label>
             <input
               type="tel"
-              placeholder="Please enter your phone number"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Please enter your email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className={inputClass}
               style={{ height: "48px" }}
               required
@@ -128,8 +128,8 @@ export default function LoginModal({ isOpen, onClose, onSignup, onForgot }) {
             </div>
           )}
 
-          {/* ── Phone Number tab: OTP ── */}
-          {tab === "phone" && (
+          {/* ── Email tab: OTP ── */}
+          {tab === "email" && (
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-semibold text-gray-800">OTP</label>
               <div className="flex gap-2">

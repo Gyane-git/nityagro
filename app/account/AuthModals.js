@@ -48,7 +48,7 @@ export default function AuthModals({ auth }) {
         isOpen={modal === "otp"}
         onClose={close}
         onSuccess={() => { close(); openReset(); }}
-        phone="+977 98XXXXXXXX"
+        email="example@me.com"
       />
 
       <ResetPasswordModal

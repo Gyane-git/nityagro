@@ -33,7 +33,7 @@ const inputClass =
   "w-full border border-gray-200 rounded-lg px-4 text-sm text-gray-700 placeholder-gray-400 outline-none transition-all focus:border-[#266A3F] focus:ring-1 focus:ring-[#266A3F]/20 bg-gray-50";
 
 export default function SignupModal({ isOpen, onClose, onLogin }) {
-  const [form, setForm] = useState({ name: "", phone: "", password: "", confirm: "" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
   const [showPw, setShowPw]   = useState(false);
   const [showCPw, setShowCPw] = useState(false);
 
@@ -63,10 +63,10 @@ export default function SignupModal({ isOpen, onClose, onLogin }) {
               className={inputClass} style={{ height: "48px" }} required />
           </div>
 
-          {/* Phone */}
+          {/* Email */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-gray-800">Phone <span className="text-red-500">*</span></label>
-            <input type="tel" placeholder="Please enter your phone number" value={form.phone} onChange={set("phone")}
+            <label className="text-sm font-semibold text-gray-800">Email <span className="text-red-500">*</span></label>
+            <input type="tel" placeholder="Please enter your email  address" value={form.email} onChange={set("email")}
               className={inputClass} style={{ height: "48px" }} required />
           </div>
 

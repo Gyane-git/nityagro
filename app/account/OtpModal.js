@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import AuthModal from "./AuthModal";
 
-export default function OtpModal({ isOpen, onClose, onSuccess, phone = "+91 XXXXXX7890" }) {
+export default function OtpModal({ isOpen, onClose, onSuccess, email = "example@me.com" }) {
   const [otp, setOtp]       = useState(["", "", "", "", "", ""]);
   const [timer, setTimer]   = useState(30);
   const [canResend, setCanResend] = useState(false);
@@ -62,7 +62,7 @@ export default function OtpModal({ isOpen, onClose, onSuccess, phone = "+91 XXXX
         <h2 className="font-bold text-gray-900 mb-1" style={{ fontSize: "20px" }}>Verify OTP</h2>
         <div style={{ width: "40px", height: "2.5px", background: "#266A3F", borderRadius: "2px" }} className="mb-3" />
         <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-          We sent a 6-digit code to <span className="font-semibold text-gray-700">{phone}</span>
+          We sent a 6-digit code to <span className="font-semibold text-gray-700">{email}</span>
         </p>
 
         <form onSubmit={handleVerify} className="flex flex-col items-center gap-5 w-full">
