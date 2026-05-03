@@ -33,7 +33,7 @@ export default function CTABanner() {
         {/* Right: CTA button */}
         <button
           onClick={() => router.push("/products")}
-          className="flex-shrink-0 inline-flex items-center gap-3 bg-[#d4a82a] rounded-full px-7 py-4 text-[10.5px] font-medium tracking-[0.18em] uppercase text-[#1e3d22] cursor-pointer"
+          className="shrink-0 inline-flex items-center gap-3 bg-[#d4a82a] rounded-full px-7 py-4 text-[10.5px] font-medium tracking-[0.18em] uppercase text-[#1e3d22] cursor-pointer"
           style={{ fontFamily: "var(--font-jost)" }}
         >
           Explore Products
