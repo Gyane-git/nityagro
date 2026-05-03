@@ -9,7 +9,6 @@ import {
   Trash2,
   Package,
   Tag,
-  // DollarSign,
   ImageIcon,
   FileText,
   ChevronDown,
@@ -28,19 +27,20 @@ export default function ProductUploadPage() {
     return `${prefix}${timestamp}${random}`;
   };
 
-  const [categories, setCategories] = useState([
+  // ── TODO: Replace with real API calls when /api/categories and /api/brands are ready ──
+  const [categories] = useState([
     { id: 1, category: "Spices & Masala" },
     { id: 2, category: "Oils & Ghee" },
     { id: 3, category: "Flours & Grains" },
     { id: 4, category: "Dairy Products" },
     { id: 5, category: "Dry Fruits & Nuts" },
   ]);
-  const [brands, setBrands] = useState([
+  const [brands] = useState([
     { id: 1, brand: "Nityagro" },
     { id: 2, brand: "Himalayan Organics" },
     { id: 3, brand: "Nepal Herbs" },
   ]);
-  const [activeTab, setActiveTab] = useState("basic");
+
   const [activeDescTab, setActiveDescTab] = useState("productDetails");
   const [expandedSections, setExpandedSections] = useState({
     basic: true,
@@ -54,42 +54,87 @@ export default function ProductUploadPage() {
 
   const defaultVariant = { weight: "", unit: "gm", price: "", stock: "" };
 
-  const [formData, setFormData] = useState({
+  const defaultForm = {
+    // ── model: productCode ──
     productCode: generateProductCode(),
-    name: "",
+
+    // ── model: productName ──
+    productName: "",
+
+    // ── to be added to model ──
     categoryId: "",
     categoryName: "",
+
+    // ── to be added to model ──
     brandId: "",
     brandName: "",
-    deliveryTargetDays: "",
+
+    // ── model: delivaryTargetDays (typo preserved from model) ──
+    delivaryTargetDays: "",
+
+    // ── to be added to model ──
     returnDays: "7",
-    status: 1,
+
+    // ── model: productStatus ──
+    productStatus: true,
+
+    // ── model: flashSale ──
+    flashSale: false,
+
+    // ── model: specialOffer ──
+    specialOffer: false,
+
+    // ── to be added to model ──
     weeklyProduct: false,
-    flashSaleProduct: false,
     todayDeals: false,
-    specialProduct: false,
     requiresSerial: true,
     warrantyAvailable: false,
+
+    // ── model: actualPrice ──
     actualPrice: "",
-    sellingPrice: "",
+
+    // ── model: SellingPrice (capital S matches Prisma model) ──
+    SellingPrice: "",
+
+    // ── model: availableQuantity ──
     availableQuantity: "",
+
+    // ── model: stockQuantity ──
     stockQuantity: "",
+
+    // ── model: productDescription ──
     productDescription: "",
-    keySpecifications: "",
+
+    // ── model: productVariation (key highlights / specs) ──
+    productVariation: "",
+
+    // ── model: nutritionInfo — saved as JSON.stringify(array) ──
     nutritionalInformation: [{ name: "", value: "" }],
+
+    // ── model: cookingInstruction — description + uses merged on submit ──
     cookingDescription: "",
     cookingRecommendedUses: "",
-    storageInstructions: "",
+
+    // ── model: storageInstruction ──
+    storageInstruction: "",
+
+    // ── to be added to model ──
     packaging: "",
     warranty: "",
     warrantyDays: "",
-    variants: [{ ...defaultVariant }],
-    productCatalog: null,
-    mainImage: null,
-    productImages: [],
-  });
 
-  // TODO: Replace dummy data with real API calls when /api/categories and /api/brands are ready
+    // ── to be added to model (JSON array) ──
+    variants: [{ ...defaultVariant }],
+
+    // ── model: productImage ──
+    productImage: null,
+
+    // ── to be added to model ──
+    productImages: [],
+    productCatalog: null,
+  };
+
+  const [formData, setFormData] = useState(defaultForm);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -141,15 +186,15 @@ export default function ProductUploadPage() {
     }));
   };
 
-  const handleMultipleImageChange = (e) => {
-    const files = Array.from(e.target.files);
-    setFormData((prev) => ({ ...prev, productImages: files }));
-  };
-
   const handleMainImageChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setFormData((prev) => ({ ...prev, mainImage: file }));
+    setFormData((prev) => ({ ...prev, productImage: file }));
+  };
+
+  const handleMultipleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    setFormData((prev) => ({ ...prev, productImages: files }));
   };
 
   const handleCatalogChange = (e) => {
@@ -163,59 +208,73 @@ export default function ProductUploadPage() {
   };
 
   const handleReset = () => {
-    setFormData({
-      productCode: generateProductCode(),
-      name: "",
-      categoryId: "",
-      categoryName: "",
-      brandId: "",
-      brandName: "",
-      status: 1,
-      deliveryTargetDays: "",
-      returnDays: "7",
-      weeklyProduct: false,
-      flashSaleProduct: false,
-      todayDeals: false,
-      specialProduct: false,
-      requiresSerial: true,
-      warrantyAvailable: false,
-      actualPrice: "",
-      sellingPrice: "",
-      availableQuantity: "",
-      stockQuantity: "",
-      productDescription: "",
-      keySpecifications: "",
-      nutritionalInformation: [{ name: "", value: "" }],
-      cookingDescription: "",
-      cookingRecommendedUses: "",
-      storageInstructions: "",
-      packaging: "",
-      warranty: "",
-      warrantyDays: "",
-      variants: [{ ...defaultVariant }],
-      mainImage: null,
-      productCatalog: null,
-      productImages: [],
-    });
+    setFormData({ ...defaultForm, productCode: generateProductCode() });
     setActiveDescTab("productDetails");
   };
 
   const handleSubmit = async () => {
-    if (!formData.name) return toast.error("Product name is required!");
-    if (!formData.mainImage) return toast.error("Main image is required!");
+    if (!formData.productName) return toast.error("Product name is required!");
+    if (!formData.productImage) return toast.error("Main image is required!");
 
     const data = new FormData();
-    Object.entries(formData).forEach(([key, value]) => {
-      if (key === "productImages") {
-        value.forEach((file) => data.append("productImages", file));
-      } else if (key === "variants") {
-        data.append("variants", JSON.stringify(value));
-      } else if (key === "nutritionalInformation") {
-        data.append("nutritionalInformation", JSON.stringify(value));
-      } else if (value !== null) {
-        data.append(key, value);
-      }
-    });
+
+    data.append("productCode", formData.productCode);
+    data.append("productName", formData.productName);
+    data.append("productStatus", formData.productStatus);
+    data.append("actualPrice", formData.actualPrice);
+    data.append("SellingPrice", formData.SellingPrice); // capital S
+    data.append("availableQuantity", formData.availableQuantity);
+    data.append("stockQuantity", formData.stockQuantity);
+    data.append("delivaryTargetDays", formData.delivaryTargetDays);
+    data.append("productDescription", formData.productDescription);
+    data.append("productVariation", formData.productVariation);
+    data.append("flashSale", formData.flashSale);
+    data.append("specialOffer", formData.specialOffer);
+
+    // nutritionInfo = JSON string of rows array
+    data.append(
+      "nutritionInfo",
+      JSON.stringify(formData.nutritionalInformation),
+    );
+
+    // cookingInstruction = description + "Recommended Uses:\n..." merged
+    const cookingInstruction = [
+      formData.cookingDescription,
+      formData.cookingRecommendedUses
+        ? `Recommended Uses:\n${formData.cookingRecommendedUses}`
+        : "",
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+    data.append("cookingInstruction", cookingInstruction);
+
+    // storageInstruction
+    data.append("storageInstruction", formData.storageInstruction);
+
+    // model: productImage (main image file)
+    data.append("productImage", formData.productImage);
+
+    // ── Fields to be added to model later ──
+    data.append("categoryId", formData.categoryId);
+    data.append("categoryName", formData.categoryName);
+    data.append("brandId", formData.brandId);
+    data.append("brandName", formData.brandName);
+    data.append("returnDays", formData.returnDays);
+    data.append("weeklyProduct", formData.weeklyProduct);
+    data.append("todayDeals", formData.todayDeals);
+    data.append("requiresSerial", formData.requiresSerial);
+    data.append("warrantyAvailable", formData.warrantyAvailable);
+    data.append("packaging", formData.packaging);
+    data.append("warranty", formData.warranty);
+    data.append("warrantyDays", formData.warrantyDays);
+    data.append("variants", JSON.stringify(formData.variants));
+
+    // gallery & catalog (to be added to model)
+    formData.productImages.forEach((file) =>
+      data.append("productImages", file),
+    );
+    if (formData.productCatalog)
+      data.append("productCatalog", formData.productCatalog);
 
     try {
       const res = await fetch("/api/products", { method: "POST", body: data });
@@ -231,6 +290,18 @@ export default function ProductUploadPage() {
       toast.error("Upload failed!");
     }
   };
+
+  // Shared style tokens ──
+  const inputClass =
+    "w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white placeholder-gray-400";
+  const labelClass =
+    "block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide";
+  const selectClass =
+    "w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white";
+  const textareaClass =
+    "w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none bg-white placeholder-gray-400";
+  const cardClass =
+    "bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden";
 
   const SectionHeader = ({ title, icon: Icon, sectionKey, color = "blue" }) => (
     <button
@@ -251,17 +322,6 @@ export default function ProductUploadPage() {
       )}
     </button>
   );
-
-  const inputClass =
-    "w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white placeholder-gray-400";
-  const labelClass =
-    "block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide";
-  const selectClass =
-    "w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white";
-  const textareaClass =
-    "w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none bg-white placeholder-gray-400";
-  const cardClass =
-    "bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -303,6 +363,7 @@ export default function ProductUploadPage() {
               {expandedSections.basic && (
                 <div className="px-5 pb-5 border-t border-gray-100">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    {/* model: productCode */}
                     <div>
                       <label className={labelClass}>Product Code</label>
                       <input
@@ -317,20 +378,22 @@ export default function ProductUploadPage() {
                       </p>
                     </div>
 
+                    {/* model: productName */}
                     <div>
                       <label className={labelClass}>
                         Product Name <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
-                        name="name"
-                        value={formData.name}
+                        name="productName"
+                        value={formData.productName}
                         onChange={handleInputChange}
                         placeholder="e.g. Red Chilli Powder"
                         className={inputClass}
                       />
                     </div>
 
+                    {/* to be added to model */}
                     <div>
                       <label className={labelClass}>Category</label>
                       <select
@@ -348,6 +411,7 @@ export default function ProductUploadPage() {
                       </select>
                     </div>
 
+                    {/* to be added to model */}
                     <div>
                       <label className={labelClass}>Brand</label>
                       <select
@@ -365,25 +429,32 @@ export default function ProductUploadPage() {
                       </select>
                     </div>
 
+                    {/* model: productStatus (Boolean) */}
                     <div>
                       <label className={labelClass}>Status</label>
                       <select
-                        name="status"
-                        value={formData.status}
-                        onChange={handleInputChange}
+                        name="productStatus"
+                        value={formData.productStatus ? "true" : "false"}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            productStatus: e.target.value === "true",
+                          }))
+                        }
                         className={selectClass}
                       >
-                        <option value={1}>Active</option>
-                        <option value={0}>Inactive</option>
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
                       </select>
                     </div>
 
+                    {/* model: delivaryTargetDays — typo preserved to match Prisma */}
                     <div>
                       <label className={labelClass}>Delivery Target Days</label>
                       <input
                         type="number"
-                        name="deliveryTargetDays"
-                        value={formData.deliveryTargetDays}
+                        name="delivaryTargetDays"
+                        value={formData.delivaryTargetDays}
                         onChange={handleInputChange}
                         placeholder="e.g. 3"
                         min="0"
@@ -408,9 +479,9 @@ export default function ProductUploadPage() {
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">
                     {[
                       { name: "weeklyProduct", label: "Weekly Product" },
-                      { name: "flashSaleProduct", label: "Flash Sale" },
+                      { name: "flashSale", label: "Flash Sale" },
                       { name: "todayDeals", label: "Today's Deals" },
-                      { name: "specialProduct", label: "Special Product" },
+                      { name: "specialOffer", label: "Special Product" },
                       { name: "requiresSerial", label: "Serial for Warranty" },
                       {
                         name: "warrantyAvailable",
@@ -442,7 +513,7 @@ export default function ProductUploadPage() {
               )}
             </div>
 
-            {/* Product Variants */}
+            {/* Product Variants — to be added to model */}
             <div className={cardClass}>
               <SectionHeader
                 title="Product Variants (Weight / Size Options)"
@@ -562,290 +633,289 @@ export default function ProductUploadPage() {
               />
               {expandedSections.description && (
                 <div className="border-t border-gray-100">
-                  {/* ── Tab bar ── */}
-                  {(() => {
-                    const descTabs = [
+                  <div className="flex border-b border-gray-200 px-5 gap-1 overflow-x-auto">
+                    {[
                       { key: "productDetails", label: "Product Details" },
                       { key: "nutritional", label: "Nutritional Information" },
                       { key: "cooking", label: "Cooking Instructions / Usage" },
                       { key: "storage", label: "Storage Instructions" },
-                    ];
-                    return (
-                      <>
-                        <div className="flex border-b border-gray-200 px-5 gap-1">
-                          {descTabs.map((t) => (
-                            <button
-                              key={t.key}
-                              type="button"
-                              onClick={() => setActiveDescTab(t.key)}
-                              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                                activeDescTab === t.key
-                                  ? "border-green-700 text-green-700"
-                                  : "border-transparent text-gray-500 hover:text-gray-700"
-                              }`}
-                            >
-                              {t.label}
-                            </button>
-                          ))}
+                    ].map((t) => (
+                      <button
+                        key={t.key}
+                        type="button"
+                        onClick={() => setActiveDescTab(t.key)}
+                        className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                          activeDescTab === t.key
+                            ? "border-green-700 text-green-700"
+                            : "border-transparent text-gray-500 hover:text-gray-700"
+                        }`}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="p-5 space-y-4">
+                    {/* Product Details → productDescription + productVariation + packaging + warranty */}
+                    {activeDescTab === "productDetails" && (
+                      <div className="space-y-4">
+                        {/* model: productDescription */}
+                        <div>
+                          <label className={labelClass}>
+                            Product Description
+                          </label>
+                          <textarea
+                            name="productDescription"
+                            value={formData.productDescription}
+                            onChange={handleInputChange}
+                            rows={5}
+                            placeholder="Our products are crafted with a deep respect for tradition and purity..."
+                            className={textareaClass}
+                          />
+                          <p className="text-xs text-gray-400 mt-1">
+                            Shown as paragraphs on the product page
+                          </p>
                         </div>
 
-                        <div className="p-5 space-y-4">
-                          {/* ── Product Details tab ── */}
-                          {activeDescTab === "productDetails" && (
-                            <div className="space-y-4">
-                              <div>
-                                <label className={labelClass}>
-                                  Product Description
-                                </label>
-                                <textarea
-                                  name="productDescription"
-                                  value={formData.productDescription}
-                                  onChange={handleInputChange}
-                                  rows={5}
-                                  placeholder="Our products are crafted with a deep respect for tradition and purity..."
-                                  className={textareaClass}
-                                />
-                                <p className="text-xs text-gray-400 mt-1">
-                                  Shown as paragraphs on the product page
-                                </p>
-                              </div>
-                              <div>
-                                <label className={labelClass}>
-                                  Key Highlights / Specifications
-                                </label>
-                                {/* <p className="text-xs text-gray-400 mb-2">
-                                  Enter each bullet point on a new line. Start
-                                  with • or leave plain.
-                                </p> */}
-                                <textarea
-                                  name="keySpecifications"
-                                  value={formData.keySpecifications}
-                                  onChange={handleInputChange}
-                                  rows={6}
-                                  placeholder={
-                                    "Traditionally processed for maximum purity\nNo chemicals, preservatives, or artificial enhancers\nMaintains original taste, aroma, and texture\nEthically sourced and responsibly produced"
-                                  }
-                                  className={textareaClass}
-                                />
-                              </div>
-                              <div>
-                                <label className={labelClass}>
-                                  Packaging Details
-                                </label>
-                                <textarea
-                                  name="packaging"
-                                  value={formData.packaging}
-                                  onChange={handleInputChange}
-                                  rows={3}
-                                  placeholder="e.g. Sealed glass jar, eco-friendly packaging..."
-                                  className={textareaClass}
-                                />
-                              </div>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                  <label className={labelClass}>
-                                    Warranty Details
-                                  </label>
-                                  <textarea
-                                    name="warranty"
-                                    value={formData.warranty}
-                                    onChange={handleInputChange}
-                                    rows={3}
-                                    placeholder="Describe warranty terms..."
-                                    className={textareaClass}
-                                  />
-                                </div>
-                                <div>
-                                  <label className={labelClass}>
-                                    Warranty Period (Days)
-                                  </label>
-                                  <input
-                                    type="number"
-                                    name="warrantyDays"
-                                    min="0"
-                                    value={formData.warrantyDays}
-                                    onChange={handleInputChange}
-                                    placeholder="365"
-                                    className={inputClass}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          )}
+                        {/* model: productVariation */}
+                        <div>
+                          <label className={labelClass}>
+                            Key Highlights / Specifications
+                          </label>
+                          <textarea
+                            name="productVariation"
+                            value={formData.productVariation}
+                            onChange={handleInputChange}
+                            rows={6}
+                            placeholder={
+                              "Traditionally processed for maximum purity\nNo chemicals, preservatives, or artificial enhancers\nMaintains original taste, aroma, and texture\nEthically sourced and responsibly produced"
+                            }
+                            className={textareaClass}
+                          />
+                        </div>
 
-                          {/* ── Nutritional Information tab ── */}
-                          {activeDescTab === "nutritional" && (
-                            <div>
-                              <p className="text-xs text-gray-500 mb-3">
-                                Add nutritional values per 100g serving (e.g.
-                                Energy → 884 kcal, Total Fat → 100g).
-                              </p>
-                              <div className="border border-gray-200 rounded-lg overflow-hidden">
-                                <div className="grid grid-cols-2 bg-gray-50 border-b border-gray-200 px-4 py-2">
-                                  <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                                    Nutrient
-                                  </span>
-                                  <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                                    Value
-                                  </span>
-                                </div>
-                                {formData.nutritionalInformation.map(
-                                  (row, idx) => (
-                                    <div
-                                      key={idx}
-                                      className="grid grid-cols-2 border-b border-gray-100 last:border-0 items-center"
-                                    >
-                                      <input
-                                        type="text"
-                                        value={row.name}
-                                        onChange={(e) => {
-                                          const updated = [
-                                            ...formData.nutritionalInformation,
-                                          ];
-                                          updated[idx] = {
-                                            ...updated[idx],
-                                            name: e.target.value,
-                                          };
-                                          setFormData((prev) => ({
-                                            ...prev,
-                                            nutritionalInformation: updated,
-                                          }));
-                                        }}
-                                        placeholder="e.g. Energy"
-                                        className="px-4 py-2.5 text-sm text-gray-900 border-r border-gray-100 outline-none focus:bg-blue-50"
-                                      />
-                                      <div className="flex items-center">
-                                        <input
-                                          type="text"
-                                          value={row.value}
-                                          onChange={(e) => {
-                                            const updated = [
-                                              ...formData.nutritionalInformation,
-                                            ];
-                                            updated[idx] = {
-                                              ...updated[idx],
-                                              value: e.target.value,
-                                            };
-                                            setFormData((prev) => ({
-                                              ...prev,
-                                              nutritionalInformation: updated,
-                                            }));
-                                          }}
-                                          placeholder="e.g. 884 kcal"
-                                          className="flex-1 px-4 py-2.5 text-sm text-gray-900 outline-none focus:bg-blue-50"
-                                        />
-                                        {idx > 0 && (
-                                          <button
-                                            type="button"
-                                            onClick={() => {
-                                              const updated =
-                                                formData.nutritionalInformation.filter(
-                                                  (_, i) => i !== idx,
-                                                );
-                                              setFormData((prev) => ({
-                                                ...prev,
-                                                nutritionalInformation: updated,
-                                              }));
-                                            }}
-                                            className="px-3 text-gray-300 hover:text-red-500 transition-colors"
-                                          >
-                                            <Trash2 className="w-3.5 h-3.5" />
-                                          </button>
-                                        )}
-                                      </div>
-                                    </div>
-                                  ),
-                                )}
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() =>
+                        {/* to be added to model: packaging */}
+                        <div>
+                          <label className={labelClass}>
+                            Packaging Details
+                          </label>
+                          <textarea
+                            name="packaging"
+                            value={formData.packaging}
+                            onChange={handleInputChange}
+                            rows={3}
+                            placeholder="e.g. Sealed glass jar, eco-friendly packaging..."
+                            className={textareaClass}
+                          />
+                        </div>
+
+                        {/* to be added to model: warranty + warrantyDays */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className={labelClass}>
+                              Warranty Details
+                            </label>
+                            <textarea
+                              name="warranty"
+                              value={formData.warranty}
+                              onChange={handleInputChange}
+                              rows={3}
+                              placeholder="Describe warranty terms..."
+                              className={textareaClass}
+                            />
+                          </div>
+                          <div>
+                            <label className={labelClass}>
+                              Warranty Period (Days)
+                            </label>
+                            <input
+                              type="number"
+                              name="warrantyDays"
+                              min="0"
+                              value={formData.warrantyDays}
+                              onChange={handleInputChange}
+                              placeholder="365"
+                              className={inputClass}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Nutritional → model: nutritionInfo (JSON.stringify) */}
+                    {activeDescTab === "nutritional" && (
+                      <div>
+                        <p className="text-xs text-gray-500 mb-3">
+                          Add nutritional values per 100g serving (e.g. Energy →
+                          884 kcal, Total Fat → 100g). Saved as JSON into{" "}
+                          <code className="bg-gray-100 px-1 rounded">
+                            nutritionInfo
+                          </code>
+                          .
+                        </p>
+                        <div className="border border-gray-200 rounded-lg overflow-hidden">
+                          <div className="grid grid-cols-2 bg-gray-50 border-b border-gray-200 px-4 py-2">
+                            <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                              Nutrient
+                            </span>
+                            <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                              Value
+                            </span>
+                          </div>
+                          {formData.nutritionalInformation.map((row, idx) => (
+                            <div
+                              key={idx}
+                              className="grid grid-cols-2 border-b border-gray-100 last:border-0 items-center"
+                            >
+                              <input
+                                type="text"
+                                value={row.name}
+                                onChange={(e) => {
+                                  const updated = [
+                                    ...formData.nutritionalInformation,
+                                  ];
+                                  updated[idx] = {
+                                    ...updated[idx],
+                                    name: e.target.value,
+                                  };
                                   setFormData((prev) => ({
                                     ...prev,
-                                    nutritionalInformation: [
-                                      ...prev.nutritionalInformation,
-                                      { name: "", value: "" },
-                                    ],
-                                  }))
-                                }
-                                className="mt-3 flex items-center gap-2 px-4 py-2 border border-dashed border-blue-400 text-blue-600 rounded-lg hover:bg-blue-50 text-sm font-medium transition-colors w-full justify-center"
-                              >
-                                <Plus className="w-4 h-4" /> Add Nutrient Row
-                              </button>
-                            </div>
-                          )}
-
-                          {/* ── Cooking Instructions tab ── */}
-                          {activeDescTab === "cooking" && (
-                            <div className="space-y-4">
-                              <div>
-                                <label className={labelClass}>
-                                  Description
-                                </label>
-                                <p className="text-xs text-gray-400 mb-2">
-                                  A short paragraph about how this product is
-                                  used in cooking.
-                                </p>
-                                <textarea
-                                  name="cookingDescription"
-                                  value={formData.cookingDescription}
-                                  onChange={handleInputChange}
-                                  rows={4}
-                                  placeholder="Yellow Mustard Oil has a distinctive pungent aroma and a high smoke point of around 480°F (250°C), making it ideal for high-heat cooking..."
-                                  className={textareaClass}
+                                    nutritionalInformation: updated,
+                                  }));
+                                }}
+                                placeholder="e.g. Energy"
+                                className="px-4 py-2.5 text-sm text-gray-900 border-r border-gray-100 outline-none focus:bg-blue-50"
+                              />
+                              <div className="flex items-center">
+                                <input
+                                  type="text"
+                                  value={row.value}
+                                  onChange={(e) => {
+                                    const updated = [
+                                      ...formData.nutritionalInformation,
+                                    ];
+                                    updated[idx] = {
+                                      ...updated[idx],
+                                      value: e.target.value,
+                                    };
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      nutritionalInformation: updated,
+                                    }));
+                                  }}
+                                  placeholder="e.g. 884 kcal"
+                                  className="flex-1 px-4 py-2.5 text-sm text-gray-900 outline-none focus:bg-blue-50"
                                 />
-                              </div>
-                              <div>
-                                <label className={labelClass}>
-                                  Recommended Uses
-                                </label>
-                                <p className="text-xs text-gray-400 mb-2">
-                                  Enter each recommended use on a new line.
-                                  These appear as bullet points under
-                                  "Recommended Uses:" on the product page.
-                                </p>
-                                <textarea
-                                  name="cookingRecommendedUses"
-                                  value={formData.cookingRecommendedUses}
-                                  onChange={handleInputChange}
-                                  rows={6}
-                                  placeholder={
-                                    "Deep frying pakoras, fish, and snacks\nTempering (tadka) for dals and curries\nMarinating meats and vegetables\nPickling the natural preservative properties are ideal\nMassage oil for traditional wellness practices"
-                                  }
-                                  className={textareaClass}
-                                />
+                                {idx > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const updated =
+                                        formData.nutritionalInformation.filter(
+                                          (_, i) => i !== idx,
+                                        );
+                                      setFormData((prev) => ({
+                                        ...prev,
+                                        nutritionalInformation: updated,
+                                      }));
+                                    }}
+                                    className="px-3 text-gray-300 hover:text-red-500 transition-colors"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
                               </div>
                             </div>
-                          )}
-
-                          {/* ── Storage Instructions tab ── */}
-                          {activeDescTab === "storage" && (
-                            <div className="space-y-3">
-                              <div>
-                                <label className={labelClass}>
-                                  Storage Instructions
-                                </label>
-                                <p className="text-xs text-gray-400 mb-2">
-                                  Enter each storage point on a new line. These
-                                  appear as bullet points on the product page.
-                                </p>
-                                <textarea
-                                  name="storageInstructions"
-                                  value={formData.storageInstructions}
-                                  onChange={handleInputChange}
-                                  rows={7}
-                                  placeholder={
-                                    "Store in a cool, dry place away from direct sunlight\nKeep the bottle tightly sealed after each use\nDo not store near heat sources or open flames\nBest used within 12 months of manufacture date"
-                                  }
-                                  className={textareaClass}
-                                />
-                              </div>
-                            </div>
-                          )}
+                          ))}
                         </div>
-                      </>
-                    );
-                  })()}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              nutritionalInformation: [
+                                ...prev.nutritionalInformation,
+                                { name: "", value: "" },
+                              ],
+                            }))
+                          }
+                          className="mt-3 flex items-center gap-2 px-4 py-2 border border-dashed border-blue-400 text-blue-600 rounded-lg hover:bg-blue-50 text-sm font-medium transition-colors w-full justify-center"
+                        >
+                          <Plus className="w-4 h-4" /> Add Nutrient Row
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Cooking → model: cookingInstruction (merged on submit) */}
+                    {activeDescTab === "cooking" && (
+                      <div className="space-y-4">
+                        <p className="text-xs text-gray-400">
+                          Both fields are merged into{" "}
+                          <code className="bg-gray-100 px-1 rounded">
+                            cookingInstruction
+                          </code>{" "}
+                          on save.
+                        </p>
+                        <div>
+                          <label className={labelClass}>Description</label>
+                          <p className="text-xs text-gray-400 mb-2">
+                            A short paragraph about how this product is used in
+                            cooking.
+                          </p>
+                          <textarea
+                            name="cookingDescription"
+                            value={formData.cookingDescription}
+                            onChange={handleInputChange}
+                            rows={4}
+                            placeholder="Yellow Mustard Oil has a distinctive pungent aroma and a high smoke point of around 480°F (250°C), making it ideal for high-heat cooking..."
+                            className={textareaClass}
+                          />
+                        </div>
+                        <div>
+                          <label className={labelClass}>Recommended Uses</label>
+                          <p className="text-xs text-gray-400 mb-2">
+                            Enter each recommended use on a new line. These
+                            appear as bullet points on the product page.
+                          </p>
+                          <textarea
+                            name="cookingRecommendedUses"
+                            value={formData.cookingRecommendedUses}
+                            onChange={handleInputChange}
+                            rows={6}
+                            placeholder={
+                              "Deep frying pakoras, fish, and snacks\nTempering (tadka) for dals and curries\nMarinating meats and vegetables\nPickling — the natural preservative properties are ideal\nMassage oil for traditional wellness practices"
+                            }
+                            className={textareaClass}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Storage → model: storageInstruction */}
+                    {activeDescTab === "storage" && (
+                      <div className="space-y-3">
+                        <div>
+                          <label className={labelClass}>
+                            Storage Instructions
+                          </label>
+                          <p className="text-xs text-gray-400 mb-2">
+                            Enter each storage point on a new line. These appear
+                            as bullet points on the product page.
+                          </p>
+                          <textarea
+                            name="storageInstruction"
+                            value={formData.storageInstruction}
+                            onChange={handleInputChange}
+                            rows={7}
+                            placeholder={
+                              "Store in a cool, dry place away from direct sunlight\nKeep the bottle tightly sealed after each use\nDo not store near heat sources or open flames\nBest used within 12 months of manufacture date"
+                            }
+                            className={textareaClass}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -863,6 +933,7 @@ export default function ProductUploadPage() {
               />
               {expandedSections.pricing && (
                 <div className="px-5 pb-5 border-t border-gray-100 space-y-3 mt-4">
+                  {/* model: actualPrice */}
                   <div className="mt-2">
                     <label className={labelClass}>Actual Price (NRP)</label>
                     <input
@@ -875,32 +946,37 @@ export default function ProductUploadPage() {
                       className={inputClass}
                     />
                   </div>
+
+                  {/* model: SellingPrice — capital S matches Prisma schema */}
                   <div>
                     <label className={labelClass}>Selling Price (NRP)</label>
                     <input
                       type="number"
-                      name="sellingPrice"
-                      value={formData.sellingPrice}
+                      name="SellingPrice"
+                      value={formData.SellingPrice}
                       onChange={handleInputChange}
                       placeholder="0.00"
                       min="0"
                       className={inputClass}
                     />
                   </div>
+
                   {formData.actualPrice &&
-                    formData.sellingPrice &&
-                    Number(formData.sellingPrice) <
+                    formData.SellingPrice &&
+                    Number(formData.SellingPrice) <
                       Number(formData.actualPrice) && (
                       <div className="bg-green-50 border border-green-200 rounded-lg p-2 text-xs text-green-700">
                         Discount:{" "}
                         {Math.round(
-                          ((formData.actualPrice - formData.sellingPrice) /
+                          ((formData.actualPrice - formData.SellingPrice) /
                             formData.actualPrice) *
                             100,
                         )}
                         % off
                       </div>
                     )}
+
+                  {/* model: availableQuantity */}
                   <div>
                     <label className={labelClass}>Available Quantity</label>
                     <input
@@ -913,6 +989,8 @@ export default function ProductUploadPage() {
                       className={inputClass}
                     />
                   </div>
+
+                  {/* model: stockQuantity */}
                   <div>
                     <label className={labelClass}>Total Stock Quantity</label>
                     <input
@@ -939,12 +1017,13 @@ export default function ProductUploadPage() {
               />
               {expandedSections.delivery && (
                 <div className="px-5 pb-5 border-t border-gray-100 space-y-3 mt-4">
+                  {/* model: delivaryTargetDays */}
                   <div>
                     <label className={labelClass}>Delivery Target Days</label>
                     <input
                       type="number"
-                      name="deliveryTargetDays"
-                      value={formData.deliveryTargetDays}
+                      name="delivaryTargetDays"
+                      value={formData.delivaryTargetDays}
                       onChange={handleInputChange}
                       placeholder="e.g. 3"
                       min="0"
@@ -954,6 +1033,8 @@ export default function ProductUploadPage() {
                       Estimated days to deliver after order
                     </p>
                   </div>
+
+                  {/* to be added to model: returnDays */}
                   <div>
                     <label className={labelClass}>
                       Free Return Window (Days)
@@ -975,7 +1056,7 @@ export default function ProductUploadPage() {
               )}
             </div>
 
-            {/* Media Upload */}
+            {/* Images & Media */}
             <div className={cardClass}>
               <SectionHeader
                 title="Images & Media"
@@ -985,33 +1066,33 @@ export default function ProductUploadPage() {
               />
               {expandedSections.media && (
                 <div className="px-5 pb-5 border-t border-gray-100 space-y-4 mt-4">
-                  {/* Main Image */}
+                  {/* model: productImage */}
                   <div>
                     <label className={labelClass}>
                       Main Image <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="file"
-                      id="mainImage"
+                      id="productImage"
                       accept="image/*"
                       onChange={handleMainImageChange}
                       className="hidden"
                     />
                     <label
-                      htmlFor="mainImage"
+                      htmlFor="productImage"
                       className={`cursor-pointer flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-5 transition-colors ${
-                        formData.mainImage
+                        formData.productImage
                           ? "border-green-400 bg-green-50"
                           : "border-gray-300 hover:border-blue-400 hover:bg-blue-50"
                       }`}
                     >
-                      {formData.mainImage ? (
+                      {formData.productImage ? (
                         <>
                           <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mb-2">
                             <ImageIcon className="w-5 h-5 text-green-600" />
                           </div>
                           <p className="text-sm text-green-700 font-medium text-center truncate max-w-full px-2">
-                            {formData.mainImage.name}
+                            {formData.productImage.name}
                           </p>
                           <p className="text-xs text-green-500 mt-1">
                             Click to change
@@ -1031,7 +1112,7 @@ export default function ProductUploadPage() {
                     </label>
                   </div>
 
-                  {/* Gallery Images */}
+                  {/* to be added to model: gallery images */}
                   <div>
                     <label className={labelClass}>Product Gallery</label>
                     <input
@@ -1078,7 +1159,7 @@ export default function ProductUploadPage() {
                     </label>
                   </div>
 
-                  {/* Product Catalog */}
+                  {/* to be added to model: productCatalog */}
                   <div>
                     <label className={labelClass}>
                       Product Catalog (PDF / Doc)
