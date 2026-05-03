@@ -17,9 +17,9 @@ const ChevronDownIcon = () => (
 );
 
 const DELIVERY_OPTIONS = [
-  "Standard Delivery — NPR 200",
-  "Express Delivery — NPR 500",
-  "Free Delivery (above NPR 2000)",
+  "Standard Delivery",
+  "Express/Same-Day Delivery",
+  "Click & Collect",
 ];
 
 export default function OrderSummary() {
