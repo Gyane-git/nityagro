@@ -93,7 +93,7 @@ function StatusBadge({ status }) {
   );
 }
 
-// Product image placeholder — swap src with real image
+// Product image
 function ProductImage({ name }) {
   return (
     <div className="w-16 h-16 rounded-md bg-amber-50 border border-amber-100 shrink-0 flex items-center justify-center overflow-hidden">
@@ -185,7 +185,7 @@ export default function OrderHistory() {
           placeholder="Search..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-md text-[13px] text-gray-600 placeholder-gray-400 outline-none focus:border-[#DB8F00] bg-white transition-colors"
+          className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-md text-[13px] text-gray-600 placeholder-gray-400 outline-none focus:border-[#DB8F00] bg-[#fcfcfb] transition-colors"
         />
       </div>
 

@@ -7,8 +7,7 @@ export const metadata: Metadata = {
     default: "Nityagro",
     template: "%s | Nityagro",
   },
-  description:
-    "Official Nityagro store.",
+  description: "Official Nityagro store.",
 
   applicationName: "Nityagro",
 
@@ -44,7 +43,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-
         {/* temporary change */}
         {/* <link rel="icon" href="/yumei_logo.png" /> */}
 
@@ -60,10 +58,12 @@ export default function RootLayout({
             }),
           }}
         />
-        <meta name="google-site-verification" content="4Pbvvp7u8ymUTbtietI_J_9ruHzdrzbDCRZofhLI2V4" />
+        <meta
+          name="google-site-verification"
+          content="4Pbvvp7u8ymUTbtietI_J_9ruHzdrzbDCRZofhLI2V4"
+        />
       </head>
-
-      <body className="antialiased">
+      <body suppressHydrationWarning={true} className="antialiased">
         <LayoutWrapper>{children}</LayoutWrapper>
       </body>
     </html>
