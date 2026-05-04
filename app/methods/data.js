@@ -1,72 +1,281 @@
-import Banner from "./components/Banner";
-import ColdPressedFlour from "./components/ColdPressedFlour";
 import SeedToBottle from "./components/SeedToBottle";
 import SideBySide from "./components/SideBySide";
 
 export const METHODS = {
   "wood-pressed": {
     Banner: {
-      image: "/banners/wood.jpg",
+      image: "/banners/banner-wood-pressed.jpg",
       title: "Wood Pressed",
     },
     ColdPressedFlour: {
-      title: "About Wood Pressed Extraction",
-      description:
-        "Our wood-pressed oils are extracted using traditional wooden Ghani at low temperatures, preserving all natural nutrients and flavors.",
+      title: "Wood Pressed Oil",
+      description: "Authentic Goodness in Every Bundle",
+      badge: "OUR METHODS · WOOD PRESSED OIL ",
+      headline1: "Pressed slow.",
+      headline2: "Poured",
+      headlineGold: "pure.",
+      desc: "For four generations, we have pressed oil the way our grandmothers did — in wooden ghanis, with patience, and without a drop of chemistry. This is how we make every bottle.",
+      btnPrimary: "Explore the Process",
+      btnSecondary: "Shop Wood Pressed Oils",
+      image: "/methods/wood-pressed-oil.jpg",
+      stats: [
+        { value: "40°C", label: "Max press temp" },
+        { value: "100%", label: "Chemical free" },
+        { value: "4 Gen", label: "Of craft" },
+      ],
     },
+
     SeedToBottle: {
-      title: "The Cold Extraction Process",
-      description:
-        "No heat is applied during the process, ensuring that the oil remains in its most natural and healthy state.",
+      title: "Four Steps · Zero Shortcuts",
+      headline1: "From seed to ",
+      headlineGold: "sealed bottle.",
+      desc: "Every step happens within our own facility, by hands we know, in time measured by season — not by quarter.",
+
+      tested: "Traditional · Time-Honoured · Tested",
+      steps: [
+        {
+          step: "Step 01",
+          icon: "🌱",
+          title: "Hand-Picked Seeds",
+          desc: "We source single-origin groundnut, sesame, coconut and mustard seeds directly from certified organic farms across India — sun-dried and inspected by hand.",
+          image: "/methods/hand-picked-seeds.png",
+          alt: "Hands holding seeds",
+          reverse: false,
+        },
+        {
+          step: "Step 02",
+          icon: "⚙️",
+          title: "Traditional Wooden Ghani",
+          desc: "Seeds are crushed slowly in heritage wooden kolhus made from neem and sheesham. The press turns under 30 RPM, never letting temperatures cross 40°C.",
+          image: "/methods/wooden-ghani.jpeg",
+          alt: "Traditional wooden ghani press",
+          reverse: true,
+        },
+        {
+          step: "Step 03",
+          icon: "🛡️",
+          title: "Lab-Tested Purity",
+          desc: "Every batch is tested in-house and by independent FSSAI-certified labs for nutrient retention, peroxide value and chemical-free purity before bottling.",
+          image: "/methods/wooden-ghani.jpeg",
+          alt: "Lab testing oil purity",
+          reverse: false,
+        },
+        {
+          step: "Step 04",
+          icon: "📦",
+          title: "Sealed in Glass",
+          desc: "Filtered through unbleached cotton and bottled the same day in dark glass — protecting the natural aroma, antioxidants and golden colour from light.",
+          image: "/methods/wooden-ghani.jpeg",
+          alt: "Glass bottles of pressed oil",
+          reverse: true,
+        },
+      ],
     },
     SideBySide: {
-      title: "The Cold Extraction Process",
-      description:
-        "No heat is applied during the process, ensuring that the oil remains in its most natural and healthy state.",
+      icon: "✦",
+      badge: "Side By Side",
+      badge1Icon: "🌿",
+      badge1: "TRADITIONAL",
+      badge2Icon: "⚙",
+      badge2: "INDUSTRIAL",
+      headline1: "One is",
+      headline2: "The other is",
+      headlineGold: "Crafted.",
+      headlineCross: "Manufactures.",
+      desc: "Look closer. Every step of how oil is made shapes what reaches your kitchen.",
+      subtitle1: "The Nityagro Way",
+      subHeading1: "Wood-Pressed",
+      subHeading2: "Refined",
+      subDesc1:
+        "Slow. Quiet. Patient. A wooden ghani turning under 30 RPM, the way it has for four generations — coaxing oil out, never forcing it.",
+      subDesc2:
+        "Fast. Hot. Chemical. Steel expellers spinning at 1500 RPM, hexane baths and bleaching clay — engineered for shelf life, not for you",
+      image1: "/methods/wood-pressed-oil.jpeg",
+      image2: "/methods/industrial-factory.png",
     },
   },
 
   "cold-pressed": {
     Banner: {
-      image: "/banners/cold.jpg",
+      image: "/banners/banner-cold-pressed.jpeg",
       title: "Cold Pressed",
     },
     ColdPressedFlour: {
-      title: "About Cold Pressed Extraction",
-      description:
-        "Cold pressed oils are obtained by pressing seeds at room temperature. This method retains the oil's natural aroma and nutritional value.",
+      title: "Cold Pressed Flour",
+      description: "Authentic Goodness in Every Bundle",
+      badge: "OUR METHODS · COLD PRESSED FLOUR",
+      headline1: "Pressed slow.",
+      headline2: "Poured",
+      headlineGold: "pure.",
+      desc: "For four generations, we have pressed oil the way our grandmothers did — in wooden ghanis, with patience, and without a drop of chemistry. This is how we make every bottle.",
+      btnPrimary: "Explore the Process",
+      btnSecondary: "Shop Cold Pressed Oils",
+      image: "/methods/wood-pressed-oil.jpg",
+      stats: [
+        { value: "40°C", label: "Max press temp" },
+        { value: "100%", label: "Chemical free" },
+        { value: "4 Gen", label: "Of craft" },
+      ],
     },
     SeedToBottle: {
-      title: "Nutritional Integrity",
-      description:
-        "The absence of heat helps in maintaining the essential fatty acids and vitamins found in the seeds.",
+      title: "Four Steps · Zero Shortcuts",
+      headline1: "From seed to ",
+      headlineGold: "sealed bottle.",
+      desc: "Every step happens within our own facility, by hands we know, in time measured by season — not by quarter.",
+
+      tested: "Traditional · Time-Honoured · Tested",
+      steps: [
+        {
+          step: "Step 01",
+          icon: "🌱",
+          title: "Hand-Picked Seeds",
+          desc: "We source single-origin groundnut, sesame, coconut and mustard seeds directly from certified organic farms across India — sun-dried and inspected by hand.",
+          image: "/methods/hand-picked-seeds.png",
+          alt: "Hands holding seeds",
+          reverse: false,
+        },
+        {
+          step: "Step 02",
+          icon: "⚙️",
+          title: "Traditional Wooden Ghani",
+          desc: "Seeds are crushed slowly in heritage wooden kolhus made from neem and sheesham. The press turns under 30 RPM, never letting temperatures cross 40°C.",
+          image: "/methods/wooden-ghani.jpeg",
+          alt: "Traditional wooden ghani press",
+          reverse: true,
+        },
+        {
+          step: "Step 03",
+          icon: "🛡️",
+          title: "Lab-Tested Purity",
+          desc: "Every batch is tested in-house and by independent FSSAI-certified labs for nutrient retention, peroxide value and chemical-free purity before bottling.",
+          image: "/methods/wooden-ghani.jpeg",
+          alt: "Lab testing oil purity",
+          reverse: false,
+        },
+        {
+          step: "Step 04",
+          icon: "📦",
+          title: "Sealed in Glass",
+          desc: "Filtered through unbleached cotton and bottled the same day in dark glass — protecting the natural aroma, antioxidants and golden colour from light.",
+          image: "/methods/wooden-ghani.jpeg",
+          alt: "Glass bottles of pressed oil",
+          reverse: true,
+        },
+      ],
     },
     SideBySide: {
-      title: "Nutritional Integrity",
-      description:
-        "The absence of heat helps in maintaining the essential fatty acids and vitamins found in the seeds.",
+      icon: "✦",
+      badge: "Side By Side",
+      badge1Icon: "🌿",
+      badge1: "TRADITIONAL",
+      badge2Icon: "⚙",
+      badge2: "INDUSTRIAL",
+      headline1: "One is",
+      headline2: "The other is",
+      headlineGold: "Crafted.",
+      headlineCross: "Manufactures.",
+      desc: "Look closer. Every step of how oil is made shapes what reaches your kitchen.",
+      subtitle1: "The Nityagro Way",
+      subHeading1: "Cold-Pressed",
+      subHeading2: "Refined",
+      subDesc1:
+        "Slow. Quiet. Patient. A wooden ghani turning under 30 RPM, the way it has for four generations — coaxing oil out, never forcing it.",
+      subDesc2:
+        "Fast. Hot. Chemical. Steel expellers spinning at 1500 RPM, hexane baths and bleaching clay — engineered for shelf life, not for you",
+      image1: "/methods/wood-pressed-oil.jpeg",
+      image2: "/methods/industrial-factory.png",
     },
   },
 
   "stone-pressed": {
     Banner: {
-      image: "/banners/stone.jpg",
+      image: "/banners/banner-stone-pressed.png",
       title: "Stone Pressed",
     },
     ColdPressedFlour: {
-      title: "About Stone Pressed Extraction",
-      description:
-        "Using heavy stone grinders, this ancient method extracts oil slowly, ensuring maximum purity and a rich, traditional taste.",
+      title: "Stone Pressed Spices",
+      description: "Authentic Goodness in Every Bundle",
+      badge: "OUR METHODS · STONE PRESSED SPICES",
+      headline1: "Pressed slow.",
+      headline2: "Poured",
+      headlineGold: "pure.",
+      desc: "For four generations, we have pressed oil the way our grandmothers did — in wooden ghanis, with patience, and without a drop of chemistry. This is how we make every bottle.",
+      btnPrimary: "Explore the Process",
+      btnSecondary: "Shop Wood Pressed Oils",
+      image: "/methods/wood-pressed-oil.jpg",
+      stats: [
+        { value: "40°C", label: "Max press temp" },
+        { value: "100%", label: "Chemical free" },
+        { value: "4 Gen", label: "Of craft" },
+      ],
     },
     SeedToBottle: {
-      title: "Ancient Wisdom",
-      description:
-        "The slow stone rotation prevents friction-induced heat, keeping the oil's bio-active compounds intact.",
+      title: "Four Steps · Zero Shortcuts",
+      headline1: "From seed to ",
+      headlineGold: "sealed bottle.",
+      desc: "Every step happens within our own facility, by hands we know, in time measured by season — not by quarter.",
+
+      tested: "Traditional · Time-Honoured · Tested",
+      steps: [
+        {
+          step: "Step 01",
+          icon: "🌱",
+          title: "Hand-Picked Seeds",
+          desc: "We source single-origin groundnut, sesame, coconut and mustard seeds directly from certified organic farms across India — sun-dried and inspected by hand.",
+          image: "/methods/hand-picked-seeds.png",
+          alt: "Hands holding seeds",
+          reverse: false,
+        },
+        {
+          step: "Step 02",
+          icon: "⚙️",
+          title: "Traditional Wooden Ghani",
+          desc: "Seeds are crushed slowly in heritage wooden kolhus made from neem and sheesham. The press turns under 30 RPM, never letting temperatures cross 40°C.",
+          image: "/methods/wooden-ghani.jpeg",
+          alt: "Traditional wooden ghani press",
+          reverse: true,
+        },
+        {
+          step: "Step 03",
+          icon: "🛡️",
+          title: "Lab-Tested Purity",
+          desc: "Every batch is tested in-house and by independent FSSAI-certified labs for nutrient retention, peroxide value and chemical-free purity before bottling.",
+          image: "/methods/wooden-ghani.jpeg",
+          alt: "Lab testing oil purity",
+          reverse: false,
+        },
+        {
+          step: "Step 04",
+          icon: "📦",
+          title: "Sealed in Glass",
+          desc: "Filtered through unbleached cotton and bottled the same day in dark glass — protecting the natural aroma, antioxidants and golden colour from light.",
+          image: "/methods/wooden-ghani.jpeg",
+          alt: "Glass bottles of pressed oil",
+          reverse: true,
+        },
+      ],
     },
     SideBySide: {
-      title: "Ancient Wisdom",
-      description:
-        "The slow stone rotation prevents friction-induced heat, keeping the oil's bio-active compounds intact.",
+      icon: "✦",
+      badge: "Side By Side",
+      badge1Icon: "🌿",
+      badge1: "TRADITIONAL",
+      badge2Icon: "⚙",
+      badge2: "INDUSTRIAL",
+      headline1: "One is",
+      headline2: "The other is",
+      headlineGold: "Crafted.",
+      headlineCross: "Manufactures.",
+      desc: "Look closer. Every step of how oil is made shapes what reaches your kitchen.",
+      subtitle1: "The Nityagro Way",
+      subHeading1: "Stone-Pressed",
+      subHeading2: "Refined",
+      subDesc1:
+        "Slow. Quiet. Patient. A wooden ghani turning under 30 RPM, the way it has for four generations — coaxing oil out, never forcing it.",
+      subDesc2:
+        "Fast. Hot. Chemical. Steel expellers spinning at 1500 RPM, hexane baths and bleaching clay — engineered for shelf life, not for you",
+      image1: "/methods/wood-pressed-oil.jpeg",
+      image2: "/methods/industrial-factory.png",
     },
   },
 };

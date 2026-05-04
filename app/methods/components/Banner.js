@@ -1,24 +1,21 @@
-
 "use client";
 
 import Image from "next/image";
 
-export default function Banner() {
+export default function Banner({ data }) {
   return (
     <div
       className="relative w-full overflow-hidden"
       style={{ height: "170px", borderRadius: "10px" }}
     >
-      {/* Background image */}
       <Image
-        src="/methods/banner.jpeg"
-        alt="Nityagro Banner"
+        src={data.image}
+        alt={data.title}
         fill
         className="object-cover object-center"
         priority
       />
 
-      {/* Overlay tint */}
       <div
         className="absolute inset-0"
         style={{
@@ -26,8 +23,6 @@ export default function Banner() {
             "linear-gradient(90deg, rgba(0,0,0,0.38) 0%, rgba(0,0,0,0.08) 60%, transparent 100%)",
         }}
       />
-
-      {/* Content */}
     </div>
   );
 }
