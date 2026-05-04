@@ -96,7 +96,7 @@ function StatusBadge({ status }) {
 // Product image placeholder — swap src with real image
 function ProductImage({ name }) {
   return (
-    <div className="w-16 h-16 rounded-md bg-amber-50 border border-amber-100 flex-shrink-0 flex items-center justify-center overflow-hidden">
+    <div className="w-16 h-16 rounded-md bg-amber-50 border border-amber-100 shrink-0 flex items-center justify-center overflow-hidden">
       <svg
         width="28"
         height="28"
@@ -121,7 +121,7 @@ function OrderCard({ order }) {
       <ProductImage name={order.name} />
 
       {/* Name / weight / date */}
-      <div className="w-[150px] flex-shrink-0">
+      <div className="w-37.5 shrink-0">
         <p className="text-[13.5px] font-semibold text-gray-800 leading-snug">
           {order.name}
         </p>
@@ -148,12 +148,12 @@ function OrderCard({ order }) {
       </div>
 
       {/* Status */}
-      <div className="w-28 flex justify-center flex-shrink-0">
+      <div className="w-28 flex justify-center shrink-0">
         <StatusBadge status={order.status} />
       </div>
 
       {/* View Details */}
-      <button className="ml-1 px-4 py-2 border border-gray-300 rounded-md text-[12.5px] text-gray-600 font-medium hover:border-[#2e5e2e] hover:text-[#2e5e2e] transition-colors whitespace-nowrap flex-shrink-0">
+      <button className="ml-1 px-4 py-2 border border-gray-300 rounded-md text-[12.5px] text-gray-600 font-medium hover:border-[#2e5e2e] hover:text-[#2e5e2e] transition-colors whitespace-nowrap shrink-0">
         View Details
       </button>
     </div>
@@ -185,7 +185,7 @@ export default function OrderHistory() {
           placeholder="Search..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-md text-[13px] bg-[#FAF9F4] text-gray-600 placeholder-gray-400 outline-none focus:border-[#DB8F00] bg-white transition-colors"
+          className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-md text-[13px] text-gray-600 placeholder-gray-400 outline-none focus:border-[#DB8F00] bg-white transition-colors"
         />
       </div>
 

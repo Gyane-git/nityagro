@@ -24,7 +24,7 @@ export default function Sidebar({ activeTab, onTabChange, user }) {
     <div className="w-67.5 min-w-67.5 flex flex-col gap-4">
       {/* CARD 1 */}
       <div className="bg-white rounded-lg shadow-sm px-5 py-4 flex items-center gap-3">
-        <div className="w-12 h-12 rounded-full bg-[#DB8F00] flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
+        <div className="w-12 h-12 rounded-full bg-[#DB8F00] flex items-center justify-center text-white text-xl font-bold shrink-0">
           {user.name.charAt(0)}
         </div>
         <div className="overflow-hidden">
