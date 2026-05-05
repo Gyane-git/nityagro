@@ -139,7 +139,7 @@ export default function Header() {
 
       {/* ── Main navbar ── */}
       <nav className="w-full bg-white border-b border-[#E6ECF0]">
-        <div className="max-w-[1440px] mx-auto h-[71px] px-8 flex items-center justify-between gap-6">
+        <div className="max-w-360 mx-auto h-17.75 px-8 flex items-center justify-between gap-6">
           {/* ── Left: Logo + Browse ── */}
           <div className="flex items-center gap-6 shrink-0">
             {/* Logo */}
@@ -157,7 +157,7 @@ export default function Header() {
             <div className="relative">
               <button
                 onClick={() => setCategoryOpen(!categoryOpen)}
-                className="h-[40px] px-3 flex items-center gap-2 rounded-md hover:bg-[#F5F8F6] transition text-[#1a1a1a]"
+                className="h-10 px-3 flex items-center gap-2 rounded-md hover:bg-[#F5F8F6] transition text-[#1a1a1a]"
               >
                 <GridIcon />
                 <span className="text-[14px] font-medium whitespace-nowrap">
@@ -167,7 +167,7 @@ export default function Header() {
               </button>
 
               {categoryOpen && (
-                <div className="absolute top-full left-0 mt-1 w-[220px] bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
+                <div className="absolute top-full left-0 mt-1 w-55 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
                   {[
                     "Oils",
                     "Flours",
@@ -203,7 +203,7 @@ export default function Header() {
                       <ChevronDownIcon />
                     </button>
                     {methodsOpen && (
-                      <div className="absolute top-full left-0 mt-2 w-[200px] bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
+                      <div className="absolute top-full left-0 mt-2 w-50 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
                         {link.childLinks.map((child) => (
                           <Link
                             key={child.label}
@@ -240,7 +240,7 @@ export default function Header() {
             <button className="relative hover:text-[#00462C] transition-colors">
               <WishlistIcon />
               <span
-                className="absolute -top-[7px] -right-[7px] min-w-[17px] h-[17px] px-[3px]
+                className="absolute -top-1.75 -right-1.75 min-w-4.25 h-4.25 px-0.75
                            bg-[#00462C] text-white text-[10px] font-bold rounded-full
                            flex items-center justify-center leading-none"
               >
@@ -252,7 +252,7 @@ export default function Header() {
             <button className="relative hover:text-[#00462C] transition-colors">
               <CartIcon />
               <span
-                className="absolute -top-[7px] -right-[7px] min-w-[17px] h-[17px] px-[3px]
+                className="absolute -top-1.75 -right-1.75 min-w-4.25 h-4.25 px-0.75
                            bg-[#00462C] text-white text-[10px] font-bold rounded-full
                            flex items-center justify-center leading-none"
               >

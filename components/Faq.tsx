@@ -25,7 +25,8 @@ const faqs: FAQItem[] = [
   },
   {
     id: 3,
-    question: "What is the difference between Wood Pressed and Cold Pressed oils?",
+    question:
+      "What is the difference between Wood Pressed and Cold Pressed oils?",
     answer:
       "Wood pressed oils are extracted using a traditional wooden churner (ghani) at low speeds, preserving natural aroma and nutrients. Cold pressed oils use a modern steel expeller with controlled low heat. Both methods avoid chemicals, but wood pressed is the more traditional method.",
   },
