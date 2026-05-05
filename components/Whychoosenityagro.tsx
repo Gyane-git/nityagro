@@ -98,7 +98,7 @@ export default function WhyChooseNityagro() {
             </h3>
 
             {/* Description */}
-            <p className="text-sm text-gray-600 leading-relaxed max-w-[180px]">
+            <p className="text-sm text-gray-600 leading-relaxed max-w-45">
               {feature.description}
             </p>
           </div>

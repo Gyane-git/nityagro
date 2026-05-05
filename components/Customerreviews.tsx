@@ -61,7 +61,9 @@ function StarRating({ rating }: { rating: number }) {
       {Array.from({ length: 5 }).map((_, i) => (
         <svg
           key={i}
-          className={`w-5 h-5 ${i < rating ? "text-yellow-400" : "text-gray-300"}`}
+          className={`w-5 h-5 ${
+            i < rating ? "text-yellow-400" : "text-gray-300"
+          }`}
           fill="currentColor"
           viewBox="0 0 20 20"
           aria-hidden="true"
@@ -131,9 +133,10 @@ function ArrowButton({
       className={`
         flex items-center justify-center w-10 h-10 rounded-full border border-gray-200
         bg-white shadow-sm transition-all shrink-0
-        ${disabled
-          ? "opacity-30 cursor-not-allowed"
-          : "hover:bg-gray-50 hover:shadow-md cursor-pointer"
+        ${
+          disabled
+            ? "opacity-30 cursor-not-allowed"
+            : "hover:bg-gray-50 hover:shadow-md cursor-pointer"
         }
       `}
     >
@@ -145,7 +148,11 @@ function ArrowButton({
         viewBox="0 0 24 24"
       >
         {direction === "left" ? (
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M15 19l-7-7 7-7"
+          />
         ) : (
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
         )}
@@ -162,7 +169,7 @@ export default function CustomerReviews() {
   const totalPages = Math.ceil(reviews.length / CARDS_PER_PAGE);
   const visibleReviews = reviews.slice(
     page * CARDS_PER_PAGE,
-    page * CARDS_PER_PAGE + CARDS_PER_PAGE
+    page * CARDS_PER_PAGE + CARDS_PER_PAGE,
   );
 
   return (
@@ -182,7 +189,7 @@ export default function CustomerReviews() {
         />
 
         {/* Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 flex-1 min-h-[220px]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 flex-1 min-h-55">
           {visibleReviews.map((review) => (
             <ReviewCard key={review.id} review={review} />
           ))}
