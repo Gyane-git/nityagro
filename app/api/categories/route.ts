@@ -44,9 +44,15 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const { categoryName,
-        userId, } =
-      body;
+    const {
+      categoryName,
+      slug,
+      categoryDescription,
+      categoryImage,
+      categoryLogo,
+      categoryBanner,
+      userId,
+    } = body;
 
     if (!categoryName) {
       return NextResponse.json(
@@ -58,6 +64,11 @@ export async function POST(req: Request) {
     const createdCategory = await prisma.categories.create({
       data: {
         categoryName,
+        slug,
+        categoryDescription,
+        categoryImage,
+        categoryLogo,
+        categoryBanner,
         userId,
       },
     });
@@ -84,18 +95,18 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
   const body = await req.json();
 
-  const { categoryId, categoryDesc } = body;
+  const { categoryId, categoryName } = body;
   if (!categoryId) {
     return NextResponse.json(
-      { success: false, message: "CategoryId  is required" },
-      { status: 400 },
+      { success: false, message: "categoryId  is required" },
+      { status: 400, headers: corsHeaders },
     );
   }
   try {
     const category = await prisma.categories.update({
       where: { categoryId: categoryId },
       data: {
-        ...(categoryDesc && { categoryDesc: categoryDesc }),
+        ...(categoryName && { categoryName: categoryName }),
       },
     });
 
@@ -108,11 +119,11 @@ export async function PUT(req: Request) {
       success: true,
       message: "Category updated successfully",
       data: safeData,
-    });
+    }, { status: 200, headers: corsHeaders },);
   } catch (error) {
     return NextResponse.json(
       { success: false, message: String(error) },
-      { status: 500 },
+       { status: 500, headers: corsHeaders },
     );
   }
 }
@@ -129,12 +140,12 @@ export async function DELETE(req: Request) {
     return NextResponse.json({
       success: true,
       message: "Category deleted successfully",
-    });
+    }, { status: 500, headers: corsHeaders },);
   } catch (error) {
     console.error("CATEGORY_DELETE_ERROR", error);
     return NextResponse.json(
       { success: false, message: "Failed to delete category" },
-      { status: 500 },
+     { status: 500, headers: corsHeaders },
     );
   }
 }

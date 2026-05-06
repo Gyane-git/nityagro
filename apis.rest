@@ -1,1 +1,12 @@
-### categories
+### categories###POST
+POST http://192.168.1.95:3000/api/categories
+Content-Type: application/json
+
+{
+  "categoryName":"Mobilef",
+  "userId":1,
+}
+
+### categories###GET
+GET http://192.168.1.95:3000/api/categories
+Content-Type: application/json
