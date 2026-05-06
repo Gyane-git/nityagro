@@ -3,7 +3,7 @@
 import { apiPostRequest } from "@/apihelper/apiHelper";
 import { apiUploadRequest } from "@/apihelper/apiHelper";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 
 type FormData = {
@@ -15,15 +15,46 @@ type FormData = {
   categoryBanner: string | null;
   userId: string;
 };
-
+type Product = {
+  PCode: string;
+  PDesc: string;
+  GroupName: string;
+  slug: string | null;
+  categoryDescription: string | null;
+  categoryImage: string | null;
+  categoryLogo: string | null;
+  categoryBanner: string | null;
+  userId: string;
+};
 export default function AddCategoryPage() {
   const [loading, setLoading] = useState(false);
+  const [products, setProduct] = useState<Product[]>([
+    {
+      PCode: "",
+      PDesc: "",
+      GroupName: "",
+      slug: null,
+      categoryDescription: null,
+      categoryImage: null,
+      categoryLogo: null,
+      categoryBanner: null,
+      userId: "1",
+    },
+  ]);
   const [categoryImageFile, setCategoryImageFile] = useState<File | null>(null);
   const [categoryLogoFile, setCategoryLogoFile] = useState<File | null>(null);
-  const [categoryBannerFile, setCategoryBannerFile] = useState<File | null>(null);
-  const [categoryImagePreviewUrl, setCategoryImagePreviewUrl] = useState<string | null>(null);
-  const [categoryLogoPreviewUrl, setCategoryLogoPreviewUrl] = useState<string | null>(null);
-  const [categoryBannerPreviewUrl, setCategoryBannerPreviewUrl] = useState<string | null>(null);
+  const [categoryBannerFile, setCategoryBannerFile] = useState<File | null>(
+    null,
+  );
+  const [categoryImagePreviewUrl, setCategoryImagePreviewUrl] = useState<
+    string | null
+  >(null);
+  const [categoryLogoPreviewUrl, setCategoryLogoPreviewUrl] = useState<
+    string | null
+  >(null);
+  const [categoryBannerPreviewUrl, setCategoryBannerPreviewUrl] = useState<
+    string | null
+  >(null);
   const categoryImagePreviewRef = useRef<string | null>(null);
   const categoryLogoPreviewRef = useRef<string | null>(null);
   const categoryBannerPreviewRef = useRef<string | null>(null);
@@ -40,18 +71,115 @@ export default function AddCategoryPage() {
 
   const [formdata, setFormData] = useState(initialFormData);
 
+  //http://bkgroupapi.globaltech.com.np:802//api/MasterList/ProductListCustomer?DbName=NITYAM8201
+  // const requestData = {
+  //   products: products.filter(
+  //     (item) => item.ProductDesc && item.ProductDesc.trim() !== "",
+  //   ),
+  // };
+
+  async function getProducts(): Promise<Product[]> {
+    const res = await fetch(
+      "http://bkgroupapi.globaltech.com.np:802/api/MasterList/ProductListCustomer?DbName=NITYAM8201",
+      {
+        cache: "no-store", // ensures fresh data
+      },
+    );
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch products");
+    }
+
+    const json = await res.json();
+    setProduct(json.data);
+
+    return json.data;
+  }
+
+  useEffect(() => {
+    getProducts();
+  }, []);
+
+  const categories = Object.values(
+    products.reduce((acc, item) => {
+      if (!acc[item.GroupName]) {
+        acc[item.GroupName] = {
+          categoryName: item.GroupName,
+          slug: null,
+          categoryDescription: null,
+          categoryImage: null,
+          categoryLogo: null,
+          categoryBanner: null,
+          userId: "1",
+        };
+      }
+
+      acc[item.GroupName]; // ✅ full product object
+      return acc;
+    }, {} as Record<string, any>),
+  );
+
+  const product = Object.values(
+    products.reduce((acc, item) => {
+      if (!acc[item.PDesc]) {
+        acc[item.PDesc] = {
+          productCode: item.PCode,
+          categoryId: 30,
+          userId: "1",
+          productName: item.PDesc,
+          slug: null,
+          productVariation: null,
+          productDescription: null,
+          nutritionInfo:null,
+          cookingInstruction: null,
+          storageInstruction:null,
+          pImage: null,
+          productStatus: true,
+          actualPrice: 0.0,
+          sellingPrice: 0.0,
+          deliveryTargetDays: null,
+          stockQuantity: null,
+          availableQuantity: null,
+        };
+      }
+
+      acc[item.PDesc]; // ✅ full product object
+      return acc;
+    }, {} as Record<string, any>),
+  );
+
+  const requestData = {
+    categories,
+  };
+
+   const requestDataProduct = {
+    product,
+  };
+
+  const pDescList = products.map((item) => item.PDesc);
+  const groupNameList = products.map((item) => item.GroupName);
+  // const requestData = {
+  //   categories: groupNameList,
+  // };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-
+   
+    console.log(JSON.stringify(requestDataProduct));
     try {
       const uploadFormData = new FormData();
-      if (categoryImageFile) uploadFormData.append("categoryImage", categoryImageFile);
-      if (categoryLogoFile) uploadFormData.append("categoryLogo", categoryLogoFile);
-      if (categoryBannerFile) uploadFormData.append("categoryBanner", categoryBannerFile);
+      if (categoryImageFile)
+        uploadFormData.append("categoryImage", categoryImageFile);
+      if (categoryLogoFile)
+        uploadFormData.append("categoryLogo", categoryLogoFile);
+      if (categoryBannerFile)
+        uploadFormData.append("categoryBanner", categoryBannerFile);
 
       let payloadToSave = { ...formdata };
-      if ([categoryImageFile, categoryLogoFile, categoryBannerFile].some(Boolean)) {
+      if (
+        [categoryImageFile, categoryLogoFile, categoryBannerFile].some(Boolean)
+      ) {
         const uploadResponse = await apiUploadRequest<{
           categoryImage?: string;
           categoryLogo?: string;
@@ -68,13 +196,18 @@ export default function AddCategoryPage() {
           ...payloadToSave,
           categoryImage:
             uploadResponse.data?.categoryImage ?? payloadToSave.categoryImage,
-          categoryLogo: uploadResponse.data?.categoryLogo ?? payloadToSave.categoryLogo,
+          categoryLogo:
+            uploadResponse.data?.categoryLogo ?? payloadToSave.categoryLogo,
           categoryBanner:
             uploadResponse.data?.categoryBanner ?? payloadToSave.categoryBanner,
         };
       }
 
-      const response = await apiPostRequest("/categories", payloadToSave);
+      const response = await apiPostRequest("/categories", requestData);
+
+       const response2 = await apiPostRequest("/products", requestDataProduct);
+       
+       alert(response2.success)
       if (response.success) {
         toast.success(response.message ?? "Category created successfully");
         setLoading(false);
@@ -153,7 +286,7 @@ export default function AddCategoryPage() {
                 type="text"
                 placeholder="Enter slug (optional)"
                 value={formdata.slug ?? ""}
-               onChange={(e) => {
+                onChange={(e) => {
                   setFormData((prev) => ({
                     ...prev,
                     slug: e.target.value,

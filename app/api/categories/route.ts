@@ -7,6 +7,15 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
+type CategoryDTO = {
+  categoryName: string;
+  slug: string;
+  categoryDescription: string;
+  categoryImage: string;
+  categoryLogo: string;
+  categoryBanner: string;
+  userId: string;
+};
 // ✅ Preflight handler
 export async function OPTIONS() {
   return new NextResponse(null, {
@@ -41,32 +50,15 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    // ✅ read ONLY ONCE
+    const { categories }: { categories: CategoryDTO[] } = await req.json();
 
-    const {
-      categoryName,
-      slug,
-      categoryDescription,
-      categoryImage,
-      categoryLogo,
-      categoryBanner,
-      userId,
-    } = body;
-
-    if (!categoryName) {
+    if (!categories || categories.length === 0) {
       return NextResponse.json(
-        { success: false, message: "Category name is required" },
-        { status: 400, headers: corsHeaders },
+        { success: false, message: "categories are required" },
+        { status: 400 },
       );
     }
-
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, message: "User id is required" },
-        { status: 400, headers: corsHeaders },
-      );
-    }
-
     const normalizeCategoryAssetUrl = (value: unknown) => {
       if (value === null || value === undefined || value === "") return null;
       if (typeof value !== "string") return null;
@@ -82,32 +74,49 @@ export async function POST(req: Request) {
       return `/categories/${cleanName}`;
     };
 
-    const createdCategory = await prisma.categories.create({
-      data: {
-        categoryName: categoryName.trim(),
-        slug: typeof slug === "string" ? slug.trim() || null : null,
-        categoryDescription:
-          typeof categoryDescription === "string"
-            ? categoryDescription.trim() || null
-            : null,
-        categoryImage: normalizeCategoryAssetUrl(categoryImage),
-        categoryLogo: normalizeCategoryAssetUrl(categoryLogo),
-        categoryBanner: normalizeCategoryAssetUrl(categoryBanner),
-        userId: BigInt(userId),
+    // ✅ 1. Find existing category names
+    const existing = await prisma.categories.findMany({
+      where: {
+        categoryName: {
+          in: categories.map((c) => c.categoryName),
+        },
       },
+      select: { categoryName: true },
     });
 
-    // 🔥 Fix BigInt serialization
-    const safeData = JSON.parse(
-      JSON.stringify(createdCategory, (_, value) =>
-        typeof value === "bigint" ? value.toString() : value,
-      ),
-    );
+    const existingNames = new Set(existing.map((e) => e.categoryName));
 
+    // ✅ 2. Split data
+    const newCategories = categories.filter(
+      (c) => !existingNames.has(c.categoryName),
+    );
+    // ✅ 3. Insert only new
+    let insertedCount = 0;
+
+    if (newCategories.length > 0) {
+      const details = await prisma.categories.createMany({
+        data: categories.map((p) => ({
+          categoryName: p.categoryName,
+          slug: p.slug === "string" ? p.slug || null : null,
+          categoryDescription:
+            typeof p.categoryDescription === "string"
+              ? p.categoryDescription || null
+              : null,
+          categoryImage: normalizeCategoryAssetUrl(p.categoryImage),
+          categoryLogo: normalizeCategoryAssetUrl(p.categoryImage),
+          categoryBanner: normalizeCategoryAssetUrl(p.categoryImage),
+          userId: BigInt(p.userId),
+        })),
+      });
+      insertedCount = details.count;
+    }
     return NextResponse.json(
-      { success: true, data: safeData, message: "Category save successful" },
+      {
+        success: true,
+        count: insertedCount,
+        message: "Category saved successfully",
+      },
       { status: 200, headers: corsHeaders },
-     
     );
   } catch (error) {
     return NextResponse.json(
@@ -116,6 +125,84 @@ export async function POST(req: Request) {
     );
   }
 }
+
+// export async function POST(req: Request) {
+//   try {
+//     const body = await req.json();
+
+//     const {
+//       categoryName,
+//       slug,
+//       categoryDescription,
+//       categoryImage,
+//       categoryLogo,
+//       categoryBanner,
+//       userId,
+//     } = body;
+
+//     if (!categoryName) {
+//       return NextResponse.json(
+//         { success: false, message: "Category name is required" },
+//         { status: 400, headers: corsHeaders },
+//       );
+//     }
+
+//     if (!userId) {
+//       return NextResponse.json(
+//         { success: false, message: "User id is required" },
+//         { status: 400, headers: corsHeaders },
+//       );
+//     }
+
+//     const normalizeCategoryAssetUrl = (value: unknown) => {
+//       if (value === null || value === undefined || value === "") return null;
+//       if (typeof value !== "string") return null;
+//       const trimmed = value.trim();
+
+//       if (!trimmed) return null;
+//       if (trimmed.startsWith("/categories/")) return trimmed;
+//       if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+//         return trimmed;
+//       }
+
+//       const cleanName = trimmed.replace(/^\/+/, "");
+//       return `/categories/${cleanName}`;
+//     };
+
+//     const createdCategory = await prisma.categories.create({
+//       data: {
+//         categoryName: categoryName.trim(),
+//         slug: typeof slug === "string" ? slug.trim() || null : null,
+//         categoryDescription:
+//           typeof categoryDescription === "string"
+//             ? categoryDescription.trim() || null
+//             : null,
+//         categoryImage: normalizeCategoryAssetUrl(categoryImage),
+//         categoryLogo: normalizeCategoryAssetUrl(categoryLogo),
+//         categoryBanner: normalizeCategoryAssetUrl(categoryBanner),
+//         userId: BigInt(userId),
+//       },
+//     });
+
+//     // 🔥 Fix BigInt serialization
+//     const safeData = JSON.parse(
+//       JSON.stringify(createdCategory, (_, value) =>
+//         typeof value === "bigint" ? value.toString() : value,
+//       ),
+//     );
+
+//     return NextResponse.json(
+//       { success: true, data: safeData, message: "Category save successful" },
+//       { status: 200, headers: corsHeaders },
+
+//     );
+//   } catch (error) {
+//     return NextResponse.json(
+//       { success: false, message: String(error) },
+//       { status: 500, headers: corsHeaders },
+//     );
+//   }
+// }
 
 export async function PUT(req: Request) {
   const body = await req.json();
@@ -159,7 +246,9 @@ export async function PUT(req: Request) {
       data: {
         ...(categoryName !== undefined && {
           categoryName:
-            typeof categoryName === "string" ? categoryName.trim() : categoryName,
+            typeof categoryName === "string"
+              ? categoryName.trim()
+              : categoryName,
         }),
         ...(slug !== undefined && {
           slug: typeof slug === "string" ? slug.trim() || null : null,
@@ -190,15 +279,18 @@ export async function PUT(req: Request) {
         typeof value === "bigint" ? value.toString() : value,
       ),
     );
-    return NextResponse.json({
-      success: true,
-      message: "Category updated successfully",
-      data: safeData,
-    }, { status: 200, headers: corsHeaders },);
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Category updated successfully",
+        data: safeData,
+      },
+      { status: 200, headers: corsHeaders },
+    );
   } catch (error) {
     return NextResponse.json(
       { success: false, message: String(error) },
-       { status: 500, headers: corsHeaders },
+      { status: 500, headers: corsHeaders },
     );
   }
 }
@@ -229,7 +321,7 @@ export async function DELETE(req: Request) {
     console.error("CATEGORY_DELETE_ERROR", error);
     return NextResponse.json(
       { success: false, message: "Failed to delete category" },
-     { status: 500, headers: corsHeaders },
+      { status: 500, headers: corsHeaders },
     );
   }
 }
