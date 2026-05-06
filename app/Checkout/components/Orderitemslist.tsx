@@ -1,5 +1,7 @@
-// components/OrderItemsList.tsx
+"use client";
+
 import Image from "next/image";
+import useCheckoutStore from "@/store/checkoutStore";
 
 interface OrderItem {
   id: number;
@@ -11,32 +13,24 @@ interface OrderItem {
   image: string; // path to product image
 }
 
-const items: OrderItem[] = [
-  {
-    id: 1,
-    name: "Yellow Mustard Oil",
-    weight: "100 gm",
-    unitPrice: 125.00,
-    qty: 1,
-    total: 1250.00,
-    image: "/products/mustard-oil.png",
-  },
-  {
-    id: 2,
-    name: "Jaggery Powder",
-    weight: "100 gm",
-    unitPrice: 125.00,
-    qty: 1,
-    total: 1250.00,
-    image: "/products/jaggery1.png",
-  },
-];
-
 function formatNPR(amount: number) {
   return `NPR ${amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
 }
 
 export default function OrderItemsList() {
+  const checkoutItems = useCheckoutStore((state) => state.checkoutItems);
+  const checkoutItem = useCheckoutStore((state) => state.checkoutItem);
+  const sourceItems = checkoutItems.length > 0 ? checkoutItems : checkoutItem ? [checkoutItem] : [];
+  const items: OrderItem[] = sourceItems.map((item) => ({
+    id: item.id,
+    name: item.name,
+    weight: item.weight ?? "100 gm",
+    unitPrice: Number(item.unitPrice ?? 0),
+    qty: Number(item.qty ?? 1),
+    total: Number(item.total ?? item.unitPrice ?? 0),
+    image: item.image || "/products/mustard-oil.png",
+  }));
+
   return (
     <div className="flex flex-col flex-1 min-w-0 mt-8">
       {/* Header */}
@@ -50,6 +44,11 @@ export default function OrderItemsList() {
 
       {/* Items card */}
       <div className="border border-gray-200 rounded-xl bg-white overflow-hidden">
+        {items.length === 0 && (
+          <div className="px-6 py-10 text-sm text-gray-500">
+            No product selected. Please go back to cart/product page and choose items.
+          </div>
+        )}
         {items.map((item, idx) => (
           <div key={item.id}>
             <div className="flex items-center gap-4 px-6 py-5">

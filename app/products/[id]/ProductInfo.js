@@ -4,6 +4,7 @@ import { useState } from "react";
 ;
 import { useRouter } from "next/navigation";
 import useCartStore from "@/store/cartStore";
+import useCheckoutStore from "@/store/checkoutStore";
 import useToastStore from "@/store/toastStore";
 
 // ─── Icons ──────────────────────────────────────────────────────────────────
@@ -42,6 +43,7 @@ export default function ProductInfo({ product }) {
   const [added, setAdded] = useState(false);
   const router = useRouter();
   const addToCart = useCartStore((state) => state.addToCart);
+  const setCheckoutItem = useCheckoutStore((state) => state.setCheckoutItem);
   const showToast = useToastStore((state) => state.showToast);
 
   const p = product ?? {
@@ -63,6 +65,19 @@ export default function ProductInfo({ product }) {
     showToast(`${p.name} added to cart`);
     setAdded(true);
     setTimeout(() => setAdded(false), 1400);
+  };
+
+  const handleBuyNow = () => {
+    setCheckoutItem({
+      id: p.id,
+      name: p.name,
+      image: p.image || p.images?.[0] || "/products/mustard-oil.png",
+      weight: selectedWeight,
+      qty,
+      unitPrice: Number(p.price || 0),
+      total: Number(p.price || 0) * qty,
+    });
+    router.push("/Checkout");
   };
 
   return (
@@ -173,7 +188,7 @@ export default function ProductInfo({ product }) {
             height: "44px",
             width: "220px",
           }}
-          onClick={() => router.push("/Checkout")}   >
+          onClick={handleBuyNow}   >
           Buy Now
         </button>
       </div>
