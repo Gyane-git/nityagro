@@ -82,7 +82,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       { success: true, data: safeData, message: "Category save successful" },
-      { headers: corsHeaders },
+      { status: 200, headers: corsHeaders },
+     
     );
   } catch (error) {
     return NextResponse.json(
