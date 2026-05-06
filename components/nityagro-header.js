@@ -3,6 +3,10 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import useCartStore from "@/store/cartStore";
+import useWishlistStore from "@/store/wishlistStore";
+import { useAuthModal } from "@/app/account/useAuthModal";
+import AuthModals from "@/app/account/AuthModals";
 
 /* ── Icons ── */
 const SearchIcon = () => (
@@ -22,52 +26,46 @@ const SearchIcon = () => (
 );
 
 const WishlistIcon = () => (
-  <Link href="/wishlist">
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-    >
-      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-    </svg>
-  </Link>
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+  </svg>
 );
 
 const CartIcon = () => (
-  <Link href="/cart">
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-    >
-      <circle cx="9" cy="21" r="1" />
-      <circle cx="20" cy="21" r="1" />
-      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-    </svg>
-  </Link>
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
+    <circle cx="9" cy="21" r="1" />
+    <circle cx="20" cy="21" r="1" />
+    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+  </svg>
 );
 
 const UserIcon = () => (
-  <Link href="/login">
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-    >
-      <path d="M20 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M4 21v-2a4 4 0 0 1 3-3.87" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  </Link>
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
+    <path d="M20 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M4 21v-2a4 4 0 0 1 3-3.87" />
+    <circle cx="12" cy="7" r="4" />
+  </svg>
 );
 
 const GridIcon = () => (
@@ -118,6 +116,11 @@ const NAV_LINKS = [
 export default function Header() {
   const [methodsOpen, setMethodsOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
+  const auth = useAuthModal();
+  const cartItems = useCartStore((state) => state.items);
+  const wishlistItems = useWishlistStore((state) => state.items);
+  const cartCount = cartItems.reduce((sum, item) => sum + Number(item.qty || 1), 0);
+  const wishlistCount = wishlistItems.length;
 
   return (
     <header className="sticky top-0 z-50 w-full">
@@ -143,7 +146,7 @@ export default function Header() {
           {/* ── Left: Logo + Browse ── */}
           <div className="flex items-center gap-6 shrink-0">
             {/* Logo */}
-            <a href="/" className="flex items-center">
+            <Link href="/" className="flex items-center">
               <Image
                 src="/logo.png"
                 alt="Nityagro"
@@ -151,7 +154,7 @@ export default function Header() {
                 height={44}
                 className="object-contain"
               />
-            </a>
+            </Link>
 
             {/* Browse All Categories */}
             <div className="relative">
@@ -237,37 +240,41 @@ export default function Header() {
             </button>
 
             {/* Wishlist with badge */}
-            <button className="relative hover:text-[#00462C] transition-colors">
+            <Link href="/wishlist" className="relative hover:text-[#00462C] transition-colors">
               <WishlistIcon />
               <span
                 className="absolute -top-[7px] -right-[7px] min-w-[17px] h-[17px] px-[3px]
                            bg-[#00462C] text-white text-[10px] font-bold rounded-full
                            flex items-center justify-center leading-none"
               >
-                8
+                {wishlistCount}
               </span>
-            </button>
+            </Link>
 
             {/* Cart with badge */}
-            <button className="relative hover:text-[#00462C] transition-colors">
+            <Link href="/cart" className="relative hover:text-[#00462C] transition-colors">
               <CartIcon />
               <span
                 className="absolute -top-[7px] -right-[7px] min-w-[17px] h-[17px] px-[3px]
                            bg-[#00462C] text-white text-[10px] font-bold rounded-full
                            flex items-center justify-center leading-none"
               >
-                3
+                {cartCount}
               </span>
-            </button>
+            </Link>
 
             {/* Log in */}
-            <button className="flex items-center gap-2 text-[15px] font-medium hover:text-[#00462C] transition-colors">
+            <button
+              className="flex items-center gap-2 text-[15px] font-medium hover:text-[#00462C] transition-colors"
+              onClick={auth.openLogin}
+            >
               <UserIcon />
               <span>Log in</span>
             </button>
           </div>
         </div>
       </nav>
+      <AuthModals auth={auth} />
     </header>
   );
 }
