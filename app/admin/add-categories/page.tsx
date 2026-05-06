@@ -1,8 +1,9 @@
 "use client";
 
-import { apiPostRequest } from "@/app/apihelper/apiHelper";
-import Toast from "@/components/Toast";
-import { useState } from "react";
+import { apiPostRequest } from "@/apihelper/apiHelper";
+import { apiUploadRequest } from "@/apihelper/apiHelper";
+import Image from "next/image";
+import { useRef, useState } from "react";
 import toast from "react-hot-toast";
 
 type FormData = {
@@ -16,59 +17,96 @@ type FormData = {
 };
 
 export default function AddCategoryPage() {
-  const [name, setName] = useState("");
-  const [slug, setSlug] = useState("");
-  const [description, setDescription] = useState("");
-  const [image, setImage] = useState(null); // store file
-  const [preview, setPreview] = useState(null); // for image preview
   const [loading, setLoading] = useState(false);
+  const [categoryImageFile, setCategoryImageFile] = useState<File | null>(null);
+  const [categoryLogoFile, setCategoryLogoFile] = useState<File | null>(null);
+  const [categoryBannerFile, setCategoryBannerFile] = useState<File | null>(null);
+  const [categoryImagePreviewUrl, setCategoryImagePreviewUrl] = useState<string | null>(null);
+  const [categoryLogoPreviewUrl, setCategoryLogoPreviewUrl] = useState<string | null>(null);
+  const [categoryBannerPreviewUrl, setCategoryBannerPreviewUrl] = useState<string | null>(null);
+  const categoryImagePreviewRef = useRef<string | null>(null);
+  const categoryLogoPreviewRef = useRef<string | null>(null);
+  const categoryBannerPreviewRef = useRef<string | null>(null);
 
   const initialFormData: FormData = {
-  categoryName: "",
-  slug: null,
-  categoryDescription: null,
-  categoryImage: null,
-  categoryLogo: null,
-  categoryBanner: null,
-  userId: "1",
-};
+    categoryName: "",
+    slug: null,
+    categoryDescription: null,
+    categoryImage: null,
+    categoryLogo: null,
+    categoryBanner: null,
+    userId: "1",
+  };
 
   const [formdata, setFormData] = useState(initialFormData);
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImage(file);
-      setPreview(URL.createObjectURL(file));
-    } else {
-      setImage(null);
-      setPreview(null);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
-    console.log(formdata)
     try {
-      const response = await apiPostRequest("/categories", formdata);
+      const uploadFormData = new FormData();
+      if (categoryImageFile) uploadFormData.append("categoryImage", categoryImageFile);
+      if (categoryLogoFile) uploadFormData.append("categoryLogo", categoryLogoFile);
+      if (categoryBannerFile) uploadFormData.append("categoryBanner", categoryBannerFile);
+
+      let payloadToSave = { ...formdata };
+      if ([categoryImageFile, categoryLogoFile, categoryBannerFile].some(Boolean)) {
+        const uploadResponse = await apiUploadRequest<{
+          categoryImage?: string;
+          categoryLogo?: string;
+          categoryBanner?: string;
+        }>("/uploads/category-assets", uploadFormData);
+
+        if (!uploadResponse.success) {
+          toast.error(uploadResponse.message ?? "Image upload failed");
+          setLoading(false);
+          return;
+        }
+
+        payloadToSave = {
+          ...payloadToSave,
+          categoryImage:
+            uploadResponse.data?.categoryImage ?? payloadToSave.categoryImage,
+          categoryLogo: uploadResponse.data?.categoryLogo ?? payloadToSave.categoryLogo,
+          categoryBanner:
+            uploadResponse.data?.categoryBanner ?? payloadToSave.categoryBanner,
+        };
+      }
+
+      const response = await apiPostRequest("/categories", payloadToSave);
       if (response.success) {
-        toast.success("response.message");
+        toast.success(response.message ?? "Category created successfully");
         setLoading(false);
-        // reset form
         setFormData(initialFormData);
+        if (categoryImagePreviewRef.current) {
+          URL.revokeObjectURL(categoryImagePreviewRef.current);
+          categoryImagePreviewRef.current = null;
+        }
+        if (categoryLogoPreviewRef.current) {
+          URL.revokeObjectURL(categoryLogoPreviewRef.current);
+          categoryLogoPreviewRef.current = null;
+        }
+        if (categoryBannerPreviewRef.current) {
+          URL.revokeObjectURL(categoryBannerPreviewRef.current);
+          categoryBannerPreviewRef.current = null;
+        }
+        setCategoryImagePreviewUrl(null);
+        setCategoryLogoPreviewUrl(null);
+        setCategoryBannerPreviewUrl(null);
+        setCategoryImageFile(null);
+        setCategoryLogoFile(null);
+        setCategoryBannerFile(null);
         return;
       } else {
-        toast.error(response.message ?? "");
-
+        console.error("Category save failed:", response);
+        toast.error(response.message ?? "Failed to create category");
         setLoading(false);
-        console.log(response.message);
       }
     } catch (error) {
       setLoading(false);
-
       console.error("Network error:", error);
+      toast.error("Network error");
     }
   };
 
@@ -144,23 +182,112 @@ export default function AddCategoryPage() {
               ></textarea>
             </div>
 
-            {/* Image Upload */}
+            {/* Category Image */}
             <div>
               <label className="block text-gray-700 font-medium mb-2">
-                Category Image
+                Category Image (Choose from gallery)
               </label>
               <input
                 type="file"
                 accept="image/*"
-                onChange={handleImageChange}
+                onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null;
+                  setCategoryImageFile(file);
+                  if (categoryImagePreviewRef.current) {
+                    URL.revokeObjectURL(categoryImagePreviewRef.current);
+                    categoryImagePreviewRef.current = null;
+                  }
+                  if (file) {
+                    const objectUrl = URL.createObjectURL(file);
+                    categoryImagePreviewRef.current = objectUrl;
+                    setCategoryImagePreviewUrl(objectUrl);
+                  } else {
+                    setCategoryImagePreviewUrl(null);
+                  }
+                }}
                 className="w-full border text-black rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500"
               />
-              {preview && (
-                <img
-                  src={preview}
-                  alt="Preview"
-                  className="mt-3 h-40 w-40 object-cover rounded-lg border"
-                />
+              {categoryImagePreviewUrl && (
+                <div className="relative mt-3 h-24 w-24 overflow-hidden rounded-lg border">
+                  <Image
+                    src={categoryImagePreviewUrl}
+                    alt="Category image preview"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-gray-700 font-medium mb-2">
+                Category Logo (Choose from gallery)
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null;
+                  setCategoryLogoFile(file);
+                  if (categoryLogoPreviewRef.current) {
+                    URL.revokeObjectURL(categoryLogoPreviewRef.current);
+                    categoryLogoPreviewRef.current = null;
+                  }
+                  if (file) {
+                    const objectUrl = URL.createObjectURL(file);
+                    categoryLogoPreviewRef.current = objectUrl;
+                    setCategoryLogoPreviewUrl(objectUrl);
+                  } else {
+                    setCategoryLogoPreviewUrl(null);
+                  }
+                }}
+                className="w-full border text-black rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {categoryLogoPreviewUrl && (
+                <div className="relative mt-3 h-24 w-24 overflow-hidden rounded-lg border">
+                  <Image
+                    src={categoryLogoPreviewUrl}
+                    alt="Category logo preview"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-gray-700 font-medium mb-2">
+                Category Banner (Choose from gallery)
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null;
+                  setCategoryBannerFile(file);
+                  if (categoryBannerPreviewRef.current) {
+                    URL.revokeObjectURL(categoryBannerPreviewRef.current);
+                    categoryBannerPreviewRef.current = null;
+                  }
+                  if (file) {
+                    const objectUrl = URL.createObjectURL(file);
+                    categoryBannerPreviewRef.current = objectUrl;
+                    setCategoryBannerPreviewUrl(objectUrl);
+                  } else {
+                    setCategoryBannerPreviewUrl(null);
+                  }
+                }}
+                className="w-full border text-black rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {categoryBannerPreviewUrl && (
+                <div className="relative mt-3 h-32 w-full max-w-sm overflow-hidden rounded-lg border">
+                  <Image
+                    src={categoryBannerPreviewUrl}
+                    alt="Category banner preview"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
               )}
             </div>
 
