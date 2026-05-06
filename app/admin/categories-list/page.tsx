@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import useConfirmModalStore from "@/store/confirmModalStore";
 import toast from "react-hot-toast";
-import { apiDeleteRequest, apiGetRequest, apiPostRequest, apiPutRequest } from "@/app/apihelper/apiHelper";
+import { apiDeleteRequest, apiGetRequest, apiPutRequest } from "@/apihelper/apiHelper";
 
 interface Categories {
   categoryId: number;
@@ -32,7 +31,6 @@ export default function CategoriesListPage() {
   const [loading, setLoading] = useState(false);
   const openConfirm = useConfirmModalStore((state) => state.open);
   const [infoDialg, setInfoDialog] = useState<Categories | null>(null);
-  const [editDialg, setEditDialog] = useState<Categories | null>(null);
   const [categories, setCategories] = useState<Categories[]>([]);
 
   const initialFormData: FormData = {
@@ -60,6 +58,7 @@ export default function CategoriesListPage() {
     }
   };
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchCategories();
   }, []);
 
@@ -141,7 +140,9 @@ export default function CategoriesListPage() {
                 <th className="px-4 py-2 border-b text-left">Name</th>
                 <th className="px-4 py-2 border-b text-left">Slug</th>
                 <th className="px-4 py-2 border-b text-left">Description</th>
-                <th className="px-4 py-2 border-b text-left">Image</th>
+                <th className="px-4 py-2 border-b text-left">Category Image</th>
+                <th className="px-4 py-2 border-b text-left">Category Logo</th>
+                <th className="px-4 py-2 border-b text-left">Category Banner</th>
                 <th className="px-4 py-2 border-b text-left">Created At</th>
                 <th className="px-4 py-2 border-b text-center">Actions</th>
               </tr>
@@ -149,7 +150,7 @@ export default function CategoriesListPage() {
             <tbody>
               {categories.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-4">
+                  <td colSpan={9} className="text-center py-4">
                     No categories found.
                   </td>
                 </tr>
@@ -163,7 +164,42 @@ export default function CategoriesListPage() {
                     <td className="px-4 py-2 border-b">
                       {cat.categoryDescription ?? "N/A"}
                     </td>
-                    <td className="px-4 py-2 border-b"></td>
+                    <td className="px-4 py-2 border-b">
+                      {cat.categoryImage ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={cat.categoryImage}
+                          alt={`${cat.categoryName} category`}
+                          className="h-12 w-12 rounded object-cover border"
+                        />
+                      ) : (
+                        "N/A"
+                      )}
+                    </td>
+                    <td className="px-4 py-2 border-b">
+                      {cat.categoryLogo ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={cat.categoryLogo}
+                          alt={`${cat.categoryName} logo`}
+                          className="h-12 w-12 rounded object-cover border"
+                        />
+                      ) : (
+                        "N/A"
+                      )}
+                    </td>
+                    <td className="px-4 py-2 border-b">
+                      {cat.categoryBanner ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={cat.categoryBanner}
+                          alt={`${cat.categoryName} banner`}
+                          className="h-12 w-24 rounded object-cover border"
+                        />
+                      ) : (
+                        "N/A"
+                      )}
+                    </td>
                     <td className="px-4 py-2 border-b">
                       {new Date(cat.createdAt).toLocaleString()}
                     </td>
@@ -242,6 +278,48 @@ export default function CategoriesListPage() {
                 className="w-full border rounded-lg px-4 py-2 text-black"
               />
             </label>
+
+            <div className="grid grid-cols-1 gap-3">
+              <div>
+                <p className="text-gray-700 font-medium mb-1">Category Image</p>
+                {infoDialg.categoryImage ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={infoDialg.categoryImage}
+                    alt="Category preview"
+                    className="h-24 w-24 object-cover rounded border"
+                  />
+                ) : (
+                  <p className="text-gray-500">N/A</p>
+                )}
+              </div>
+              <div>
+                <p className="text-gray-700 font-medium mb-1">Category Logo</p>
+                {infoDialg.categoryLogo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={infoDialg.categoryLogo}
+                    alt="Category logo preview"
+                    className="h-24 w-24 object-cover rounded border"
+                  />
+                ) : (
+                  <p className="text-gray-500">N/A</p>
+                )}
+              </div>
+              <div>
+                <p className="text-gray-700 font-medium mb-1">Category Banner</p>
+                {infoDialg.categoryBanner ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={infoDialg.categoryBanner}
+                    alt="Category banner preview"
+                    className="h-24 w-full object-cover rounded border"
+                  />
+                ) : (
+                  <p className="text-gray-500">N/A</p>
+                )}
+              </div>
+            </div>
 
             <div className="flex justify-end gap-2">
               <button
