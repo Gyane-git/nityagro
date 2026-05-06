@@ -2,22 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  DollarSign,
-  Package,
-  Users,
-  ShoppingCart,
-  MessageSquareWarning,
-  RotateCcw,
-  ChevronRight,
-} from "lucide-react";
+import { DollarSign, Package, Users, ShoppingCart, MessageSquareWarning, RotateCcw, ChevronRight } from "lucide-react";
 
 function getAdminToken() {
   if (typeof window === "undefined") return null;
-  const raw =
-    localStorage.getItem("admin_auth") ||
-    localStorage.getItem("admin_token") ||
-    sessionStorage.getItem("admin_token");
+  const raw = localStorage.getItem("admin_auth") || localStorage.getItem("admin_token") || sessionStorage.getItem("admin_token");
 
   if (!raw) return null;
   try {
@@ -50,14 +39,14 @@ function StatCard({ title, value, subtitle, icon: Icon, tone = "orange" }) {
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-      <div className={`absolute -top-10 -right-10 h-28 w-28 rounded-full bg-gradient-to-br ${tones[tone]} opacity-10`} />
+      <div className={`absolute -top-10 -right-10 h-28 w-28 rounded-full bg-linear-to-br ${tones[tone]} opacity-10`} />
       <div className="relative flex items-start justify-between">
         <div>
           <p className="text-xs uppercase tracking-wider text-gray-500">{title}</p>
           <p className="mt-2 text-2xl font-bold text-gray-900">{value}</p>
           <p className="mt-1 text-xs text-gray-500">{subtitle}</p>
         </div>
-        <div className={`rounded-xl bg-gradient-to-br ${tones[tone]} p-2.5 text-white shadow`}>
+        <div className={`rounded-xl bg-linear-to-br ${tones[tone]} p-2.5 text-white shadow`}>
           <Icon size={18} />
         </div>
       </div>
@@ -95,8 +84,10 @@ export default function DashboardPage() {
 
   const loadDashboard = useCallback(async () => {
     const token = getAdminToken();
+
+    // Temporary changes
     if (!token) {
-      router.replace("/login-admin");
+      // router.replace("/login-admin");
       return;
     }
 
@@ -104,31 +95,29 @@ export default function DashboardPage() {
       setLoading(true);
       setError("");
 
-      const [ordersRes, customersRes, returnsRes, inquiriesRes, productsRes] =
-        await Promise.all([
-          fetch("/api/admin/orders?limit=100", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch("/api/admin/customers?limit=100", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch("/api/admin/returns", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch("/api/inquiries", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch("/api/products"),
-        ]);
+      const [ordersRes, customersRes, returnsRes, inquiriesRes, productsRes] = await Promise.all([
+        fetch("/api/admin/orders?limit=100", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("/api/admin/customers?limit=100", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("/api/admin/returns", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("/api/inquiries", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("/api/products"),
+      ]);
 
-      const [ordersPayload, customersPayload, returnsPayload, inquiriesPayload, productsPayload] =
-        await Promise.all([
-          ordersRes.json(),
-          customersRes.json(),
-          returnsRes.json(),
-          inquiriesRes.json(),
-          productsRes.json(),
-        ]);
+      const [ordersPayload, customersPayload, returnsPayload, inquiriesPayload, productsPayload] = await Promise.all([
+        ordersRes.json(),
+        customersRes.json(),
+        returnsRes.json(),
+        inquiriesRes.json(),
+        productsRes.json(),
+      ]);
 
       if ([ordersRes, customersRes, returnsRes, inquiriesRes].some((r) => r.status === 401 || r.status === 403)) {
         router.replace("/login-admin");
@@ -158,10 +147,7 @@ export default function DashboardPage() {
   }, [loadDashboard]);
 
   const metrics = useMemo(() => {
-    const totalRevenue = orders.reduce(
-      (sum, o) => sum + Number(o?.totalAmount || 0),
-      0
-    );
+    const totalRevenue = orders.reduce((sum, o) => sum + Number(o?.totalAmount || 0), 0);
 
     const orderStatus = {
       processing: 0,
@@ -210,16 +196,10 @@ export default function DashboardPage() {
       <div className="rounded-3xl border border-orange-100 bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 p-6 text-white shadow-lg">
         <p className="text-xs uppercase tracking-[0.2em] text-white/90">Admin Command Center</p>
         <h1 className="mt-2 text-3xl font-black">Dashboard Overview</h1>
-        <p className="mt-2 text-sm text-white/90">
-          Real-time snapshot of orders, customers, inquiries, returns and revenue.
-        </p>
+        <p className="mt-2 text-sm text-white/90">Real-time snapshot of orders, customers, inquiries, returns and revenue.</p>
       </div>
 
-      {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {error}
-        </div>
-      )}
+      {error && <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>}
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -230,58 +210,19 @@ export default function DashboardPage() {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            <StatCard
-              icon={DollarSign}
-              title="Revenue"
-              value={formatMoney(metrics.totalRevenue)}
-              subtitle="From recent loaded orders"
-              tone="green"
-            />
-            <StatCard
-              icon={ShoppingCart}
-              title="Orders"
-              value={metrics.totalOrders}
-              subtitle="Total order count"
-              tone="orange"
-            />
-            <StatCard
-              icon={Users}
-              title="Customers"
-              value={metrics.totalCustomers}
-              subtitle="Registered customers"
-              tone="blue"
-            />
-            <StatCard
-              icon={Package}
-              title="Products"
-              value={metrics.totalProducts}
-              subtitle="Available in product table"
-              tone="purple"
-            />
-            <StatCard
-              icon={RotateCcw}
-              title="Return Requests"
-              value={metrics.totalReturns}
-              subtitle="Product-level return requests"
-              tone="red"
-            />
-            <StatCard
-              icon={MessageSquareWarning}
-              title="Inquiries"
-              value={metrics.totalInquiries}
-              subtitle="Contact form grievances"
-              tone="slate"
-            />
+            <StatCard icon={DollarSign} title="Revenue" value={formatMoney(metrics.totalRevenue)} subtitle="From recent loaded orders" tone="green" />
+            <StatCard icon={ShoppingCart} title="Orders" value={metrics.totalOrders} subtitle="Total order count" tone="orange" />
+            <StatCard icon={Users} title="Customers" value={metrics.totalCustomers} subtitle="Registered customers" tone="blue" />
+            <StatCard icon={Package} title="Products" value={metrics.totalProducts} subtitle="Available in product table" tone="purple" />
+            <StatCard icon={RotateCcw} title="Return Requests" value={metrics.totalReturns} subtitle="Product-level return requests" tone="red" />
+            <StatCard icon={MessageSquareWarning} title="Inquiries" value={metrics.totalInquiries} subtitle="Contact form grievances" tone="slate" />
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
             <div className="xl:col-span-2 rounded-2xl border bg-white p-5 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-gray-900">Recent Orders</h2>
-                <button
-                  onClick={() => router.push("/admin/ordermanagement")}
-                  className="inline-flex items-center gap-1 text-sm font-semibold text-orange-600"
-                >
+                <button onClick={() => router.push("/admin/ordermanagement")} className="inline-flex items-center gap-1 text-sm font-semibold text-orange-600">
                   View all <ChevronRight size={16} />
                 </button>
               </div>
@@ -306,9 +247,7 @@ export default function DashboardPage() {
                           <td className="px-3 py-2 font-semibold">#{o.orderNumber}</td>
                           <td className="px-3 py-2">{o.user?.fullName || "-"}</td>
                           <td className="px-3 py-2 capitalize">{o.orderStatus}</td>
-                          <td className="px-3 py-2 font-semibold">
-                            {formatMoney(o.totalAmount)}
-                          </td>
+                          <td className="px-3 py-2 font-semibold">{formatMoney(o.totalAmount)}</td>
                           <td className="px-3 py-2 text-gray-500">{formatDate(o.createdAt)}</td>
                         </tr>
                       ))}
@@ -320,9 +259,7 @@ export default function DashboardPage() {
 
             <div className="space-y-4">
               <div className="rounded-2xl border bg-white p-5 shadow-sm">
-                <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wide">
-                  Order Status Split
-                </h3>
+                <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wide">Order Status Split</h3>
                 <div className="space-y-3">
                   <StatusBar label="processing" value={metrics.orderStatus.processing} total={metrics.totalOrders || 1} color="bg-blue-500" />
                   <StatusBar label="shipped" value={metrics.orderStatus.shipped} total={metrics.totalOrders || 1} color="bg-indigo-500" />
@@ -333,9 +270,7 @@ export default function DashboardPage() {
               </div>
 
               <div className="rounded-2xl border bg-white p-5 shadow-sm">
-                <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wide">
-                  Support Pipeline
-                </h3>
+                <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wide">Support Pipeline</h3>
                 <div className="space-y-3">
                   <StatusBar label="returns new" value={metrics.returnStatus.new} total={metrics.totalReturns || 1} color="bg-orange-500" />
                   <StatusBar label="returns shipped" value={metrics.returnStatus.shipped} total={metrics.totalReturns || 1} color="bg-green-500" />
