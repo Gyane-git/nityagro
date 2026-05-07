@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import useCheckoutStore from "@/store/checkoutStore";
+import useCartStore from "@/store/cartStore";
 
 const PromoIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -22,17 +24,46 @@ const DELIVERY_OPTIONS = [
   "Click & Collect",
 ];
 
-export default function OrderSummary() {
+export default function OrderSummary({ checkedIds = [] }) {
   const [promo, setPromo] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [delivery, setDelivery] = useState("");
 
   const router = useRouter();
+  const setCheckoutItems = useCheckoutStore((state) => state.setCheckoutItems);
+  const cartItems = useCartStore((state) => state.items);
+  const selectedItems = cartItems.filter((item) => checkedIds.includes(item.id));
 
-  const itemsTotal   = 1250;
-  const discount     = 350;
-  const deliveryFee  = 200;
+  const itemsTotal = selectedItems.reduce(
+    (sum, item) => sum + Number(item.price || 0) * Number(item.qty || 1),
+    0,
+  );
+  const discount = 0;
+  const deliveryFee =
+    itemsTotal === 0
+      ? 0
+      : delivery === "Express/Same-Day Delivery"
+        ? 300
+        : delivery === "Click & Collect"
+          ? 0
+          : 200;
   const total        = itemsTotal - discount + deliveryFee;
+  const totalQty = selectedItems.reduce((sum, item) => sum + Number(item.qty || 1), 0);
+
+  const checkoutPayload = selectedItems.map((item) => ({
+    id: item.id,
+    name: item.name,
+    image: item.image,
+    weight: item.weight ?? "100 gm",
+    qty: Number(item.qty || 1),
+    unitPrice: Number(item.price || 0),
+    total: Number(item.price || 0) * Number(item.qty || 1),
+  }));
+
+  const moveToCheckout = (path) => {
+    setCheckoutItems(checkoutPayload);
+    router.push(path);
+  };
 
   const handleApply = () => {
     if (promo.trim()) setPromoApplied(true);
@@ -92,7 +123,7 @@ export default function OrderSummary() {
       <div className="flex flex-col gap-3">
         {/* Items total */}
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-500">Item(s) total</span>
+          <span className="text-sm text-gray-500">Item(s) total ({totalQty})</span>
           <span className="text-sm font-semibold text-gray-800">
             NPR {itemsTotal.toLocaleString()}.00
           </span>
@@ -137,7 +168,15 @@ export default function OrderSummary() {
         >
           <select
             value={delivery}
-            onChange={(e) => setDelivery(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setDelivery(value);
+              if (value === "Standard Delivery") {
+                if (checkoutPayload.length > 0) {
+                  moveToCheckout("/profile?tab=address&next=/Checkout");
+                }
+              }
+            }}
             className="w-full text-sm text-gray-500 bg-transparent outline-none appearance-none cursor-pointer pr-6"
           >
             <option value="" disabled>Choose delivery option</option>
@@ -152,14 +191,17 @@ export default function OrderSummary() {
       </div>
 
       {/* ── Proceed to Checkout ── */}
-      <button
+        <button
+        disabled={itemsTotal === 0}
         className="w-full flex items-center justify-center text-white font-bold text-sm rounded-lg transition-all hover:opacity-90 active:scale-95"
         style={{
           background: "#00462C",
           height: "48px",
           boxShadow: "0 4px 16px rgba(0,70,44,0.25)",
+          opacity: itemsTotal === 0 ? 0.6 : 1,
+          cursor: itemsTotal === 0 ? "not-allowed" : "pointer",
         }}
-        onClick={() => router.push("/Checkout")}
+        onClick={() => moveToCheckout("/Checkout")}
       >
         Proceed to Checkout
       </button>

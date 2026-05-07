@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import useCheckoutStore from "@/store/checkoutStore";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const ChevronDownIcon = () => (
@@ -82,10 +83,20 @@ function SelectField({
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function DeliveryAddressForm() {
+  const selectedAddress = useCheckoutStore((state) => state.getSelectedAddress());
+  const saveAddress = useCheckoutStore((state) => state.saveAddress);
   const [form, setForm] = useState({
-    fullName: "", region:  "", phone:   "", city:    "",
-    building: "", area:    "", colony:  "", address: "",
-    email:    "", label:   "Office",
+    id: selectedAddress?.id,
+    fullName: selectedAddress?.fullName || "",
+    region: selectedAddress?.region || "",
+    phone: selectedAddress?.phone || "",
+    city: selectedAddress?.city || "",
+    building: selectedAddress?.building || "",
+    area: selectedAddress?.area || "",
+    colony: selectedAddress?.colony || "",
+    address: selectedAddress?.address || "",
+    email: selectedAddress?.email || "",
+    label: selectedAddress?.label || "Office",
   });
 
   const set = (key: string) => (val: string) =>
@@ -93,7 +104,7 @@ export default function DeliveryAddressForm() {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Saved address:", form);
+    saveAddress(form);
   };
 
   return (

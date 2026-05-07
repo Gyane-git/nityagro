@@ -21,7 +21,12 @@ const TAB_COMPONENTS = {
 };
 
 export default function MyAccountPage() {
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window === "undefined") return "profile";
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
+    return tab && Object.hasOwn(TAB_COMPONENTS, tab) ? tab : "profile";
+  });
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
