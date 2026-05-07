@@ -1,4 +1,3 @@
-import React from "react";
 import HeroSection from "@/components/Herosection";
 import ImageSlider from "@/components/Imageslider";
 import ProductSection from "@/components/Productsection";

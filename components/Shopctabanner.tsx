@@ -12,7 +12,7 @@ export default function ShopCTABanner() {
      * Outer wrapper: pt-[70px] gives headroom for the product images
      * that overflow 69px above the banner's top edge.
      */
-    <section className="w-full max-w-[1360px] mx-auto px-4 sm:px-6 pt-[70px]">
+    <section className="w-full max-w-340 mx-auto px-4 sm:px-6 pt-17.5">
       {/**
        * ── Banner container — exact Figma values ──────────────────────────
        *   width: 1360px  |  height: 238px
@@ -35,7 +35,7 @@ export default function ShopCTABanner() {
         }}
       >
         {/* ── Left: text + email form ────────────────────────────────────── */}
-        <div className="relative z-10 flex flex-col gap-4 max-w-[460px]">
+        <div className="relative z-10 flex flex-col gap-4 max-w-115">
           {/* Heading with dashed underline */}
           <h2
             className="text-2xl sm:text-[28px] font-bold text-[#1e5631] leading-snug"
@@ -54,13 +54,13 @@ export default function ShopCTABanner() {
           </p>
 
           {/* Pill input + button */}
-          <div className="flex items-center mt-1 max-w-[370px] shadow-sm">
+          <div className="flex items-center mt-1 max-w-92.5 shadow-sm">
             <input
               type="email"
               placeholder="Your email address"
-              className="flex-1 px-4 py-[11px] text-sm text-gray-600 bg-white rounded-l-full outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-[#2d7a4f]/30 border-0 min-w-0"
+              className="flex-1 px-4 py-2.75 text-sm text-gray-600 bg-white rounded-l-full outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-[#2d7a4f]/30 border-0 min-w-0"
             />
-            <button className="px-6 py-[11px] bg-[#2d6b3f] hover:bg-[#245a34] active:bg-[#1e5631] text-white text-sm font-semibold rounded-r-full transition-colors whitespace-nowrap">
+            <button className="px-6 py-2.75 bg-[#2d6b3f] hover:bg-[#245a34] active:bg-[#1e5631] text-white text-sm font-semibold rounded-r-full transition-colors whitespace-nowrap">
               Subscribe
             </button>
           </div>
@@ -101,7 +101,6 @@ export default function ShopCTABanner() {
           <Image
             width={280}
             height={289.74}
-
             src="/b1.png"
             alt="Nityagro products"
             className="w-full h-full object-contain object-bottom"
