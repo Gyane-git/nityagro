@@ -61,7 +61,9 @@ function StarRating({ rating }: { rating: number }) {
       {Array.from({ length: 5 }).map((_, i) => (
         <svg
           key={i}
-          className={`w-5 h-5 ${i < rating ? "text-yellow-400" : "text-gray-300"}`}
+          className={`w-5 h-5 ${
+            i < rating ? "text-yellow-400" : "text-gray-300"
+          }`}
           fill="currentColor"
           viewBox="0 0 20 20"
           aria-hidden="true"
@@ -131,9 +133,10 @@ function ArrowButton({
       className={`
         flex items-center justify-center w-10 h-10 rounded-full border border-gray-200
         bg-white shadow-sm transition-all shrink-0
-        ${disabled
-          ? "opacity-30 cursor-not-allowed"
-          : "hover:bg-gray-50 hover:shadow-md cursor-pointer"
+        ${
+          disabled
+            ? "opacity-30 cursor-not-allowed"
+            : "hover:bg-gray-50 hover:shadow-md cursor-pointer"
         }
       `}
     >
@@ -145,7 +148,11 @@ function ArrowButton({
         viewBox="0 0 24 24"
       >
         {direction === "left" ? (
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M15 19l-7-7 7-7"
+          />
         ) : (
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
         )}
@@ -162,15 +169,18 @@ export default function CustomerReviews() {
   const totalPages = Math.ceil(reviews.length / CARDS_PER_PAGE);
   const visibleReviews = reviews.slice(
     page * CARDS_PER_PAGE,
-    page * CARDS_PER_PAGE + CARDS_PER_PAGE
+    page * CARDS_PER_PAGE + CARDS_PER_PAGE,
   );
 
   return (
     <section className="bg-white py-16 px-4 sm:px-8 lg:px-16">
       {/* Heading */}
-      <h2 className="text-3xl sm:text-4xl font-bold text-[#1e5631] text-center mb-12">
+      <h1
+        className="text-center font-bold text-[32px] leading-[38.4px] tracking-[0.6px] text-[#235A49] mb-10"
+        style={{ fontFamily: "Roboto Slab" }}
+      >
         What Our Customers Say
-      </h2>
+      </h1>
 
       {/* Carousel Row */}
       <div className="max-w-5xl mx-auto flex items-center gap-4">

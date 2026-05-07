@@ -25,7 +25,8 @@ const faqs: FAQItem[] = [
   },
   {
     id: 3,
-    question: "What is the difference between Wood Pressed and Cold Pressed oils?",
+    question:
+      "What is the difference between Wood Pressed and Cold Pressed oils?",
     answer:
       "Wood pressed oils are extracted using a traditional wooden churner (ghani) at low speeds, preserving natural aroma and nutrients. Cold pressed oils use a modern steel expeller with controlled low heat. Both methods avoid chemicals, but wood pressed is the more traditional method.",
   },
@@ -104,9 +105,12 @@ export default function FAQ() {
   return (
     <section className="bg-white py-16 px-4 sm:px-8 lg:px-16">
       {/* Heading */}
-      <h2 className="text-3xl sm:text-4xl font-bold text-[#1e5631] text-center mb-10">
+      <h1
+        className="text-center font-bold text-[32px] leading-[38.4px] tracking-[0.6px] text-[#235A49] mb-10"
+        style={{ fontFamily: "Roboto Slab" }}
+      >
         Frequently Asked Questions
-      </h2>
+      </h1>
 
       {/* FAQ List */}
       <div className="max-w-4xl mx-auto flex flex-col gap-4">

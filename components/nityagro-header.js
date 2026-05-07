@@ -194,43 +194,47 @@ export default function Header() {
 
           {/* ── Center: Nav links ── */}
           <div className="hidden md:flex items-center gap-9">
-            {NAV_LINKS.map((link) => (
-              <div key={link.label} className="relative">
-                {link.hasDropdown ? (
-                  <>
-                    <button
-                      onClick={() => setMethodsOpen(!methodsOpen)}
-                      className="flex items-center gap-1 text-[15px] font-medium text-[#1a1a1a] hover:text-[#00462C] transition-colors"
-                    >
-                      {link.label}
-                      <ChevronDownIcon />
-                    </button>
-                    {methodsOpen && (
-                      <div className="absolute top-full left-0 mt-2 w-[200px] bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
-                        {link.childLinks.map((child) => (
-                          <Link
-                            key={child.label}
-                            href={`/methods/${child.slug}`}
-                            onClick={() => setMethodsOpen(false)}
-                            className="block px-5 py-3 text-[13px] text-[#00462C] hover:bg-[#F5F8F6] transition"
-                          >
-                            {child.label}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <a
-                    href={link.href}
-                    className="text-[15px] font-medium text-[#1a1a1a] hover:text-[#00462C] transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                )}
-              </div>
-            ))}
-          </div>
+  {NAV_LINKS.map((link) => (
+    <div key={link.label} className="relative">
+      {link.hasDropdown ? (
+        <>
+          <button
+            onClick={() => setMethodsOpen(!methodsOpen)}
+            className="flex items-center gap-1 font-semibold text-[14px] leading-[18px] text-[#2D333A] hover:text-[#00462C] transition-colors"
+            style={{ fontFamily: "Source Sans Pro" }}
+          >
+            {link.label}
+            <ChevronDownIcon />
+          </button>
+
+          {methodsOpen && (
+            <div className="absolute top-full left-0 mt-2 w-[200px] bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
+              {link.childLinks.map((child) => (
+                <Link
+                  key={child.label}
+                  href={`/methods/${child.slug}`}
+                  onClick={() => setMethodsOpen(false)}
+                  className="block px-5 py-3 font-semibold text-[16px] leading-[18px] text-[#2D333A] hover:bg-[#F5F8F6] hover:text-[#00462C] transition"
+                  style={{ fontFamily: "Source Sans Pro" }}
+                >
+                  {child.label}
+                </Link>
+              ))}
+            </div>
+          )}
+        </>
+      ) : (
+        <a
+          href={link.href}
+          className="font-semibold text-[16px] leading-[18px] text-[#2D333A] hover:text-[#00462C] transition-colors"
+          style={{ fontFamily: "Source Sans Pro" }}
+        >
+          {link.label}
+        </a>
+      )}
+    </div>
+  ))}
+</div>
 
           {/* ── Right: Icons ── */}
           <div className="flex items-center gap-5 text-[#1a1a1a] shrink-0">
