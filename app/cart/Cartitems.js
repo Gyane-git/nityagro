@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import useCartStore from "@/store/cartStore";
 
 // ─── Icons ──────────────────────────────────────────────────────────────────
@@ -129,16 +128,11 @@ function CartRow({ item, checked, onCheck, onQtyChange, onRemove }) {
 }
 
 // ─── Main CartItems component ─────────────────────────────────────────────────
-export default function CartItems({ onCartChange }) {
+export default function CartItems({ checkedIds, setCheckedIds }) {
   const items = useCartStore((state) => state.items);
   const updateQty = useCartStore((state) => state.updateQty);
   const removeItem = useCartStore((state) => state.removeItem);
   const clearCart = useCartStore((state) => state.clearCart);
-  const [checkedIds, setCheckedIds] = useState([]);
-
-  useEffect(() => {
-    onCartChange?.(items);
-  }, [items, onCartChange]);
 
   const validCheckedIds = checkedIds.filter((id) =>
     items.some((item) => item.id === id)

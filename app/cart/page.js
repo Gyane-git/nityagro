@@ -3,14 +3,15 @@
 import { useState } from "react";
 import CartItems from "./Cartitems";
 import OrderSummary from "./Ordersummary";
+import Link from "next/link";
 
 // ─── Breadcrumb ──────────────────────────────────────────────────────────────
 function Breadcrumb() {
   return (
     <nav className="flex items-center gap-1 text-xs text-gray-500 mb-6">
-      <a href="/" className="hover:text-[#00462C] transition-colors">
+      <Link href="/" className="hover:text-[#00462C] transition-colors">
         Home
-      </a>
+      </Link>
       <span className="text-gray-400">›</span>
       <span className="font-semibold text-gray-700">Cart</span>
     </nav>
@@ -19,7 +20,7 @@ function Breadcrumb() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState(null);
+  const [checkedIds, setCheckedIds] = useState([]);
 
   return (
     <main className="min-h-screen bg-white">
@@ -55,10 +56,10 @@ export default function CartPage() {
         {/* ── Main layout: Cart Items (left) + Order Summary (right) ── */}
         <div className="flex gap-6 items-start">
           {/* Left: cart items table */}
-          <CartItems onCartChange={setCartItems} />
+          <CartItems checkedIds={checkedIds} setCheckedIds={setCheckedIds} />
 
           {/* Right: order summary */}
-          <OrderSummary />
+          <OrderSummary checkedIds={checkedIds} />
         </div>
       </div>
     </main>

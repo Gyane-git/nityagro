@@ -1,5 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
+import useCheckoutStore from "@/store/checkoutStore";
 
 // components/OrderSummary.tsx
 
@@ -8,12 +9,35 @@ type OrderSummaryProps = {
 };
 
 export default function OrderSummary({ onProceed }: OrderSummaryProps) {
-  const items = [
-    { label: "Item(s) total",   value: "NPR 1250.00",  color: "text-gray-800" },
-    { label: "Discount",        value: "- NPR 350.00", color: "text-gray-800" },
-    { label: "Delivery Charge", value: "NPR 200.00",   color: "text-gray-800" },
-  ];
   const router = useRouter();
+  const checkoutItems = useCheckoutStore((state) => state.checkoutItems);
+  const checkoutItem = useCheckoutStore((state) => state.checkoutItem);
+  const sourceItems = checkoutItems.length > 0 ? checkoutItems : checkoutItem ? [checkoutItem] : [];
+  const itemTotal = sourceItems.reduce(
+    (sum, item) => sum + Number(item.total ?? item.unitPrice ?? 0),
+    0,
+  );
+  const discount = 0;
+  const deliveryCharge = itemTotal > 0 ? 200 : 0;
+  const totalAmount = itemTotal - discount + deliveryCharge;
+
+  const items = [
+    {
+      label: "Item(s) total",
+      value: `NPR ${itemTotal.toFixed(2)}`,
+      color: "text-gray-800",
+    },
+    {
+      label: "Discount",
+      value: `- NPR ${discount.toFixed(2)}`,
+      color: "text-gray-800",
+    },
+    {
+      label: "Delivery Charge",
+      value: `NPR ${deliveryCharge.toFixed(2)}`,
+      color: "text-gray-800",
+    },
+  ];
 
   return (
     <div
@@ -46,7 +70,7 @@ export default function OrderSummary({ onProceed }: OrderSummaryProps) {
       <div className="flex items-center justify-between mb-6">
         <span className="text-base font-bold text-gray-900">Total Amount</span>
         <span className="text-base font-bold" style={{ color: "#00462C" }}>
-          NPR 1150.00
+          NPR {totalAmount.toFixed(2)}
         </span>
       </div>
 

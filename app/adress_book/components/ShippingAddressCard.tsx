@@ -1,3 +1,8 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import useCheckoutStore from "@/store/checkoutStore";
+
 // components/ShippingAddressCard.tsx
 
 const UserIcon = () => (
@@ -35,6 +40,9 @@ const EditIcon = () => (
 );
 
 export default function ShippingAddressCard() {
+  const router = useRouter();
+  const selectedAddress = useCheckoutStore((state) => state.getSelectedAddress());
+
   return (
     <div className="flex flex-col flex-1 min-w-0">
       {/* Header row */}
@@ -42,7 +50,10 @@ export default function ShippingAddressCard() {
         <h2 className="font-bold text-gray-900" style={{ fontSize: "20px" }}>
           Shipping Address
         </h2>
-        <button className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+        <button
+          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          onClick={() => router.push("/profile?tab=address")}
+        >
           <EditIcon />
           Edit
         </button>
@@ -60,19 +71,19 @@ export default function ShippingAddressCard() {
         <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
           <span className="flex items-center gap-2 text-sm text-gray-700">
             <UserIcon />
-            Archie Thapa Magar
+            {selectedAddress?.fullName || "N/A"}
           </span>
           <span className="flex items-center gap-2 text-sm text-gray-700">
             <PhoneIcon />
-            +977 9860377498
+            {selectedAddress?.phone || "N/A"}
           </span>
           <span className="flex items-center gap-2 text-sm text-gray-700">
             <MailIcon />
-            archierai74@gmail.com
+            {selectedAddress?.email || "N/A"}
           </span>
           <span className="flex items-center gap-2 text-sm text-gray-700">
             <MapPinIcon />
-            Kathmandu, Nepal
+            {[selectedAddress?.city, selectedAddress?.region].filter(Boolean).join(", ") || "N/A"}
           </span>
         </div>
 
@@ -80,13 +91,20 @@ export default function ShippingAddressCard() {
         <div className="flex items-center gap-3">
           <MapPinIcon />
           <span className="text-sm text-gray-700">
-            Mandip Thapa Magar, Barhaghare Area, Bharatpur, Bagmati Province
+            {[
+              selectedAddress?.building,
+              selectedAddress?.area,
+              selectedAddress?.colony,
+              selectedAddress?.address,
+            ]
+              .filter(Boolean)
+              .join(", ") || "N/A"}
           </span>
           <span
             className="px-3 py-1 rounded-full text-xs font-semibold text-white ml-1"
             style={{ background: "#00462C" }}
           >
-            Office
+            {selectedAddress?.label || "Home"}
           </span>
         </div>
       </div>
