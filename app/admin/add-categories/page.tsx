@@ -130,9 +130,9 @@ export default function AddCategoryPage() {
           slug: null,
           productVariation: null,
           productDescription: null,
-          nutritionInfo:null,
+          nutritionInfo: null,
           cookingInstruction: null,
-          storageInstruction:null,
+          storageInstruction: null,
           pImage: null,
           productStatus: true,
           actualPrice: 0.0,
@@ -152,7 +152,7 @@ export default function AddCategoryPage() {
     categories,
   };
 
-   const requestDataProduct = {
+  const requestDataProduct = {
     product,
   };
 
@@ -165,7 +165,7 @@ export default function AddCategoryPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-   
+
     console.log(JSON.stringify(requestDataProduct));
     try {
       const uploadFormData = new FormData();
@@ -205,9 +205,9 @@ export default function AddCategoryPage() {
 
       const response = await apiPostRequest("/categories", requestData);
 
-       const response2 = await apiPostRequest("/products", requestDataProduct);
-       
-       alert(response2.success)
+      const response2 = await apiPostRequest("/products", requestDataProduct);
+
+      alert(response2.success);
       if (response.success) {
         toast.success(response.message ?? "Category created successfully");
         setLoading(false);

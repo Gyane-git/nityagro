@@ -4,7 +4,6 @@ import { Plus, Edit2, Trash2, ImageIcon } from "lucide-react";
 import toast from "react-hot-toast";
 import useConfirmModalStore from "@/store/confirmModalStore";
 
-
 const API_URL = "/api/popup-ads";
 
 export default function PopupAdsAdmin() {
@@ -14,7 +13,8 @@ export default function PopupAdsAdmin() {
   const [editingAd, setEditingAd] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
 
-  const [formData, setFormData] = useState({
+  const [formData, 
+    setFormData] = useState({
     title: "",
     colorCode: "#000000",
     position: "0",
@@ -53,7 +53,6 @@ export default function PopupAdsAdmin() {
   useEffect(() => {
     fetchAds();
   }, []);
-
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -146,10 +145,11 @@ export default function PopupAdsAdmin() {
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 p-6">
       <div className="max-w-6xl mx-auto">
-
         {/* TOP HEADER WITH ADD BUTTON */}
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-slate-800 " >Popup Ads Manager</h2>
+          <h2 className="text-2xl font-bold text-slate-800 ">
+            Popup Ads Manager
+          </h2>
 
           <button
             onClick={() => {
@@ -174,7 +174,9 @@ export default function PopupAdsAdmin() {
         {/* Ads List */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="bg-linear-to-r from-slate-700 to-slate-800 px-8 py-4">
-            <h2 className="text-xl font-semibold text-white">Active Popup Ads</h2>
+            <h2 className="text-xl font-semibold text-white">
+              Active Popup Ads
+            </h2>
           </div>
 
           <div className="p-6">
@@ -257,7 +259,7 @@ export default function PopupAdsAdmin() {
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full">
             <form onSubmit={handleSubmit} className="p-8 space-y-6">
               <div>
-                <label className="block text-sm font-semibold mb-2 text-gray-900" >
+                <label className="block text-sm font-semibold mb-2 text-gray-900">
                   Ad Title *
                 </label>
                 <textarea
@@ -329,7 +331,9 @@ export default function PopupAdsAdmin() {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => setSelectedImage(e.target.files?.[0] || null)}
+                  onChange={(e) =>
+                    setSelectedImage(e.target.files?.[0] || null)
+                  }
                   className="w-full px-4 py-3 border rounded-lg text-black"
                 />
                 {editingAd?.imageUrl && !selectedImage && (

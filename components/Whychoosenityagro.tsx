@@ -47,10 +47,16 @@ export default function WhyChooseNityagro() {
     <section className="bg-white py-16 px-4 sm:px-8 lg:px-16">
       {/* Heading */}
       <div className="text-center mb-14">
-        <h2 className="text-3xl sm:text-4xl font-bold text-[#1e5631] leading-tight">
+        <h1
+          className="text-center font-bold text-[32px] leading-[38.4px] tracking-[0.6px] text-[#235A49]"
+          style={{ fontFamily: "Roboto Slab" }}
+        >
           Why Choose Nityagro?
-        </h2>
-        <p className="text-2xl sm:text-3xl text-[#2d7a4f] font-normal mt-1">
+        </h1>
+        <p
+          className="text-center font-normal text-[32px] leading-[38.4px] tracking-[0.6px] text-[#235A49]"
+          style={{ fontFamily: "Roboto Slab" }}
+        >
           Authentic Goodness in Every Bundle
         </p>
       </div>

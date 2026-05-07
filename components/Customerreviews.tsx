@@ -175,9 +175,12 @@ export default function CustomerReviews() {
   return (
     <section className="bg-white py-16 px-4 sm:px-8 lg:px-16">
       {/* Heading */}
-      <h2 className="text-3xl sm:text-4xl font-bold text-[#1e5631] text-center mb-12">
+      <h1
+        className="text-center font-bold text-[32px] leading-[38.4px] tracking-[0.6px] text-[#235A49] mb-10"
+        style={{ fontFamily: "Roboto Slab" }}
+      >
         What Our Customers Say
-      </h2>
+      </h1>
 
       {/* Carousel Row */}
       <div className="max-w-5xl mx-auto flex items-center gap-4">

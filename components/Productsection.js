@@ -8,123 +8,6 @@ import useCartStore from "@/store/cartStore";
 import useToastStore from "@/store/toastStore";
 
 // ─── Category Icons (inline SVG) ───────────────────────────────────────────
-const AllIcon = () => (
-  <svg
-    width="38"
-    height="38"
-    viewBox="0 0 48 48"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <rect x="6" y="6" width="14" height="14" rx="2" />
-    <rect x="28" y="6" width="14" height="14" rx="2" />
-    <rect x="6" y="28" width="14" height="14" rx="2" />
-    <rect x="28" y="28" width="14" height="14" rx="2" />
-  </svg>
-);
-const OilIcon = () => (
-  <svg
-    width="38"
-    height="38"
-    viewBox="0 0 48 48"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M18 8h12v6l4 6v16a2 2 0 0 1-2 2H16a2 2 0 0 1-2-2V20l4-6V8z" />
-    <line x1="14" y1="26" x2="34" y2="26" />
-    <line x1="22" y1="8" x2="26" y2="8" />
-  </svg>
-);
-const FlourIcon = () => (
-  <svg
-    width="38"
-    height="38"
-    viewBox="0 0 48 48"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <ellipse cx="24" cy="20" rx="10" ry="14" />
-    <path d="M14 20c0 8 20 8 20 0" />
-    <path d="M20 6c-2-2-4-1-4 2" />
-    <path d="M28 6c2-2 4-1 4 2" />
-  </svg>
-);
-const SpiceIcon = () => (
-  <svg
-    width="38"
-    height="38"
-    viewBox="0 0 48 48"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <rect x="12" y="16" width="24" height="22" rx="3" />
-    <rect x="16" y="10" width="16" height="8" rx="2" />
-    <line x1="18" y1="24" x2="30" y2="24" />
-    <line x1="18" y1="30" x2="30" y2="30" />
-  </svg>
-);
-const JaggeryIcon = () => (
-  <svg
-    width="38"
-    height="38"
-    viewBox="0 0 48 48"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <rect x="8" y="20" width="32" height="18" rx="3" />
-    <path d="M16 20v-4a8 8 0 0 1 16 0v4" />
-    <line x1="16" y1="29" x2="32" y2="29" />
-  </svg>
-);
-const DailyaIcon = () => (
-  <svg
-    width="38"
-    height="38"
-    viewBox="0 0 48 48"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M12 14c0-2 2-4 4-4h16c2 0 4 2 4 4v22a2 2 0 0 1-2 2H14a2 2 0 0 1-2-2V14z" />
-    <path d="M20 10v4" />
-    <path d="M28 10v4" />
-    <ellipse cx="24" cy="24" rx="6" ry="4" />
-  </svg>
-);
-const SattuIcon = () => (
-  <svg
-    width="38"
-    height="38"
-    viewBox="0 0 48 48"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <rect x="10" y="18" width="28" height="20" rx="4" />
-    <path d="M16 18v-4a8 8 0 0 1 16 0v4" />
-    <path d="M10 26h28" />
-    <circle cx="24" cy="22" r="2" />
-  </svg>
-);
 
 const CartIcon = () => (
   <svg
@@ -158,38 +41,13 @@ const StarIcon = ({ filled }) => (
 
 // ─── Data ──────────────────────────────────────────────────────────────────
 const CATEGORIES = [
-  { id: "all", label: "All", image: "/categories/all.png", Icon: AllIcon },
-  { id: "oils", label: "Oils", image: "/categories/oils.png", Icon: OilIcon },
-  {
-    id: "flours",
-    label: "Flours",
-    image: "/categories/flours.png",
-    Icon: FlourIcon,
-  },
-  {
-    id: "spices",
-    label: "Spices",
-    image: "/categories/spieces.png",
-    Icon: SpiceIcon,
-  },
-  {
-    id: "jaggery",
-    label: "Jaggery",
-    image: "/categories/jaggery.png",
-    Icon: JaggeryIcon,
-  },
-  {
-    id: "dailya",
-    label: "Dailya",
-    image: "/categories/dailya.png",
-    Icon: DailyaIcon,
-  },
-  {
-    id: "sattu",
-    label: "Sattu",
-    image: "/categories/satu.png",
-    Icon: SattuIcon,
-  },
+  { id: "all",      label: "All",     image: "/categories/all.png" }, 
+  { id: "oils",     label: "Oils",    image: "/categories/oils.png" },
+  { id: "flours",   label: "Flours",  image: "/categories/flours.png"},
+  { id: "spices",   label: "Spices",  image: "/categories/spieces.png" },
+  { id: "jaggery",  label: "Jaggery", image: "/categories/jaggery.png"},
+  { id: "dailya",   label: "Dailya",  image: "/categories/dailya.png" },
+  { id: "sattu",    label: "Sattu",   image: "/categories/satu.png"},
 ];
 
 const PRODUCTS = [
@@ -392,19 +250,16 @@ export default function ProductSection() {
             paddingTop: "45px",
           }}
         >
-          <h1
-            className="font-bold text-[#00462C]"
-            style={{ fontSize: "clamp(1.4rem, 2.2vw, 1.75rem)" }}
-          >
+       <h1
+  className="text-center font-bold text-[32px] leading-[38.4px] tracking-[0.6px] text-[#235A49]"
+  style={{ fontFamily: "Roboto Slab" }}
+>
             Welcome To Nityagro!
           </h1>
           <p
-            className="text-[#00462C]"
-            style={{
-              fontFamily: "'Georgia', serif",
-              fontSize: "clamp(1.1rem, 1.8vw, 1.45rem)",
-            }}
-          >
+  className="text-center font-normal text-[32px] leading-[38.4px] tracking-[0.6px] text-[#235A49]"
+  style={{ fontFamily: "Roboto Slab" }}
+>
             Pure Goodness, Delivered Closer to You
           </p>
         </div>
@@ -412,7 +267,7 @@ export default function ProductSection() {
         {/* ── Category Tabs ── */}
         {/* width:1360 · height:86.56 · minHeight:80 · gap:12 · px:20 · pb:13 */}
         <div
-          className="flex items-end justify-center"
+          className="flex items-end justify-center mt-4"
           style={{
             width: "100%",
             height: "86.56px",
@@ -434,11 +289,11 @@ export default function ProductSection() {
               >
                 {/* Icon container: width:72 · height:75.56 · pb:1 */}
                 <div
-                  className="flex flex-col items-center justify-end"
+                  className="flex flex-col items-center justify-end "
                   style={{
                     width: "72px",
                     height: "75.56px",
-                    paddingBottom: "1px",
+                    paddingBottom: "2px",
                   }}
                 >
                   <span
@@ -453,6 +308,9 @@ export default function ProductSection() {
                     className="text-xs font-medium mt-1"
                     style={{
                       color: isActive ? "#00462C" : "#6B7280",
+                      lineHeight: "16px",
+                      letterSpacing: "0.2px",
+                      
                       transition: "color 0.2s",
                     }}
                   >
