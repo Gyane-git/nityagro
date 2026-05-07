@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/prisma";
+import { getCategoryImageDir } from "@/utils/imageUpload";
 import { NextResponse } from "next/server";
-
+import fs from "fs";
+import path from "path";
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "http://localhost:3000",
+  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
 type CategoryDTO = {
@@ -50,81 +52,222 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    // ✅ read ONLY ONCE
+    // ✅ Read body only once
     const { categories }: { categories: CategoryDTO[] } = await req.json();
 
+    // ✅ Validation
     if (!categories || categories.length === 0) {
       return NextResponse.json(
-        { success: false, message: "categories are required" },
-        { status: 400 },
+        {
+          success: false,
+          message: "Categories are required",
+        },
+        {
+          status: 400,
+          headers: corsHeaders,
+        },
       );
     }
+
+    // ✅ Normalize image path
     const normalizeCategoryAssetUrl = (value: unknown) => {
-      if (value === null || value === undefined || value === "") return null;
-      if (typeof value !== "string") return null;
+      if (value === null || value === undefined || value === "") {
+        return null;
+      }
+
+      if (typeof value !== "string") {
+        return null;
+      }
+
       const trimmed = value.trim();
 
-      if (!trimmed) return null;
-      if (trimmed.startsWith("/categories/")) return trimmed;
+      if (!trimmed) {
+        return null;
+      }
+
+      if (trimmed.startsWith("/categories/")) {
+        return trimmed;
+      }
+
       if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
         return trimmed;
       }
 
       const cleanName = trimmed.replace(/^\/+/, "");
+
       return `/categories/${cleanName}`;
     };
 
-    // ✅ 1. Find existing category names
-    const existing = await prisma.categories.findMany({
+    // ✅ Find existing category names in DB
+    const existingCategories = await prisma.categories.findMany({
       where: {
         categoryName: {
           in: categories.map((c) => c.categoryName),
         },
       },
-      select: { categoryName: true },
+      select: {
+        categoryName: true,
+      },
     });
 
-    const existingNames = new Set(existing.map((e) => e.categoryName));
-
-    // ✅ 2. Split data
-    const newCategories = categories.filter(
-      (c) => !existingNames.has(c.categoryName),
+    const existingNames = new Set(
+      existingCategories.map((e) => e.categoryName),
     );
-    // ✅ 3. Insert only new
+
+    // ✅ Remove duplicates from incoming request also
+    const addedNames = new Set<string>();
+
+    const newCategories = categories.filter((c) => {
+      // already exists in DB
+      if (existingNames.has(c.categoryName)) {
+        return false;
+      }
+
+      // duplicate inside request array
+      if (addedNames.has(c.categoryName)) {
+        return false;
+      }
+
+      addedNames.add(c.categoryName);
+
+      return true;
+    });
+
+    // ✅ Insert only unique categories
     let insertedCount = 0;
 
     if (newCategories.length > 0) {
       const details = await prisma.categories.createMany({
-        data: categories.map((p) => ({
+        data: newCategories.map((p) => ({
           categoryName: p.categoryName,
-          slug: p.slug === "string" ? p.slug || null : null,
+
+          slug: typeof p.slug === "string" ? p.slug || null : null,
+
           categoryDescription:
             typeof p.categoryDescription === "string"
               ? p.categoryDescription || null
               : null,
+
           categoryImage: normalizeCategoryAssetUrl(p.categoryImage),
-          categoryLogo: normalizeCategoryAssetUrl(p.categoryImage),
-          categoryBanner: normalizeCategoryAssetUrl(p.categoryImage),
+
+          categoryLogo: normalizeCategoryAssetUrl(p.categoryLogo),
+
+          categoryBanner: normalizeCategoryAssetUrl(p.categoryBanner),
+
           userId: BigInt(p.userId),
         })),
+
+        // ✅ Prisma duplicate protection
+        skipDuplicates: true,
       });
+
       insertedCount = details.count;
     }
+
     return NextResponse.json(
       {
         success: true,
         count: insertedCount,
         message: "Category saved successfully",
       },
-      { status: 200, headers: corsHeaders },
+      {
+        status: 200,
+        headers: corsHeaders,
+      },
     );
   } catch (error) {
+    console.error(error);
+
     return NextResponse.json(
-      { success: false, message: String(error) },
-      { status: 500, headers: corsHeaders },
+      {
+        success: false,
+        message: String(error),
+      },
+      {
+        status: 500,
+        headers: corsHeaders,
+      },
     );
   }
 }
+
+// export async function POST(req: Request) {
+//   try {
+//     // ✅ read ONLY ONCE
+//     const { categories }: { categories: CategoryDTO[] } = await req.json();
+
+//     if (!categories || categories.length === 0) {
+//       return NextResponse.json(
+//         { success: false, message: "categories are required" },
+//         { status: 400 },
+//       );
+//     }
+//     const normalizeCategoryAssetUrl = (value: unknown) => {
+//       if (value === null || value === undefined || value === "") return null;
+//       if (typeof value !== "string") return null;
+//       const trimmed = value.trim();
+
+//       if (!trimmed) return null;
+//       if (trimmed.startsWith("/categories/")) return trimmed;
+//       if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+//         return trimmed;
+//       }
+
+//       const cleanName = trimmed.replace(/^\/+/, "");
+//       return `/categories/${cleanName}`;
+//     };
+
+//     // ✅ 1. Find existing category names
+//     const existing = await prisma.categories.findMany({
+//       where: {
+//         categoryName: {
+//           in: categories.map((c) => c.categoryName),
+//         },
+//       },
+//       select: { categoryName: true },
+//     });
+
+//     const existingNames = new Set(existing.map((e) => e.categoryName));
+
+//     // ✅ 2. Split data
+//     const newCategories = categories.filter(
+//       (c) => !existingNames.has(c.categoryName),
+//     );
+//     // ✅ 3. Insert only new
+//     let insertedCount = 0;
+
+//     if (newCategories.length > 0) {
+//       const details = await prisma.categories.createMany({
+//         data: categories.map((p) => ({
+//           categoryName: p.categoryName,
+//           slug: p.slug === "string" ? p.slug || null : null,
+//           categoryDescription:
+//             typeof p.categoryDescription === "string"
+//               ? p.categoryDescription || null
+//               : null,
+//           categoryImage: normalizeCategoryAssetUrl(p.categoryImage),
+//           categoryLogo: normalizeCategoryAssetUrl(p.categoryImage),
+//           categoryBanner: normalizeCategoryAssetUrl(p.categoryImage),
+//           userId: BigInt(p.userId),
+//         })),
+//       });
+//       insertedCount = details.count;
+//     }
+//     return NextResponse.json(
+//       {
+//         success: true,
+//         count: insertedCount,
+//         message: "Category saved successfully",
+//       },
+//       { status: 200, headers: corsHeaders },
+//     );
+//   } catch (error) {
+//     return NextResponse.json(
+//       { success: false, message: String(error) },
+//       { status: 500, headers: corsHeaders },
+//     );
+//   }
+// }
 
 // export async function POST(req: Request) {
 //   try {
@@ -206,7 +349,7 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   const body = await req.json();
-
+//const file = formData.get("image") as File | null;
   const {
     categoryId,
     categoryName,
@@ -225,20 +368,23 @@ export async function PUT(req: Request) {
     );
   }
 
-  const normalizeCategoryAssetUrl = (value: unknown) => {
-    if (value === null || value === undefined || value === "") return null;
-    if (typeof value !== "string") return null;
-    const trimmed = value.trim();
+    //   let imagePath: string | null = null;
+    // const uploadDir = getCategoryImageDir();
+    // console.log("upload dir:", uploadDir);
 
-    if (!trimmed) return null;
-    if (trimmed.startsWith("/categories/")) return trimmed;
-    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-      return trimmed;
-    }
+    // fs.mkdirSync(uploadDir, { recursive: true });
 
-    const cleanName = trimmed.replace(/^\/+/, "");
-    return `/categories/${cleanName}`;
-  };
+    // if (categoryImage) {
+    //   const bytes = await categoryImage.arrayBuffer();
+    //   const buffer = Buffer.from(bytes);
+
+    //   const fileName = `${Date.now()}-${categoryImage.name.replace(/\s+/g, "")}`;
+    //   const fullPath = path.join(uploadDir, fileName);
+
+    //   fs.writeFileSync(fullPath, buffer);
+
+    //   imagePath = `/uploads/categories/${fileName}`;
+    // }
 
   try {
     const category = await prisma.categories.update({
@@ -260,13 +406,13 @@ export async function PUT(req: Request) {
               : null,
         }),
         ...(categoryImage !== undefined && {
-          categoryImage: normalizeCategoryAssetUrl(categoryImage),
+          categoryImage: categoryImage,
         }),
         ...(categoryLogo !== undefined && {
-          categoryLogo: normalizeCategoryAssetUrl(categoryLogo),
+          categoryLogo: categoryLogo,
         }),
         ...(categoryBanner !== undefined && {
-          categoryBanner: normalizeCategoryAssetUrl(categoryBanner),
+          categoryBanner: categoryBanner,
         }),
         ...(categoryStatus !== undefined && {
           categoryStatus: Boolean(categoryStatus),

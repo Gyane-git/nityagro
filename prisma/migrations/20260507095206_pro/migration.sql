@@ -40,7 +40,7 @@ CREATE TABLE `categories` (
 CREATE TABLE `products` (
     `productId` BIGINT NOT NULL AUTO_INCREMENT,
     `productCode` VARCHAR(191) NOT NULL,
-    `categoryId` BIGINT NOT NULL,
+    `categoryId` VARCHAR(191) NOT NULL,
     `userId` BIGINT NOT NULL,
     `productName` VARCHAR(191) NOT NULL,
     `slug` VARCHAR(191) NULL,
@@ -392,9 +392,6 @@ CREATE TABLE `auditLog` (
 
 -- AddForeignKey
 ALTER TABLE `categories` ADD CONSTRAINT `categories_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`userId`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `products` ADD CONSTRAINT `products_categoryId_fkey` FOREIGN KEY (`categoryId`) REFERENCES `categories`(`categoryId`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `products` ADD CONSTRAINT `products_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`userId`) ON DELETE RESTRICT ON UPDATE CASCADE;

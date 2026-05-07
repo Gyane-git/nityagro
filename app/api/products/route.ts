@@ -2,84 +2,124 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "http://localhost:3000",
+  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
+
+
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 200,
+    headers: corsHeaders,
+  });
+}
 
 type ProductDTO = {
   productCode: string;
   categoryId: number;
   userId: number;
   productName: string;
-  slug: string;
-  productVariation: string;
-  productDescription: string;
-  nutritionInfo: string;
-  cookingInstruction: string;
-  storageInstruction: string;
-  pImage: string;
-  productStatus: boolean;
+  slug?: string;
+  productVariation?: string;
+  productDescription?: string;
+  nutritionInfo?: string;
+  cookingInstruction?: string;
+  storageInstruction?: string;
+  pImage?: string;
+  productStatus?: boolean;
   actualPrice: number;
   sellingPrice: number;
-  deliveryTargetDays: number;
-  stockQuantity: number;
-  availableQuantity: number;
-  flashSale: boolean;
-  specialOffer: boolean;
-  createdAt: string;
-  updatedAt: string;
+  deliveryTargetDays?: number;
+  stockQuantity?: number;
+  availableQuantity?: number;
+  flashSale?: boolean;
+  specialOffer?: boolean;
 };
 
 
+export async function GET() {
+  try {
+    const categories = await prisma.products.findMany();
+    // 🔥 Fix BigInt serialization
+    const safeData = JSON.parse(
+      JSON.stringify(categories, (_, value) =>
+        typeof value === "bigint" ? value.toString() : value,
+      ),
+    );
+    return Response.json(
+      {
+        success: true,
+        data: safeData,
+      },
+      { status: 200, headers: corsHeaders },
+    );
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, message: String(error) },
+      { status: 500, headers: corsHeaders },
+    );
+  }
+}
+
 export async function POST(req: Request) {
   try {
-    // ✅ read ONLY ONCE
+    // ✅ Read body once
     const { product }: { product: ProductDTO[] } = await req.json();
 
+    // ✅ Validation
     if (!product || product.length === 0) {
       return NextResponse.json(
-        { success: false, message: "product are required" },
-        { status: 400 },
+        {
+          success: false,
+          message: "Products are required",
+        },
+        {
+          status: 400,
+          headers: corsHeaders,
+        },
       );
     }
-    // const normalizeCategoryAssetUrl = (value: unknown) => {
-    //   if (value === null || value === undefined || value === "") return null;
-    //   if (typeof value !== "string") return null;
-    //   const trimmed = value.trim();
 
-    //   if (!trimmed) return null;
-    //   if (trimmed.startsWith("/categories/")) return trimmed;
-    //   if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-    //     return trimmed;
-    //   }
-
-    //   const cleanName = trimmed.replace(/^\/+/, "");
-    //   return `/categories/${cleanName}`;
-    // };
-
-    // ✅ 1. Find existing category names
-    const existing = await prisma.products.findMany({
+    // ✅ Find existing product names
+    const existingProducts = await prisma.products.findMany({
       where: {
         productName: {
-          in: product.map((c) => c.productName),
+          in: product.map((p) => p.productName),
         },
       },
-      select: { productName: true },
+      select: {
+        productName: true,
+      },
     });
 
-    const existingNames = new Set(existing.map((e) => e.productName));
+    const existingNames = new Set(existingProducts.map((e) => e.productName));
 
-    // ✅ 2. Split data
-    const newCategories = product.filter(
-      (c) => !existingNames.has(c.productName),
-    );
-    // ✅ 3. Insert only new
+    // ✅ Remove duplicate names inside request itself
+    const addedNames = new Set<string>();
+
+    const newProducts = product.filter((p) => {
+      // already exists in DB
+      if (existingNames.has(p.productName)) {
+        return false;
+      }
+
+      // duplicate inside incoming array
+      if (addedNames.has(p.productName)) {
+        return false;
+      }
+
+      addedNames.add(p.productName);
+
+      return true;
+    });
+
+    // ✅ Insert only unique products
     let insertedCount = 0;
 
-    if (newCategories.length > 0) {
+    if (newProducts.length > 0) {
       const details = await prisma.products.createMany({
-        data: product.map((p) => ({
+        data: newProducts.map((p) => ({
           productCode: p.productCode,
           categoryId: p.categoryId,
           userId: p.userId,
@@ -99,24 +139,38 @@ export async function POST(req: Request) {
           availableQuantity: p.availableQuantity,
           flashSale: p.flashSale,
           specialOffer: p.specialOffer,
-          createdAt: p.createdAt,
-          updatedAt: p.updatedAt,
         })),
+
+        // ✅ Prisma skip duplicate safeguard
+        skipDuplicates: true,
       });
+
       insertedCount = details.count;
     }
+
     return NextResponse.json(
       {
         success: true,
         count: insertedCount,
-        message: "Product saved successfully",
+        message: "Products saved successfully",
       },
-      { status: 200, headers: corsHeaders },
+      {
+        status: 200,
+        headers: corsHeaders,
+      },
     );
   } catch (error) {
+    console.error(error);
+
     return NextResponse.json(
-      { success: false, message: String(error) },
-      { status: 500, headers: corsHeaders },
+      {
+        success: false,
+        message: String(error),
+      },
+      {
+        status: 500,
+        headers: corsHeaders,
+      },
     );
   }
 }

@@ -2,6 +2,7 @@
 
 import { apiPostRequest } from "@/apihelper/apiHelper";
 import { apiUploadRequest } from "@/apihelper/apiHelper";
+import { WifiSync } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
@@ -71,13 +72,6 @@ export default function AddCategoryPage() {
 
   const [formdata, setFormData] = useState(initialFormData);
 
-  //http://bkgroupapi.globaltech.com.np:802//api/MasterList/ProductListCustomer?DbName=NITYAM8201
-  // const requestData = {
-  //   products: products.filter(
-  //     (item) => item.ProductDesc && item.ProductDesc.trim() !== "",
-  //   ),
-  // };
-
   async function getProducts(): Promise<Product[]> {
     const res = await fetch(
       "http://bkgroupapi.globaltech.com.np:802/api/MasterList/ProductListCustomer?DbName=NITYAM8201",
@@ -124,15 +118,15 @@ export default function AddCategoryPage() {
       if (!acc[item.PDesc]) {
         acc[item.PDesc] = {
           productCode: item.PCode,
-          categoryId: 30,
+          categoryId: item.GroupName,
           userId: "1",
           productName: item.PDesc,
           slug: null,
           productVariation: null,
           productDescription: null,
-          nutritionInfo:null,
+          nutritionInfo: null,
           cookingInstruction: null,
-          storageInstruction:null,
+          storageInstruction: null,
           pImage: null,
           productStatus: true,
           actualPrice: 0.0,
@@ -152,7 +146,7 @@ export default function AddCategoryPage() {
     categories,
   };
 
-   const requestDataProduct = {
+  const requestDataProduct = {
     product,
   };
 
@@ -162,10 +156,13 @@ export default function AddCategoryPage() {
   //   categories: groupNameList,
   // };
 
+  
+
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-   
+
     console.log(JSON.stringify(requestDataProduct));
     try {
       const uploadFormData = new FormData();
@@ -203,11 +200,10 @@ export default function AddCategoryPage() {
         };
       }
 
-      const response = await apiPostRequest("/categories", requestData);
+       const response2 = await apiPostRequest("/categories", requestData);
 
-       const response2 = await apiPostRequest("/products", requestDataProduct);
-       
-       alert(response2.success)
+      const response = await apiPostRequest("/products", requestDataProduct);
+
       if (response.success) {
         toast.success(response.message ?? "Category created successfully");
         setLoading(false);

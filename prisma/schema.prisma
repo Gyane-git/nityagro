@@ -54,7 +54,7 @@ model Categories {
   updatedAt           DateTime @updatedAt
 
   user     Users      @relation(fields: [userId], references: [userId])
-  products Products[]
+  
 
   @@map("categories")
 }
@@ -62,7 +62,7 @@ model Categories {
 model Products {
   productId          BigInt   @id @default(autoincrement())
   productCode        String   @unique
-  categoryId         BigInt
+  categoryId         String   
   userId             BigInt
   productName        String
   slug               String?
@@ -83,7 +83,7 @@ model Products {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
-  category Categories @relation(fields: [categoryId], references: [categoryId])
+ 
   user     Users      @relation(fields: [userId], references: [userId])
 
   orders          Orders[]
