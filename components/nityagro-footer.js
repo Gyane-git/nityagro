@@ -1,5 +1,6 @@
 "use client";
 
+import { Ticket } from "lucide-react";
 import Image from "next/image";
 
 // Social Icons
@@ -9,9 +10,15 @@ const FacebookIcon = () => (
   </svg>
 );
 
-const TwitterIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z" />
+const TikTokIcon = () => (
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M16 2c.6 2.6 2.4 4.7 5 5v3c-2.2-.1-4.2-.9-5.8-2.2V16c0 3.3-2.7 6-6 6s-6-2.7-6-6 2.7-6 6-6c.3 0 .7 0 1 .1v3.2c-.3-.1-.6-.2-1-.2-1.7 0-3 1.3-3 3s1.3 3 3 3 3-1.3 3-3V2h3z" />
   </svg>
 );
 
@@ -335,8 +342,8 @@ export default function Footer() {
                 <div className="flex items-center gap-3">
                   {[
                     { icon: <FacebookIcon />, href: "#", label: "Facebook" },
-                    { icon: <TwitterIcon />, href: "#", label: "Twitter" },
-                    { icon: <InstagramIcon />, href: "#", label: "Instagram" },
+                    { icon: <TikTokIcon />, href: "https://www.tiktok.com/@nityagro.np?_r=1&_t=ZS-964Is7j2GEC", label: "TikTok" },
+                    { icon: <InstagramIcon />, href: "https://www.instagram.com/nityamagro.np?igsh=MmlzcXVvcnBqYjRz", label: "Instagram" },
                   ].map(({ icon, href, label }) => (
                     <a
                       key={label}
