@@ -28,6 +28,7 @@ export default function ProductEditPage() {
   const router = useRouter();
   const productId = Array.isArray(params?.id) ? params.id[0] : params?.id;
 
+  alert(productId)
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [categories, setCategories] = useState([]);

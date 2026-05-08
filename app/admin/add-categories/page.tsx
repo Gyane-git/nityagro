@@ -11,6 +11,9 @@ type FormData = {
   categoryName: string;
   slug: string | null;
   categoryDescription: string | null;
+   actualPrice: number;
+  sellingPrice: number;
+  stockQuantity: number;
   categoryImage: string | null;
   categoryLogo: string | null;
   categoryBanner: string | null;
@@ -22,6 +25,13 @@ type Product = {
   GroupName: string;
   slug: string | null;
   categoryDescription: string | null;
+  BuyRate: number;
+  SalesRate: number;
+  MRP:number;
+  TradeRate:number;
+  StockStatus:string;
+  StockQty:string;
+  stockQuantity: number;
   categoryImage: string | null;
   categoryLogo: string | null;
   categoryBanner: string | null;
@@ -36,6 +46,9 @@ export default function AddCategoryPage() {
       GroupName: "",
       slug: null,
       categoryDescription: null,
+      actualPrice: 0,
+      sellingPrice: 0,
+      stockQuantity: 0,
       categoryImage: null,
       categoryLogo: null,
       categoryBanner: null,
@@ -64,6 +77,9 @@ export default function AddCategoryPage() {
     categoryName: "",
     slug: null,
     categoryDescription: null,
+    actualPrice: 0,
+    sellingPrice: 0,
+    stockQuantity: 0,
     categoryImage: null,
     categoryLogo: null,
     categoryBanner: null,
@@ -129,11 +145,11 @@ export default function AddCategoryPage() {
           storageInstruction: null,
           pImage: null,
           productStatus: true,
-          actualPrice: 0.0,
-          sellingPrice: 0.0,
+          actualPrice: item.BuyRate,
+          sellingPrice:item.SalesRate,
           deliveryTargetDays: null,
-          stockQuantity: null,
-          availableQuantity: null,
+          stockQuantity: item.StockQty,
+          availableQuantity: item.StockQty,
         };
       }
 
@@ -149,14 +165,6 @@ export default function AddCategoryPage() {
   const requestDataProduct = {
     product,
   };
-
-  const pDescList = products.map((item) => item.PDesc);
-  const groupNameList = products.map((item) => item.GroupName);
-  // const requestData = {
-  //   categories: groupNameList,
-  // };
-
-  
 
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -200,7 +208,7 @@ export default function AddCategoryPage() {
         };
       }
 
-       const response2 = await apiPostRequest("/categories", requestData);
+      const response2 = await apiPostRequest("/categories", requestData);
 
       const response = await apiPostRequest("/products", requestDataProduct);
 
@@ -252,7 +260,7 @@ export default function AddCategoryPage() {
             Add New Category
           </h2>
 
-          <form    onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Category Name */}
             <div>
               <label className="block text-gray-700 font-medium mb-2">

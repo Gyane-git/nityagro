@@ -17,7 +17,7 @@ export async function OPTIONS() {
 
 type ProductDTO = {
   productCode: string;
-  categoryId: number;
+  categoryId: string;
   userId: number;
   productName: string;
   slug?: string;
