@@ -110,7 +110,7 @@ export async function POST(req: Request) {
           variationName: p.variationName,
           salesRate: p.salesRate,
         })),
-
+//zxcvlxcvjkl
         // ✅ Prisma duplicate protection
         skipDuplicates: true,
       });
