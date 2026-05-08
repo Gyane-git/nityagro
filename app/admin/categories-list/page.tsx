@@ -118,9 +118,7 @@ export default function CategoriesListPage() {
     //   formDatas.append("categoryImage", categoryImage);
     // }
 
-    console.log(JSON.stringify(formdata))
-    alert(JSON.stringify(formdata))
-     const response = await apiPutRequest("/categories", formdata);
+     const response = await apiPutRequest("/categories", formDatas);
       if (response.success) {
         setFormData(initialFormData);
         toast.success("response.message");
