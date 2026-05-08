@@ -181,7 +181,7 @@ export default function AddCategoryPage() {
           categoryImage?: string;
           categoryLogo?: string;
           categoryBanner?: string;
-        }>("/uploads/category-assets", uploadFormData);
+        }>("/uploads/category-assetsffff", uploadFormData);
 
         if (!uploadResponse.success) {
           toast.error(uploadResponse.message ?? "Image upload failed");
@@ -252,7 +252,7 @@ export default function AddCategoryPage() {
             Add New Category
           </h2>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form    onSubmit={handleSubmit} className="space-y-6">
             {/* Category Name */}
             <div>
               <label className="block text-gray-700 font-medium mb-2">

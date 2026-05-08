@@ -347,96 +347,128 @@ export async function POST(req: Request) {
 //   }
 // }
 
+
+
+
 export async function PUT(req: Request) {
-  const body = await req.json();
-//const file = formData.get("image") as File | null;
-  const {
-    categoryId,
-    categoryName,
-    slug,
-    categoryDescription,
-    categoryImage,
-    categoryLogo,
-    categoryBanner,
-    categoryStatus,
-  } = body;
-
-  if (!categoryId) {
-    return NextResponse.json(
-      { success: false, message: "categoryId  is required" },
-      { status: 400, headers: corsHeaders },
-    );
-  }
-
-    //   let imagePath: string | null = null;
-    // const uploadDir = getCategoryImageDir();
-    // console.log("upload dir:", uploadDir);
-
-    // fs.mkdirSync(uploadDir, { recursive: true });
-
-    // if (categoryImage) {
-    //   const bytes = await categoryImage.arrayBuffer();
-    //   const buffer = Buffer.from(bytes);
-
-    //   const fileName = `${Date.now()}-${categoryImage.name.replace(/\s+/g, "")}`;
-    //   const fullPath = path.join(uploadDir, fileName);
-
-    //   fs.writeFileSync(fullPath, buffer);
-
-    //   imagePath = `/uploads/categories/${fileName}`;
-    // }
-
   try {
+    // ✅ Read form data
+    const formData = await req.formData();
+
+    const categoryId = formData.get("categoryId")?.toString();
+
+    const categoryName = formData.get("categoryName")?.toString();
+
+    const slug = formData.get("slug")?.toString();
+
+    const categoryDescription = formData
+      .get("categoryDescription")
+      ?.toString();
+
+    const categoryStatus = formData.get("categoryStatus");
+
+    // ✅ File
+    const file = formData.get("categoryImage") as File | null;
+
+    if (!categoryId) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "categoryId is required",
+        },
+        {
+          status: 400,
+          headers: corsHeaders,
+        }
+      );
+    }
+
+    let imagePath: string | undefined;
+
+    // ✅ Upload image
+    if (file && file.size > 0) {
+      const uploadDir = getCategoryImageDir();
+
+      fs.mkdirSync(uploadDir, { recursive: true });
+
+      const bytes = await file.arrayBuffer();
+
+      const buffer = Buffer.from(bytes);
+
+      const fileName = `${Date.now()}-${file.name.replace(/\s+/g, "")}`;
+
+      const fullPath = path.join(uploadDir, fileName);
+
+      fs.writeFileSync(fullPath, buffer);
+
+      imagePath = `/uploads/categories/${fileName}`;
+    }
+
+    // ✅ Update DB
     const category = await prisma.categories.update({
-      where: { categoryId: BigInt(categoryId) },
+      where: {
+        categoryId: BigInt(categoryId),
+      },
+
       data: {
         ...(categoryName !== undefined && {
-          categoryName:
-            typeof categoryName === "string"
-              ? categoryName.trim()
-              : categoryName,
+          categoryName: categoryName.trim(),
         }),
+
         ...(slug !== undefined && {
-          slug: typeof slug === "string" ? slug.trim() || null : null,
+          slug: slug.trim() || null,
         }),
+
         ...(categoryDescription !== undefined && {
           categoryDescription:
-            typeof categoryDescription === "string"
-              ? categoryDescription.trim() || null
-              : null,
+            categoryDescription.trim() || null,
         }),
-        ...(categoryImage !== undefined && {
-          categoryImage: categoryImage,
+
+        ...(imagePath && {
+          categoryImage: imagePath,
+          categoryLogo: imagePath,
+          categoryBanner: imagePath,
         }),
-        ...(categoryLogo !== undefined && {
-          categoryLogo: categoryLogo,
-        }),
-        ...(categoryBanner !== undefined && {
-          categoryBanner: categoryBanner,
-        }),
-        ...(categoryStatus !== undefined && {
-          categoryStatus: Boolean(categoryStatus),
-        }),
+
+        // ...(categoryStatus !== null && {
+        //   categoryStatus:
+        //     categoryStatus === "true",
+        // }),
       },
     });
 
+    // ✅ Convert bigint
     const safeData = JSON.parse(
       JSON.stringify(category, (_, value) =>
-        typeof value === "bigint" ? value.toString() : value,
-      ),
+        typeof value === "bigint"
+          ? value.toString()
+          : value
+      )
     );
+
     return NextResponse.json(
       {
         success: true,
         message: "Category updated successfully",
         data: safeData,
       },
-      { status: 200, headers: corsHeaders },
+      {
+        status: 200,
+        headers: corsHeaders,
+      }
     );
   } catch (error) {
+    console.error(error);
+
     return NextResponse.json(
-      { success: false, message: String(error) },
-      { status: 500, headers: corsHeaders },
+      {
+        success: false,
+        message: String(error),
+      },
+      {
+        status: 500,
+        headers: corsHeaders,
+      }
     );
   }
 }

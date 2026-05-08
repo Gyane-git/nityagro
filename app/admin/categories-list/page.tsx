@@ -71,6 +71,12 @@ export default function CategoriesListPage() {
 
   const [formdata, setFormData] = useState(initialFormData);
 
+  const [categoryImage, setCategoryImage] = useState<File | null>(null);
+
+  const [categoryLogo, setCategoryLogo] = useState<File | null>(null);
+
+  const [categoryBanner, setCategoryBanner] = useState<File | null>(null);
+
   const fetchCategories = async () => {
     try {
       const response = await apiGetRequest<Categories[]>("/categories");
@@ -87,7 +93,48 @@ export default function CategoriesListPage() {
     fetchCategories();
   }, []);
 
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const updateSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formDatas = new FormData();
+
+    formDatas.append("categoryId", formdata.categoryId);
+    formDatas.append("categoryName", formdata.categoryName);
+    formDatas.append("slug", formdata.slug ?? "");
+    formDatas.append("categoryDescription", formdata.categoryDescription ?? "");
+    formDatas.append("categoryDescription", formdata.categoryDescription ?? "");
+
+    // formDatas.append(
+    //   "categoryStatus",
+    //   String(formdata.categoryStatus ?? false)
+    // );
+    alert(JSON.stringify(formdata.categoryId))
+    if (categoryImage) {
+      formDatas.append("categoryImage", categoryImage);
+    }
+
+    console.log(JSON.stringify(formDatas))
+
+     const response = await apiPutRequest("/categories", formdata);
+      if (response.success) {
+        setFormData(initialFormData);
+        toast.success("response.message");
+        setLoading(false);
+        fetchCategories();
+        // reset form
+        return;
+      } else {
+        toast.error(response.message ?? "");
+
+        setLoading(false);
+        console.log(response.message);
+      }
+
+   
+  }
+
+  const updateSubmit2 = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
@@ -119,12 +166,9 @@ export default function CategoriesListPage() {
 
         payloadToSave = {
           ...payloadToSave,
-          categoryImage:
-            uploadResponse.data?.categoryImage ?? payloadToSave.categoryImage,
-          categoryLogo:
-            uploadResponse.data?.categoryLogo ?? payloadToSave.categoryLogo,
-          categoryBanner:
-            uploadResponse.data?.categoryBanner ?? payloadToSave.categoryBanner,
+          categoryImage: payloadToSave.categoryImage,
+          categoryLogo: payloadToSave.categoryLogo,
+          categoryBanner: payloadToSave.categoryBanner,
         };
       }
 
@@ -444,7 +488,7 @@ export default function CategoriesListPage() {
               Edit Category Info {formdata.categoryName}
             </h2>
 
-            <form onSubmit={updateSubmit}>
+            <form  onSubmit={updateSubmit}>
               <label className="block text-gray-700 font-medium mb-2">
                 Category Name
                 <input
@@ -487,93 +531,27 @@ export default function CategoriesListPage() {
               </label>
               <div className="grid grid-cols-1 gap-3">
                 {/* Category Image */}
-                <div>
-                  <label className="block text-gray-700 font-medium mb-2">
-                    Category Image (Choose from gallery)
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0] ?? null;
-                      setCategoryImageFile(file);
-                      if (categoryImagePreviewRef.current) {
-                        URL.revokeObjectURL(categoryImagePreviewRef.current);
-                        categoryImagePreviewRef.current = null;
-                      }
-                      if (file) {
-                        const objectUrl = URL.createObjectURL(file);
-                        categoryImagePreviewRef.current = objectUrl;
-                        setCategoryImagePreviewUrl(objectUrl);
-                        setFormData((prev)=>({
-                          ...prev,
-                          categoryImage:objectUrl
-                        }))
-                      } else {
-                        setCategoryImagePreviewUrl(null);
-                      }
-                    }}
-                    className="w-full border text-black rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
 
-                <div>
-                  <label className="block text-gray-700 font-medium mb-2">
-                    Category Logo (Choose from gallery)
-                  </label>
+                <div className="grid grid-cols-3 gap-2">
                   <input
                     type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0] ?? null;
-                      setCategoryLogoFile(file);
-                      if (categoryLogoPreviewRef.current) {
-                        URL.revokeObjectURL(categoryLogoPreviewRef.current);
-                        categoryLogoPreviewRef.current = null;
-                      }
-                      if (file) {
-                        const objectUrl = URL.createObjectURL(file);
-                        categoryLogoPreviewRef.current = objectUrl;
-                        setCategoryLogoPreviewUrl(objectUrl);
-                         setFormData((prev)=>({
-                          ...prev,
-                          categoryLogo:objectUrl
-                        }))
-                      } else {
-                        setCategoryLogoPreviewUrl(null);
-                      }
-                    }}
-                    className="w-full border text-black rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+                    onChange={(e) =>
+                      setCategoryImage(e.target.files?.[0] || null)
+                    }
                   />
-                </div>
 
-                <div>
-                  <label className="block text-gray-700 font-medium mb-2">
-                    Category Banner (Choose from gallery)
-                  </label>
                   <input
                     type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0] ?? null;
-                      setCategoryBannerFile(file);
-                      if (categoryBannerPreviewRef.current) {
-                        URL.revokeObjectURL(categoryBannerPreviewRef.current);
-                        categoryBannerPreviewRef.current = null;
-                      }
-                      if (file) {
-                        const objectUrl = URL.createObjectURL(file);
-                        categoryBannerPreviewRef.current = objectUrl;
-                        setCategoryBannerPreviewUrl(objectUrl);
-                         setFormData((prev)=>({
-                          ...prev,
-                          categoryBanner:objectUrl
-                        }))
-                      } else {
-                        setCategoryBannerPreviewUrl(null);
-                      }
-                    }}
-                    className="w-full border text-black rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+                    onChange={(e) =>
+                      setCategoryLogo(e.target.files?.[0] || null)
+                    }
+                  />
+
+                  <input
+                    type="file"
+                    onChange={(e) =>
+                      setCategoryBanner(e.target.files?.[0] || null)
+                    }
                   />
                 </div>
               </div>
