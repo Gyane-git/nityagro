@@ -16,7 +16,7 @@ const CheckIcon = () => (
 
 interface OrderConfirmedModalProps {
   orderId: string;
-  placedAt: string; // e.g. "August 12, 2025 10:39:44 EST"
+  placedAt: string;
   onContinue: () => void;
 }
 
