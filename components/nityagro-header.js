@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import useCartStore from "@/store/cartStore";
@@ -97,6 +97,35 @@ const ChevronDownIcon = () => (
   </svg>
 );
 
+const MenuIcon = () => (
+  <svg
+    width="22"
+    height="22"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
+    <line x1="3" y1="6" x2="21" y2="6" />
+    <line x1="3" y1="12" x2="21" y2="12" />
+    <line x1="3" y1="18" x2="21" y2="18" />
+  </svg>
+);
+
+const CloseIcon = () => (
+  <svg
+    width="22"
+    height="22"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+);
+
 /* ── Nav links ── */
 const NAV_LINKS = [
   { label: "Home", href: "/" },
@@ -113,75 +142,135 @@ const NAV_LINKS = [
   },
 ];
 
+const CATEGORIES = ["Oils", "Flours", "Spices", "Jaggery", "Dairy", "Sattu"];
+
+/* ── Badge ── */
+const Badge = ({ count }) => (
+  <span
+    className="absolute -top-1.5 -right-1.5 min-w-[17px] h-[17px] px-0.5
+               bg-[#00462C] text-white text-[10px] font-bold rounded-full
+               flex items-center justify-center leading-none"
+  >
+    {count}
+  </span>
+);
+
 export default function Header() {
   const [methodsOpen, setMethodsOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileMethodsOpen, setMobileMethodsOpen] = useState(false);
+  const [mobileCategoryOpen, setMobileCategoryOpen] = useState(false);
+
   const auth = useAuthModal();
   const cartItems = useCartStore((state) => state.items);
   const wishlistItems = useWishlistStore((state) => state.items);
-  const cartCount = cartItems.reduce((sum, item) => sum + Number(item.qty || 1), 0);
+  const cartCount = cartItems.reduce(
+    (sum, item) => sum + Number(item.qty || 1),
+    0,
+  );
   const wishlistCount = wishlistItems.length;
 
+  const categoryRef = useRef(null);
+  const methodsRef = useRef(null);
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (categoryRef.current && !categoryRef.current.contains(e.target)) {
+        setCategoryOpen(false);
+      }
+      if (methodsRef.current && !methodsRef.current.contains(e.target)) {
+        setMethodsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    document.body.style.overflow = mobileMenuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
   return (
-    <header className="sticky top-0 z-50 w-full">
+    <header
+      className="sticky top-0 z-50 w-full left-0 right-0"
+      style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
+    >
       {/* ── Promo bar ── */}
-      <div className="w-full bg-[#FFF8E7] border-b border-[#f0e6c8] h-10 px-8 flex items-center justify-between">
-        {[...Array(4)].map((_, i) => (
-          <div
-            key={i}
-            className="flex items-center gap-2 text-[13px] text-[#1a1a1a] font-medium"
-          >
-            {/* Red gift box emoji matching screenshot */}
-            <span className="text-[15px]">🎁</span>
-            <span>
-              12% OFF above - Code: <span className="font-semibold">NEW12</span>
-            </span>
-          </div>
-        ))}
+      <div
+        className="w-full bg-[#FFF8E7] border-b border-[#f0e6c8] h-9 overflow-hidden"
+        style={{ width: "100%", boxSizing: "border-box" }}
+      >
+        {/* Mobile: single centered item */}
+        <div className="flex md:hidden items-center justify-center h-full px-4 text-[12px] text-[#1a1a1a] font-medium gap-1.5">
+          <span className="text-[14px]">🎁</span>
+          <span>
+            12% OFF above · Code: <span className="font-semibold">NEW12</span>
+          </span>
+        </div>
+        {/* Desktop: four items */}
+        <div className="hidden md:flex items-center justify-between h-full px-8">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-2 text-[13px] text-[#1a1a1a] font-medium"
+            >
+              <span className="text-[15px]">🎁</span>
+              <span>
+                12% OFF above · Code:{" "}
+                <span className="font-semibold">NEW12</span>
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* ── Main navbar ── */}
-      <nav className="w-full bg-white border-b border-[#E6ECF0]">
-        <div className="max-w-360 mx-auto h-17.75 px-8 flex items-center justify-between gap-6">
+      <nav
+        className="w-full bg-white border-b border-[#E6ECF0]"
+        style={{ width: "100%", boxSizing: "border-box" }}
+      >
+        <div className="w-full max-w-[1440px] mx-auto h-[71px] px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
           {/* ── Left: Logo + Browse ── */}
-          <div className="flex items-center gap-6 shrink-0">
-            {/* Logo */}
+          <div className="flex items-center gap-3 lg:gap-6 shrink-0">
             <Link href="/" className="flex items-center">
               <Image
                 src="/logo.png"
                 alt="Nityagro"
-                width={120}
-                height={44}
-                className="object-contain"
+                width={110}
+                height={40}
+                className="object-contain w-[90px] sm:w-[110px]"
               />
             </Link>
 
-            {/* Browse All Categories */}
-            <div className="relative">
+            {/* Browse All Categories — hidden on mobile */}
+            <div className="relative hidden sm:block" ref={categoryRef}>
               <button
                 onClick={() => setCategoryOpen(!categoryOpen)}
-                className="h-10 px-3 flex items-center gap-2 rounded-md hover:bg-[#F5F8F6] transition text-[#1a1a1a]"
+                className="h-10 px-2.5 lg:px-3 flex items-center gap-1.5 lg:gap-2 rounded-md hover:bg-[#F5F8F6] transition text-[#1a1a1a]"
               >
                 <GridIcon />
-                <span className="text-[14px] font-medium whitespace-nowrap">
+                <span className="hidden lg:inline text-[14px] font-medium whitespace-nowrap">
                   Browse All Categories
+                </span>
+                <span className="hidden md:inline lg:hidden text-[13px] font-medium whitespace-nowrap">
+                  Categories
                 </span>
                 <ChevronDownIcon />
               </button>
 
               {categoryOpen && (
-                <div className="absolute top-full left-0 mt-1 w-55 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
-                  {[
-                    "Oils",
-                    "Flours",
-                    "Spices",
-                    "Jaggery",
-                    "Dairy",
-                    "Sattu",
-                  ].map((item) => (
+                <div className="absolute top-full left-0 mt-1 w-52 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
+                  {CATEGORIES.map((item) => (
                     <a
                       key={item}
                       href={`/category/${item.toLowerCase()}`}
+                      onClick={() => setCategoryOpen(false)}
                       className="block px-5 py-3 text-[13px] text-[#00462C] hover:bg-[#F5F8F6] transition"
                     >
                       {item}
@@ -192,10 +281,14 @@ export default function Header() {
             </div>
           </div>
 
-          {/* ── Center: Nav links ── */}
-          <div className="hidden md:flex items-center gap-9">
+          {/* ── Center: Nav links (desktop only) ── */}
+          <div className="hidden lg:flex items-center gap-7 xl:gap-9">
             {NAV_LINKS.map((link) => (
-              <div key={link.label} className="relative">
+              <div
+                key={link.label}
+                className="relative"
+                ref={link.hasDropdown ? methodsRef : undefined}
+              >
                 {link.hasDropdown ? (
                   <>
                     <button
@@ -206,7 +299,7 @@ export default function Header() {
                       <ChevronDownIcon />
                     </button>
                     {methodsOpen && (
-                      <div className="absolute top-full left-0 mt-2 w-50 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
+                      <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
                         {link.childLinks.map((child) => (
                           <Link
                             key={child.label}
@@ -233,47 +326,192 @@ export default function Header() {
           </div>
 
           {/* ── Right: Icons ── */}
-          <div className="flex items-center gap-5 text-[#1a1a1a] shrink-0">
-            {/* Search */}
+          <div className="flex items-center gap-4 sm:gap-5 text-[#1a1a1a] shrink-0">
             <button className="hover:text-[#00462C] transition-colors">
               <SearchIcon />
             </button>
 
-            {/* Wishlist with badge */}
-            <Link href="/wishlist" className="relative hover:text-[#00462C] transition-colors">
+            <Link
+              href="/wishlist"
+              className="relative hover:text-[#00462C] transition-colors"
+            >
               <WishlistIcon />
-              <span
-                className="absolute -top-1.75 -right-1.75 min-w-4.25 h-4.25 px-0.75
-                           bg-[#00462C] text-white text-[10px] font-bold rounded-full
-                           flex items-center justify-center leading-none"
-              >
-                {wishlistCount}
-              </span>
+              <Badge count={wishlistCount} />
             </Link>
 
-            {/* Cart with badge */}
-            <Link href="/cart" className="relative hover:text-[#00462C] transition-colors">
+            <Link
+              href="/cart"
+              className="relative hover:text-[#00462C] transition-colors"
+            >
               <CartIcon />
-              <span
-                className="absolute -top-1.75 -right-1.75 min-w-4.25 h-4.25 px-0.75
-                           bg-[#00462C] text-white text-[10px] font-bold rounded-full
-                           flex items-center justify-center leading-none"
-              >
-                {cartCount}
-              </span>
+              <Badge count={cartCount} />
             </Link>
 
-            {/* Log in */}
             <button
-              className="flex items-center gap-2 text-[15px] font-medium hover:text-[#00462C] transition-colors"
+              className="flex items-center gap-1.5 text-[15px] font-medium hover:text-[#00462C] transition-colors"
               onClick={auth.openLogin}
             >
               <UserIcon />
-              <span>Log in</span>
+              <span className="hidden sm:inline">Log in</span>
+            </button>
+
+            {/* Hamburger — mobile/tablet only */}
+            <button
+              className="lg:hidden hover:text-[#00462C] transition-colors"
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Open menu"
+            >
+              <MenuIcon />
             </button>
           </div>
         </div>
       </nav>
+
+      {/* ── Mobile drawer overlay ── */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* ── Mobile drawer ── */}
+      <div
+        className={`
+          fixed top-0 left-0 h-full w-[300px] max-w-[85vw] bg-white z-50
+          shadow-2xl flex flex-col transition-transform duration-300 ease-in-out lg:hidden
+          ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
+        `}
+      >
+        {/* Drawer header */}
+        <div className="flex items-center justify-between px-5 h-[71px] border-b border-[#E6ECF0]">
+          <Link href="/" onClick={() => setMobileMenuOpen(false)}>
+            <Image
+              src="/logo.png"
+              alt="Nityagro"
+              width={90}
+              height={33}
+              className="object-contain"
+            />
+          </Link>
+          <button
+            onClick={() => setMobileMenuOpen(false)}
+            className="text-[#1a1a1a] hover:text-[#00462C] transition-colors"
+            aria-label="Close menu"
+          >
+            <CloseIcon />
+          </button>
+        </div>
+
+        {/* Drawer body */}
+        <div className="flex-1 overflow-y-auto py-4">
+          {/* Browse Categories (mobile) */}
+          <div className="px-5 mb-1">
+            <button
+              onClick={() => setMobileCategoryOpen(!mobileCategoryOpen)}
+              className="w-full flex items-center justify-between py-3 text-[15px] font-semibold text-[#1a1a1a]"
+            >
+              <span className="flex items-center gap-2.5">
+                <GridIcon />
+                Browse Categories
+              </span>
+              <span
+                className={`transition-transform duration-200 ${
+                  mobileCategoryOpen ? "rotate-180" : ""
+                }`}
+              >
+                <ChevronDownIcon />
+              </span>
+            </button>
+            {mobileCategoryOpen && (
+              <div className="pl-7 pb-2 flex flex-col gap-0.5">
+                {CATEGORIES.map((item) => (
+                  <a
+                    key={item}
+                    href={`/category/${item.toLowerCase()}`}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="py-2.5 text-[14px] text-[#00462C] hover:font-medium transition"
+                  >
+                    {item}
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="mx-5 h-px bg-[#E6ECF0] my-1" />
+
+          {/* Nav links (mobile) */}
+          {NAV_LINKS.map((link) => (
+            <div key={link.label} className="px-5">
+              {link.hasDropdown ? (
+                <>
+                  <button
+                    onClick={() => setMobileMethodsOpen(!mobileMethodsOpen)}
+                    className="w-full flex items-center justify-between py-3 text-[15px] font-medium text-[#1a1a1a]"
+                  >
+                    {link.label}
+                    <span
+                      className={`transition-transform duration-200 ${
+                        mobileMethodsOpen ? "rotate-180" : ""
+                      }`}
+                    >
+                      <ChevronDownIcon />
+                    </span>
+                  </button>
+                  {mobileMethodsOpen && (
+                    <div className="pl-4 pb-2 flex flex-col gap-0.5">
+                      {link.childLinks.map((child) => (
+                        <Link
+                          key={child.label}
+                          href={`/methods/${child.slug}`}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="py-2.5 text-[14px] text-[#00462C] hover:font-medium transition"
+                        >
+                          {child.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <a
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block py-3 text-[15px] font-medium text-[#1a1a1a] hover:text-[#00462C] transition-colors"
+                >
+                  {link.label}
+                </a>
+              )}
+            </div>
+          ))}
+
+          <div className="mx-5 h-px bg-[#E6ECF0] my-1" />
+
+          {/* Log in (mobile) */}
+          <div className="px-5">
+            <button
+              onClick={() => {
+                auth.openLogin();
+                setMobileMenuOpen(false);
+              }}
+              className="w-full flex items-center gap-3 py-3 text-[15px] font-medium text-[#1a1a1a] hover:text-[#00462C] transition-colors"
+            >
+              <UserIcon />
+              Log in
+            </button>
+          </div>
+        </div>
+
+        {/* Drawer footer */}
+        <div className="px-5 py-4 border-t border-[#E6ECF0] bg-[#FFF8E7]">
+          <p className="text-[12px] text-[#1a1a1a] font-medium text-center">
+            🎁 12% OFF above · Code:{" "}
+            <span className="font-semibold">NEW12</span>
+          </p>
+        </div>
+      </div>
+
       <AuthModals auth={auth} />
     </header>
   );

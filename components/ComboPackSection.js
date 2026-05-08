@@ -292,9 +292,28 @@ export default function ProductSection() {
           style={{ maxWidth: "1278px" }}
         >
           {filtered.length > 0 ? (
-            filtered.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))
+            <>
+              {/* 🔹 Mobile & Tablet → Slider */}
+              <div className="lg:hidden overflow-x-auto scrollbar-hide pb-6 px-4">
+                <div className="flex gap-3" style={{ width: "max-content" }}>
+                  {filtered.map((product) => (
+                    <div
+                      key={product.id}
+                      className="shrink-0 w-[160px] sm:w-[200px]"
+                    >
+                      <ProductCard product={product} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 🔹 Large Screen → Grid */}
+              <div className="hidden lg:grid grid-cols-4 xl:grid-cols-5 gap-5 px-4 pb-12 max-w-[1278px] mx-auto">
+                {filtered.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            </>
           ) : (
             <p className="text-gray-400 text-sm py-10 w-full text-center">
               No products in this category yet.

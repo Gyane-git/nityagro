@@ -7,8 +7,7 @@ import { ALL_PRODUCTS } from "@/app/products/productsData";
 import useCartStore from "@/store/cartStore";
 import useToastStore from "@/store/toastStore";
 
-// ─── Category Icons (inline SVG) ───────────────────────────────────────────
-
+// ─── Icons ─────────────────────────────────────────────────────────────────
 const CartIcon = () => (
   <svg
     width="16"
@@ -41,13 +40,13 @@ const StarIcon = ({ filled }) => (
 
 // ─── Data ──────────────────────────────────────────────────────────────────
 const CATEGORIES = [
-  { id: "all",      label: "All",     image: "/categories/all.png" }, 
-  { id: "oils",     label: "Oils",    image: "/categories/oils.png" },
-  { id: "flours",   label: "Flours",  image: "/categories/flours.png"},
-  { id: "spices",   label: "Spices",  image: "/categories/spieces.png" },
-  { id: "jaggery",  label: "Jaggery", image: "/categories/jaggery.png"},
-  { id: "dailya",   label: "Dailya",  image: "/categories/dailya.png" },
-  { id: "sattu",    label: "Sattu",   image: "/categories/satu.png"},
+  { id: "all", label: "All", image: "/categories/all.png" },
+  { id: "oils", label: "Oils", image: "/categories/oils.png" },
+  { id: "flours", label: "Flours", image: "/categories/flours.png" },
+  { id: "spices", label: "Spices", image: "/categories/spieces.png" },
+  { id: "jaggery", label: "Jaggery", image: "/categories/jaggery.png" },
+  { id: "dailya", label: "Dailya", image: "/categories/dailya.png" },
+  { id: "sattu", label: "Sattu", image: "/categories/satu.png" },
 ];
 
 const PRODUCTS = [
@@ -143,25 +142,18 @@ function ProductCard({ product }) {
   };
 
   return (
-    <div
-      className="relative flex flex-col border border-gray-200 overflow-hidden"
-      style={{
-        width: "230.2px",
-        height: "360.83px",
-        borderRadius: "8px",
-      }}
-    >
+    <div className="relative flex flex-col border border-gray-200 overflow-hidden rounded-lg w-full h-full">
       {/* Discount */}
       {product.discount && (
         <div
           className="absolute top-0 left-0 z-10 text-white font-bold text-center"
           style={{
             background: "#00462C",
-            width: "56px",
-            minHeight: "60px",
+            width: "48px",
+            minHeight: "54px",
             borderBottomRightRadius: "8px",
-            fontSize: "11px",
-            padding: "6px 4px",
+            fontSize: "9px",
+            padding: "5px 4px",
             whiteSpace: "pre-line",
           }}
         >
@@ -172,11 +164,12 @@ function ProductCard({ product }) {
       {/* Badge */}
       {product.badge && (
         <div
-          className="absolute top-3 right-0 z-10 text-white text-xs px-3 py-1.5"
+          className="absolute top-3 right-0 z-10 text-white px-2 py-1"
           style={{
             background: "#F5A623",
             borderTopLeftRadius: "4px",
             borderBottomLeftRadius: "4px",
+            fontSize: "10px",
           }}
         >
           {product.badge}
@@ -188,35 +181,33 @@ function ProductCard({ product }) {
         className="flex flex-col flex-1 min-h-0"
       >
         {/* Image */}
-        <div className="relative w-full h-55 bg-gray-50 flex items-center justify-center">
+        <div className="relative w-full bg-gray-50" style={{ height: "160px" }}>
           <Image
             src={product.image}
             alt={product.name}
             fill
-            className="object-contain p-4"
+            className="object-contain p-3"
+            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 20vw"
           />
         </div>
 
         {/* Info */}
-        <div className="flex flex-col flex-1 px-3 py-3">
-          <div>
-            <StarRating rating={product.rating} reviews={product.reviews} />
-
-            <p className="text-sm font-medium text-gray-800 line-clamp-2 mt-1">
-              {product.name}
-            </p>
-
-            <p className="text-base font-bold text-gray-900 mt-1">
-              NPR {product.price}
-            </p>
-          </div>
+        <div className="flex flex-col flex-1 px-2.5 py-2">
+          <StarRating rating={product.rating} reviews={product.reviews} />
+          <p className="text-xs sm:text-sm font-medium text-gray-800 line-clamp-2 mt-1 leading-tight">
+            {product.name}
+          </p>
+          <p className="text-sm font-bold text-gray-900 mt-1">
+            NPR {product.price}
+          </p>
         </div>
       </Link>
 
-      <div className="px-3 pb-3">
+      {/* Add to Cart */}
+      <div className="px-2.5 pb-2.5">
         <button
           onClick={handleAdd}
-          className="w-full py-2.5 rounded text-white font-semibold flex items-center justify-center gap-2"
+          className="w-full py-2 rounded text-white font-semibold flex items-center justify-center gap-1.5 text-sm transition-colors"
           style={{ background: added ? "#2d7a4f" : "#00462C" }}
         >
           <CartIcon />
@@ -238,87 +229,77 @@ export default function ProductSection() {
 
   return (
     <section className="w-full bg-white">
-      <div className="mx-auto" style={{ maxWidth: "1360px" }}>
+      <style>{`
+        .product-card-item {
+          width: calc((100vw - 48px) / 2.5);
+        }
+        @media (min-width: 640px) {
+          .product-card-item {
+            width: calc((100vw - 64px) / 3.5);
+          }
+        }
+        @media (min-width: 1024px) {
+          .product-card-item {
+            width: calc((100vw - 80px) / 4.5);
+          }
+        }
+        @media (min-width: 1280px) {
+          .product-card-item {
+            width: calc((100vw - 96px) / 5.5);
+          }
+        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+
+      <div className="mx-auto w-full max-w-[1278px]">
         {/* ── Welcome Header ── */}
-        {/* width:1360 · height:127 · gap:4 · pt:45 */}
-        <div
-          className="flex flex-col items-center text-center"
-          style={{
-            width: "100%",
-            height: "127px",
-            gap: "4px",
-            paddingTop: "45px",
-          }}
-        >
-       <h1
-  className="text-center font-bold text-[32px] leading-[38.4px] tracking-[0.6px] text-[#235A49]"
-  style={{ fontFamily: "Roboto Slab" }}
->
+        <div className="flex flex-col items-center text-center pt-8 sm:pt-10 lg:pt-[45px] pb-2 gap-1 px-4">
+          <h1
+            className="font-bold text-xl sm:text-2xl lg:text-[32px] leading-tight tracking-[0.6px] text-[#235A49]"
+            style={{ fontFamily: "Roboto Slab" }}
+          >
             Welcome To Nityagro!
           </h1>
           <p
-  className="text-center font-normal text-[32px] leading-[38.4px] tracking-[0.6px] text-[#235A49]"
-  style={{ fontFamily: "Roboto Slab" }}
->
+            className="font-normal text-sm sm:text-lg lg:text-[32px] leading-tight tracking-[0.6px] text-[#235A49]"
+            style={{ fontFamily: "Roboto Slab" }}
+          >
             Pure Goodness, Delivered Closer to You
           </p>
         </div>
 
         {/* ── Category Tabs ── */}
-        {/* width:1360 · height:86.56 · minHeight:80 · gap:12 · px:20 · pb:13 */}
-        <div
-          className="flex items-end justify-center mt-4 "
-          style={{
-            width: "100%",
-            height: "86.56px",
-            minHeight: "80px",
-            gap: "12px",
-            paddingRight: "20px",
-            paddingLeft: "20px",
-            paddingBottom: "13px",
-          }}
-        >
+        <div className="flex items-end overflow-x-auto scrollbar-hide gap-1 sm:gap-3 sm:justify-center pb-3 mt-4 px-4">
           {CATEGORIES.map(({ id, label, image }) => {
             const isActive = activeCategory === id;
             return (
               <button
                 key={id}
                 onClick={() => setActiveCategory(id)}
-                className="flex flex-col items-center gap-1 relative transition-all"
-                style={{ minWidth: "72px" }}
+                className="flex flex-col items-center relative transition-all flex-shrink-0"
+                style={{ minWidth: "52px" }}
               >
-                {/* Icon container: width:72 · height:75.56 · pb:1 */}
-                <div
-                  className="flex flex-col items-center justify-end cursor-pointer"
-                  style={{
-                    width: "72px",
-                    height: "75.56px",
-                    paddingBottom: "2px",
-                  }}
-                >
-                  <span
-                    style={{
-                      color: isActive ? "#00462C" : "#6B7280",
-                      transition: "color 0.2s",
-                    }}
-                  >
-                    <Image src={image} alt={label} width={48} height={48} />
-                  </span>
+                <div className="flex flex-col items-center justify-end cursor-pointer pb-2">
+                  <Image
+                    src={image}
+                    alt={label}
+                    width={36}
+                    height={36}
+                    className="sm:w-12 sm:h-12"
+                  />
                   <span
                     className="text-xs font-medium mt-1"
                     style={{
                       color: isActive ? "#00462C" : "#6B7280",
                       lineHeight: "16px",
                       letterSpacing: "0.2px",
-                      
                       transition: "color 0.2s",
                     }}
                   >
                     {label}
                   </span>
                 </div>
-
-                {/* Active underline */}
                 <div
                   className="absolute bottom-0 left-1/2 -translate-x-1/2 transition-all duration-200"
                   style={{
@@ -334,48 +315,52 @@ export default function ProductSection() {
         </div>
 
         {/* ── Divider ── */}
-        <div className="border-t border-gray-200 mx-5" />
+        <div className="border-t border-gray-200 mx-4" />
 
-        {/* ── All Products Title Row ── */}
-        {/* width:1278 · height:36 · gap:16 */}
-        <div
-          className="flex items-center justify-between mx-auto mt-6 mb-5"
-          style={{
-            width: "1440px",
-            maxWidth: "100%",
-            height: "36px",
-            gap: "16px",
-          }}
-        >
-          <h2 className="font-bold text-[#00462C]" style={{ fontSize: "22px" }}>
+        {/* ── Title Row ── */}
+        <div className="flex items-center justify-between mt-4 mb-3 px-4">
+          <h2 className="font-bold text-lg sm:text-xl lg:text-[22px] text-[#00462C]">
             {activeCategory === "all"
               ? "All Products"
               : CATEGORIES.find((c) => c.id === activeCategory)?.label}
           </h2>
           <Link
             href="/products"
-            className="font-semibold text-sm hover:underline transition-colors"
+            className="font-semibold text-sm hover:underline"
             style={{ color: "#00462C" }}
           >
             View All
           </Link>
         </div>
 
-        {/* ── Product Cards Grid ── */}
-        <div
-          className="mx-auto flex flex-wrap gap-5 pb-12"
-          style={{ maxWidth: "1278px" }}
-        >
-          {filtered.length > 0 ? (
-            filtered.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))
-          ) : (
-            <p className="text-gray-400 text-sm py-10 w-full text-center">
-              No products in this category yet.
-            </p>
-          )}
-        </div>
+        {filtered.length > 0 ? (
+          <>
+            {/* 🔹 Mobile & Tablet → Slider */}
+            <div className="lg:hidden overflow-x-auto scrollbar-hide pb-6 px-4">
+              <div className="flex gap-3" style={{ width: "max-content" }}>
+                {filtered.map((product) => (
+                  <div
+                    key={product.id}
+                    className="shrink-0 product-card-item"
+                  >
+                    <ProductCard product={product} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 🔹 Large Screen → Grid */}
+            <div className="hidden lg:grid grid-cols-4 xl:grid-cols-5 gap-4 px-4 pb-8">
+              {filtered.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </>
+        ) : (
+          <p className="text-gray-400 text-sm py-10 w-full text-center px-4">
+            No products in this category yet.
+          </p>
+        )}
       </div>
     </section>
   );
