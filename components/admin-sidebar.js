@@ -47,7 +47,7 @@ export default function SideHeaderBar() {
       children: [
         { name: "View All", path: "/admin/product-list" },
         { name: "Add New", path: "/admin/add-product" },
-        { name: "Product Units", path: "/admin/product-units" },
+        
       ],
     },
 
