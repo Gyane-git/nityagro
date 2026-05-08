@@ -43,6 +43,7 @@ CREATE TABLE `products` (
     `categoryId` VARCHAR(191) NOT NULL,
     `userId` BIGINT NOT NULL,
     `productName` VARCHAR(191) NOT NULL,
+    `subGroupName` VARCHAR(191) NULL,
     `slug` VARCHAR(191) NULL,
     `productVariation` VARCHAR(191) NULL,
     `productDescription` VARCHAR(191) NULL,
@@ -345,6 +346,19 @@ CREATE TABLE `productImage` (
     `updatedAt` DATETIME(3) NOT NULL,
 
     PRIMARY KEY (`productImageId`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `productVariant` (
+    `variantId` BIGINT NOT NULL AUTO_INCREMENT,
+    `pCode` VARCHAR(191) NOT NULL,
+    `subGroupName` VARCHAR(191) NOT NULL,
+    `variationName` VARCHAR(191) NOT NULL,
+    `salesRate` DOUBLE NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    PRIMARY KEY (`variantId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable

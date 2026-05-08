@@ -26,6 +26,35 @@ interface Category {
 }
 
 type OmsProduct = {
+  PCode: string;
+  PDesc: string;
+  GroupName: string;
+  SubGroupName:string;
+  slug: string | null;
+  categoryDescription: string | null;
+  BuyRate: number;
+  SalesRate: number;
+  MRP: number;
+  TradeRate: number;
+  StockStatus: string;
+  StockQty: string;
+  stockQuantity: number;
+  categoryImage: string | null;
+  categoryLogo: string | null;
+  categoryBanner: string | null;
+  userId: string;
+};
+
+type OmsSubGroupName = {
+  PCode: string;
+  PDesc: string;
+  SubGroupName: string;
+  SalesRate: number;
+  Qty:number;
+
+};
+
+type OmsCategory = {
   GroupName: string;
 };
 
@@ -63,7 +92,9 @@ export default function CategoriesListPage() {
 
   const [categoryImageFile, setCategoryImageFile] = useState<File | null>(null);
   const [categoryLogoFile, setCategoryLogoFile] = useState<File | null>(null);
-  const [categoryBannerFile, setCategoryBannerFile] = useState<File | null>(null);
+  const [categoryBannerFile, setCategoryBannerFile] = useState<File | null>(
+    null,
+  );
 
   const fetchCategories = async () => {
     setLoading(true);
@@ -112,13 +143,69 @@ export default function CategoriesListPage() {
       }
 
       const omsJson = await omsResponse.json();
-      const products: OmsProduct[] = Array.isArray(omsJson?.data) ? omsJson.data : [];
-      const uniqueCategoryNames = Array.from(
+      const categories: OmsCategory[] = Array.isArray(omsJson?.data)
+        ? omsJson.data
+        : [];
+         const uniqueCategoryNames = Array.from(
         new Set(
-          products
+          categories
             .map((item) => (item.GroupName || "").trim())
             .filter(Boolean),
         ),
+      );
+      const products: OmsProduct[] = Array.isArray(omsJson?.data)
+        ? omsJson.data
+        : [];
+         const subGroup: OmsSubGroupName[] = Array.isArray(omsJson?.data)
+        ? omsJson.data
+        : [];
+     
+     
+
+      const product = Object.values(
+        products.reduce((acc, item) => {
+          if (!acc[item.PDesc]) {
+            acc[item.PDesc] = {
+              productCode: item.PCode,
+              categoryId: item.GroupName,
+              userId: "1",
+              productName: item.PDesc,
+              subGroupName:item.SubGroupName || null,
+              slug: null,
+              productVariation: null,
+              productDescription: null,
+              nutritionInfo: null,
+              cookingInstruction: null,
+              storageInstruction: null,
+              pImage: null,
+              productStatus: true,
+              actualPrice: item.BuyRate,
+              sellingPrice: item.SalesRate,
+              deliveryTargetDays: null,
+              stockQuantity: item.StockQty,
+              availableQuantity: item.StockQty,
+            };
+          }
+
+          acc[item.PDesc]; // ✅ full product object
+          return acc;
+        }, {} as Record<string, any>),
+      );
+
+      const productsubGroup = Object.values(
+        subGroup.reduce((acc, item) => {
+          if (!acc[item.PDesc]) {
+            acc[item.PDesc] = {
+              pCode: item.PCode,
+              subGroupName: item.SubGroupName,
+              variationName: item.PDesc,
+              salesRate: item.SalesRate,
+            };
+          }
+
+          acc[item.PDesc]; // ✅ full product object
+          return acc;
+        }, {} as Record<string, any>),
       );
 
       if (uniqueCategoryNames.length === 0) {
@@ -139,7 +226,18 @@ export default function CategoriesListPage() {
         })),
       };
 
+      const requestDataProduct = {
+        product,
+      };
+
+      const requestDataSubGroup = {
+        productsubGroup,
+      };
+
       const response = await apiPostRequest("/categories", payload);
+      const response2 = await apiPostRequest("/products", requestDataProduct);
+      const response3 = await apiPostRequest("/subcategories", requestDataSubGroup);
+      console.log(JSON.stringify(payload))
       if (!response.success) {
         toast.error(response.message ?? "OMS sync failed");
         return;
@@ -179,11 +277,16 @@ export default function CategoriesListPage() {
       let categoryLogo = editForm.categoryLogo;
       let categoryBanner = editForm.categoryBanner;
 
-      if ([categoryImageFile, categoryLogoFile, categoryBannerFile].some(Boolean)) {
+      if (
+        [categoryImageFile, categoryLogoFile, categoryBannerFile].some(Boolean)
+      ) {
         const uploadFormData = new FormData();
-        if (categoryImageFile) uploadFormData.append("categoryImage", categoryImageFile);
-        if (categoryLogoFile) uploadFormData.append("categoryLogo", categoryLogoFile);
-        if (categoryBannerFile) uploadFormData.append("categoryBanner", categoryBannerFile);
+        if (categoryImageFile)
+          uploadFormData.append("categoryImage", categoryImageFile);
+        if (categoryLogoFile)
+          uploadFormData.append("categoryLogo", categoryLogoFile);
+        if (categoryBannerFile)
+          uploadFormData.append("categoryBanner", categoryBannerFile);
 
         const uploadResponse = await apiUploadRequest<{
           categoryImage?: string;
@@ -239,7 +342,9 @@ export default function CategoriesListPage() {
         "Are you sure you want to delete this category? This action cannot be undone.",
       onConfirm: async () => {
         try {
-          const response = await apiDeleteRequest("/categories", { categoryId });
+          const response = await apiDeleteRequest("/categories", {
+            categoryId,
+          });
           if (!response.success) {
             toast.error(response.message ?? "Failed to delete category");
             return;
@@ -279,14 +384,17 @@ export default function CategoriesListPage() {
               onClick={handleOmsSync}
               disabled={syncingOms}
               className={`rounded-md px-4 py-2 text-sm font-semibold text-white ${
-                syncingOms ? "bg-gray-400 cursor-not-allowed" : "bg-[#1f6a45] hover:bg-[#155235]"
+                syncingOms
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-[#1f6a45] hover:bg-[#155235]"
               }`}
             >
               {syncingOms ? "Syncing..." : "OMS Data Sync"}
             </button>
           </div>
           <p className="mt-3 text-sm text-gray-500">
-            External API categories are synced automatically. You can only update
+            External API categories are synced automatically. You can only
+            update
             <strong> slug, description and images</strong> here.
           </p>
         </div>
@@ -299,9 +407,15 @@ export default function CategoriesListPage() {
                 <th className="p-2 text-center text-xs border">Name</th>
                 <th className="p-2 text-center text-xs border">Slug</th>
                 <th className="p-2 text-center text-xs border">Description</th>
-                <th className="p-2 text-center text-xs border">Category Image</th>
-                <th className="p-2 text-center text-xs border">Category Logo</th>
-                <th className="p-2 text-center text-xs border">Category Banner</th>
+                <th className="p-2 text-center text-xs border">
+                  Category Image
+                </th>
+                <th className="p-2 text-center text-xs border">
+                  Category Logo
+                </th>
+                <th className="p-2 text-center text-xs border">
+                  Category Banner
+                </th>
                 <th className="p-2 text-center text-xs border">Created At</th>
                 <th className="p-2 text-center text-xs border">Status</th>
                 <th className="p-2 text-center text-xs border">Actions</th>
@@ -316,15 +430,26 @@ export default function CategoriesListPage() {
                 </tr>
               ) : (
                 filteredCategories.map((category) => (
-                  <tr key={category.categoryId} className="hover:bg-green-100 text-sm text-gray-900">
+                  <tr
+                    key={category.categoryId}
+                    className="hover:bg-green-100 text-sm text-gray-900"
+                  >
                     <td className="p-1 text-center">{category.categoryId}</td>
                     <td className="p-1 text-center">{category.categoryName}</td>
-                    <td className="p-1 text-center">{category.slug ?? "N/A"}</td>
-                    <td className="p-1 text-center">{category.categoryDescription ?? "N/A"}</td>
+                    <td className="p-1 text-center">
+                      {category.slug ?? "N/A"}
+                    </td>
+                    <td className="p-1 text-center">
+                      {category.categoryDescription ?? "N/A"}
+                    </td>
                     <td className="p-1 text-center">
                       {category.categoryImage ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={category.categoryImage} alt="" className="h-12 w-12 rounded object-cover border mx-auto" />
+                        <img
+                          src={category.categoryImage}
+                          alt=""
+                          className="h-12 w-12 rounded object-cover border mx-auto"
+                        />
                       ) : (
                         "N/A"
                       )}
@@ -332,7 +457,11 @@ export default function CategoriesListPage() {
                     <td className="p-1 text-center">
                       {category.categoryLogo ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={category.categoryLogo} alt="" className="h-12 w-12 rounded object-cover border mx-auto" />
+                        <img
+                          src={category.categoryLogo}
+                          alt=""
+                          className="h-12 w-12 rounded object-cover border mx-auto"
+                        />
                       ) : (
                         "N/A"
                       )}
@@ -340,12 +469,18 @@ export default function CategoriesListPage() {
                     <td className="p-1 text-center">
                       {category.categoryBanner ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={category.categoryBanner} alt="" className="h-12 w-24 rounded object-cover border mx-auto" />
+                        <img
+                          src={category.categoryBanner}
+                          alt=""
+                          className="h-12 w-24 rounded object-cover border mx-auto"
+                        />
                       ) : (
                         "N/A"
                       )}
                     </td>
-                    <td className="p-1 text-center">{new Date(category.createdAt).toLocaleString()}</td>
+                    <td className="p-1 text-center">
+                      {new Date(category.createdAt).toLocaleString()}
+                    </td>
                     <td className="p-1 text-center">
                       <span
                         className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
@@ -391,7 +526,9 @@ export default function CategoriesListPage() {
             <div className="bg-gradient-to-r from-[#0072bc] to-blue-600 px-6 py-5 text-white flex justify-between items-center">
               <div>
                 <h2 className="text-xl font-bold">Category Details</h2>
-                <p className="text-sm text-blue-100 mt-1">View complete category information</p>
+                <p className="text-sm text-blue-100 mt-1">
+                  View complete category information
+                </p>
               </div>
               <button
                 onClick={() => setInfoDialog(null)}
@@ -403,21 +540,27 @@ export default function CategoriesListPage() {
 
             <div className="p-6 space-y-5">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Category Name</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Category Name
+                </label>
                 <div className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 font-medium">
                   {infoDialog.categoryName || "-"}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Slug</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Slug
+                </label>
                 <div className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-800">
                   {infoDialog.slug || "-"}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Description
+                </label>
                 <div className="min-h-[120px] w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 whitespace-pre-wrap leading-relaxed">
                   {infoDialog.categoryDescription || "No description available"}
                 </div>
@@ -426,11 +569,19 @@ export default function CategoriesListPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="rounded-xl bg-blue-50 border border-blue-100 p-4">
                   <p className="text-xs text-gray-500 mb-1">Category ID</p>
-                  <p className="font-semibold text-gray-800">#{infoDialog.categoryId}</p>
+                  <p className="font-semibold text-gray-800">
+                    #{infoDialog.categoryId}
+                  </p>
                 </div>
                 <div className="rounded-xl bg-green-50 border border-green-100 p-4">
                   <p className="text-xs text-gray-500 mb-1">Status</p>
-                  <p className={`font-semibold ${infoDialog.categoryStatus ? "text-green-600" : "text-gray-600"}`}>
+                  <p
+                    className={`font-semibold ${
+                      infoDialog.categoryStatus
+                        ? "text-green-600"
+                        : "text-gray-600"
+                    }`}
+                  >
                     {infoDialog.categoryStatus ? "Active" : "Inactive"}
                   </p>
                 </div>
@@ -455,7 +606,9 @@ export default function CategoriesListPage() {
             <div className="flex items-center justify-between px-6 py-5 border-b bg-gradient-to-r from-[#0072bc] to-blue-600 text-white">
               <div>
                 <h2 className="text-xl font-bold">Edit Category</h2>
-                <p className="text-sm text-blue-100 mt-1">Update category details and media assets</p>
+                <p className="text-sm text-blue-100 mt-1">
+                  Update category details and media assets
+                </p>
               </div>
               <button
                 onClick={() => setEditForm(emptyForm)}
@@ -467,30 +620,43 @@ export default function CategoriesListPage() {
 
             <form onSubmit={handleEditSubmit} className="p-6 space-y-5">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Category Name</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Category Name
+                </label>
                 <input
                   readOnly
                   value={editForm.categoryName}
                   className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-gray-600 outline-none"
                 />
-                <p className="text-xs text-gray-400 mt-1">Category name is synced from OMS and non-editable</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Category name is synced from OMS and non-editable
+                </p>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Slug</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Slug
+                </label>
                 <input
                   value={editForm.slug}
-                  onChange={(e) => setEditForm((prev) => ({ ...prev, slug: e.target.value }))}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({ ...prev, slug: e.target.value }))
+                  }
                   className="w-full rounded-xl border border-gray-300 px-4 py-3 text-black outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Description
+                </label>
                 <textarea
                   value={editForm.categoryDescription}
                   onChange={(e) =>
-                    setEditForm((prev) => ({ ...prev, categoryDescription: e.target.value }))
+                    setEditForm((prev) => ({
+                      ...prev,
+                      categoryDescription: e.target.value,
+                    }))
                   }
                   rows={4}
                   className="w-full rounded-xl border border-gray-300 px-4 py-3 text-black outline-none resize-none focus:ring-2 focus:ring-blue-500"
@@ -498,12 +664,26 @@ export default function CategoriesListPage() {
               </div>
 
               <div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">Media Uploads</h3>
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                  Media Uploads
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {[
-                    { title: "Category Image", current: editForm.categoryImage, setter: setCategoryImageFile },
-                    { title: "Category Logo", current: editForm.categoryLogo, setter: setCategoryLogoFile },
-                    { title: "Category Banner", current: editForm.categoryBanner, setter: setCategoryBannerFile },
+                    {
+                      title: "Category Image",
+                      current: editForm.categoryImage,
+                      setter: setCategoryImageFile,
+                    },
+                    {
+                      title: "Category Logo",
+                      current: editForm.categoryLogo,
+                      setter: setCategoryLogoFile,
+                    },
+                    {
+                      title: "Category Banner",
+                      current: editForm.categoryBanner,
+                      setter: setCategoryBannerFile,
+                    },
                   ].map((item) => (
                     <label
                       key={item.title}
@@ -519,13 +699,19 @@ export default function CategoriesListPage() {
                       ) : (
                         <div className="text-3xl mb-2">📁</div>
                       )}
-                      <p className="font-medium text-gray-700 group-hover:text-blue-600">{item.title}</p>
-                      <p className="text-xs text-gray-400 mt-1">Click to replace</p>
+                      <p className="font-medium text-gray-700 group-hover:text-blue-600">
+                        {item.title}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Click to replace
+                      </p>
                       <input
                         type="file"
                         accept="image/*"
                         className="hidden"
-                        onChange={(e) => item.setter(e.target.files?.[0] || null)}
+                        onChange={(e) =>
+                          item.setter(e.target.files?.[0] || null)
+                        }
                       />
                     </label>
                   ))}
@@ -538,7 +724,10 @@ export default function CategoriesListPage() {
                     type="checkbox"
                     checked={editForm.categoryStatus}
                     onChange={(e) =>
-                      setEditForm((prev) => ({ ...prev, categoryStatus: e.target.checked }))
+                      setEditForm((prev) => ({
+                        ...prev,
+                        categoryStatus: e.target.checked,
+                      }))
                     }
                   />
                   Set this category Active
@@ -572,4 +761,3 @@ export default function CategoriesListPage() {
     </div>
   );
 }
-

@@ -65,6 +65,7 @@ model Products {
   categoryId         String   
   userId             BigInt
   productName        String
+  subGroupName       String?
   slug               String?
   productVariation   String?
   productDescription String?
@@ -400,6 +401,18 @@ model ProductImage {
   products Products @relation(fields: [productId], references: [productId])
 
   @@map("productImage")
+}
+
+model ProductVariant {
+  variantId BigInt   @id @default(autoincrement())
+  pCode      String
+  subGroupName       String
+  variationName       String
+   salesRate    Float?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("productVariant")
 }
 
 model SetShippingCost {

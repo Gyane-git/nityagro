@@ -20,6 +20,7 @@ type ProductDTO = {
   categoryId: string;
   userId: number;
   productName: string;
+  subGroupName?:string;
   slug?: string;
   productVariation?: string;
   productDescription?: string;
@@ -97,20 +98,16 @@ export async function POST(req: Request) {
 
     // ✅ Remove duplicate names inside request itself
     const addedNames = new Set<string>();
-
     const newProducts = product.filter((p) => {
       // already exists in DB
       if (existingNames.has(p.productName)) {
         return false;
       }
-
       // duplicate inside incoming array
       if (addedNames.has(p.productName)) {
         return false;
       }
-
       addedNames.add(p.productName);
-
       return true;
     });
 
@@ -124,6 +121,7 @@ export async function POST(req: Request) {
           categoryId: p.categoryId,
           userId: p.userId,
           productName: p.productName,
+          subGroupName:p.subGroupName,
           slug: p.slug,
           productVariation: p.productVariation,
           productDescription: p.productDescription,

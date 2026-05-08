@@ -17,6 +17,7 @@ interface Products {
   categoryId: string;
   userId: string;
   productName: string;
+  subGroupName: string;
   slug: null;
   productVariation: null;
   productDescription: null;
@@ -169,6 +170,9 @@ export default function ProductListPage() {
                 Category
               </th>
               <th className="p-2 text-center text-xs border">
+                Sub Category
+              </th>
+              <th className="p-2 text-center text-xs border">
                 Price
               </th>
               <th className="p-2 text-center text-xs border">
@@ -194,8 +198,12 @@ export default function ProductListPage() {
 
                 {/* Catalog */}
               <td className="p-1 text-left">
-                  {product.productName}
-                </td>
+
+                { product.subGroupName === "NO Sub GROUP" ? product.productName :     product.subGroupName
+
+                }
+                  {/* {product.productName}  {product.subGroupName} */}
+               </td>
 
                 {/* Code */}
                <td className="p-1 text-center">
@@ -220,6 +228,13 @@ export default function ProductListPage() {
                   <div>
                     <div className="text-sm font-semibold text-gray-900">
                       {product.categoryId || "Yuemi"}
+                    </div>
+                  </div>
+                </td>
+                 <td className="p-1 text-center">
+                  <div>
+                    <div className="text-sm font-semibold text-gray-900">
+                      {product.subGroupName || "Yuemi"}
                     </div>
                   </div>
                 </td>
