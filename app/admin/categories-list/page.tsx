@@ -1,159 +1,190 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useConfirmModalStore from "@/store/confirmModalStore";
 import toast from "react-hot-toast";
 import {
   apiDeleteRequest,
   apiGetRequest,
+  apiPostRequest,
   apiPutRequest,
   apiUploadRequest,
 } from "@/apihelper/apiHelper";
-import { Edit, Edit2, Info, Search, Trash, Trash2 } from "lucide-react";
+import { Edit2, Info, Search, Trash2 } from "lucide-react";
 
-interface Categories {
+interface Category {
   categoryId: number;
   categoryName: string;
-  slug: string;
   userId: string;
+  slug: string | null;
+  categoryDescription: string | null;
   categoryImage: string | null;
   categoryLogo: string | null;
   categoryBanner: string | null;
-  categoryStatus: string | null;
-  categoryDescription: string;
+  categoryStatus: boolean;
   createdAt: string;
 }
-type FormData = {
+
+type OmsProduct = {
+  GroupName: string;
+};
+
+type EditForm = {
   categoryId: string;
   categoryName: string;
-  slug: string | null;
-  categoryDescription: string | null;
-  categoryImage: File | null;
+  slug: string;
+  categoryDescription: string;
+  categoryImage: string | null;
   categoryLogo: string | null;
   categoryBanner: string | null;
-  userId: string;
+  categoryStatus: boolean;
 };
-export default function CategoriesListPage() {
-  const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(false);
-  const openConfirm = useConfirmModalStore((state) => state.open);
-  const [infoDialg, setInfoDialog] = useState<Categories | null>(null);
-  const [categories, setCategories] = useState<Categories[]>([]);
 
-  const initialFormData: FormData = {
-    categoryId: "",
-    categoryName: "",
-    slug: null,
-    categoryDescription: null,
-    categoryImage: null,
-    categoryLogo: null,
-    categoryBanner: null,
-    userId: "1",
-  };
+const emptyForm: EditForm = {
+  categoryId: "",
+  categoryName: "",
+  slug: "",
+  categoryDescription: "",
+  categoryImage: null,
+  categoryLogo: null,
+  categoryBanner: null,
+  categoryStatus: false,
+};
+
+export default function CategoriesListPage() {
+  const openConfirm = useConfirmModalStore((state) => state.open);
+
+  const [loading, setLoading] = useState(false);
+  const [syncingOms, setSyncingOms] = useState(false);
+  const [search, setSearch] = useState("");
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [infoDialog, setInfoDialog] = useState<Category | null>(null);
+  const [editForm, setEditForm] = useState<EditForm>(emptyForm);
 
   const [categoryImageFile, setCategoryImageFile] = useState<File | null>(null);
   const [categoryLogoFile, setCategoryLogoFile] = useState<File | null>(null);
-  const [categoryBannerFile, setCategoryBannerFile] = useState<File | null>(
-    null,
-  );
-  const [categoryImagePreviewUrl, setCategoryImagePreviewUrl] = useState<
-    string | null
-  >(null);
-  const [categoryLogoPreviewUrl, setCategoryLogoPreviewUrl] = useState<
-    string | null
-  >(null);
-  const [categoryBannerPreviewUrl, setCategoryBannerPreviewUrl] = useState<
-    string | null
-  >(null);
-  const categoryImagePreviewRef = useRef<string | null>(null);
-  const categoryLogoPreviewRef = useRef<string | null>(null);
-  const categoryBannerPreviewRef = useRef<string | null>(null);
-
-  const [formdata, setFormData] = useState(initialFormData);
-
-  const [categoryImage, setCategoryImage] = useState<File | null>(null);
-
-  const [categoryLogo, setCategoryLogo] = useState<File | null>(null);
-
-  const [categoryBanner, setCategoryBanner] = useState<File | null>(null);
+  const [categoryBannerFile, setCategoryBannerFile] = useState<File | null>(null);
 
   const fetchCategories = async () => {
+    setLoading(true);
     try {
-      const response = await apiGetRequest<Categories[]>("/categories");
+      const response = await apiGetRequest<Category[]>("/categories");
       if (response.success) {
-        setLoading(false);
-        setCategories(response.data || []);
+        setCategories((response.data || []) as Category[]);
+      } else {
+        toast.error(response.message ?? "Failed to fetch categories");
       }
     } catch (error) {
-      console.error("Error fetching ledger:", error);
+      console.error(error);
+      toast.error("Failed to fetch categories");
+    } finally {
+      setLoading(false);
     }
   };
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchCategories();
   }, []);
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const updateSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const filteredCategories = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return categories;
+    return categories.filter(
+      (category) =>
+        category.categoryName.toLowerCase().includes(q) ||
+        (category.slug || "").toLowerCase().includes(q) ||
+        (category.categoryDescription || "").toLowerCase().includes(q),
+    );
+  }, [categories, search]);
 
-    const formDatas = new FormData();
+  const handleOmsSync = async () => {
+    setSyncingOms(true);
+    try {
+      const omsResponse = await fetch(
+        "http://bkgroupapi.globaltech.com.np:802/api/MasterList/ProductListCustomer?DbName=NITYAM8201",
+        { cache: "no-store" },
+      );
 
-    formDatas.append("categoryId", formdata.categoryId);
-    formDatas.append("categoryName", formdata.categoryName);
-    formDatas.append("slug", formdata.slug ?? "");
-    formDatas.append("categoryDescription", formdata.categoryDescription ?? "");
-    formDatas.append("categoryDescription", formdata.categoryDescription ?? "");
-
-    // formDatas.append(
-    //   "categoryStatus",
-    //   String(formdata.categoryStatus ?? false)
-    // );
-    
-    setFormData((prev)=>({
-      ...prev,
-      categoryImage:imageFile
-    }))
-    // if (categoryImage) {
-    //   formDatas.append("categoryImage", categoryImage);
-    // }
-
-     const response = await apiPutRequest("/categories", formDatas);
-      if (response.success) {
-        setFormData(initialFormData);
-        toast.success("response.message");
-        setLoading(false);
-        fetchCategories();
-        // reset form
+      if (!omsResponse.ok) {
+        toast.error("Failed to fetch OMS categories");
         return;
-      } else {
-        toast.error(response.message ?? "");
-
-        setLoading(false);
-        console.log(response.message);
       }
 
-   
-  }
+      const omsJson = await omsResponse.json();
+      const products: OmsProduct[] = Array.isArray(omsJson?.data) ? omsJson.data : [];
+      const uniqueCategoryNames = Array.from(
+        new Set(
+          products
+            .map((item) => (item.GroupName || "").trim())
+            .filter(Boolean),
+        ),
+      );
 
-  const updateSubmit2 = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+      if (uniqueCategoryNames.length === 0) {
+        toast("No categories found in OMS");
+        return;
+      }
+
+      const payload = {
+        categories: uniqueCategoryNames.map((categoryName) => ({
+          categoryName,
+          slug: "",
+          categoryDescription: "",
+          categoryImage: "",
+          categoryLogo: "",
+          categoryBanner: "",
+          userId: "1",
+          categoryStatus: false,
+        })),
+      };
+
+      const response = await apiPostRequest("/categories", payload);
+      if (!response.success) {
+        toast.error(response.message ?? "OMS sync failed");
+        return;
+      }
+
+      toast.success(response.message ?? "OMS sync completed");
+      await fetchCategories();
+    } catch (error) {
+      console.error(error);
+      toast.error("OMS sync failed");
+    } finally {
+      setSyncingOms(false);
+    }
+  };
+
+  const handleEditOpen = (category: Category) => {
+    setEditForm({
+      categoryId: String(category.categoryId),
+      categoryName: category.categoryName,
+      slug: category.slug || "",
+      categoryDescription: category.categoryDescription || "",
+      categoryImage: category.categoryImage,
+      categoryLogo: category.categoryLogo,
+      categoryBanner: category.categoryBanner,
+      categoryStatus: Boolean(category.categoryStatus),
+    });
+    setCategoryImageFile(null);
+    setCategoryLogoFile(null);
+    setCategoryBannerFile(null);
+  };
+
+  const handleEditSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setLoading(true);
-
-    console.log(JSON.stringify(formdata));
     try {
-      const uploadFormData = new FormData();
-      if (categoryImageFile)
-        uploadFormData.append("categoryImage", categoryImageFile);
-      if (categoryLogoFile)
-        uploadFormData.append("categoryLogo", categoryLogoFile);
-      if (categoryBannerFile)
-        uploadFormData.append("categoryBanner", categoryBannerFile);
+      let categoryImage = editForm.categoryImage;
+      let categoryLogo = editForm.categoryLogo;
+      let categoryBanner = editForm.categoryBanner;
 
-      let payloadToSave = { ...formdata };
-      if (
-        [categoryImageFile, categoryLogoFile, categoryBannerFile].some(Boolean)
-      ) {
+      if ([categoryImageFile, categoryLogoFile, categoryBannerFile].some(Boolean)) {
+        const uploadFormData = new FormData();
+        if (categoryImageFile) uploadFormData.append("categoryImage", categoryImageFile);
+        if (categoryLogoFile) uploadFormData.append("categoryLogo", categoryLogoFile);
+        if (categoryBannerFile) uploadFormData.append("categoryBanner", categoryBannerFile);
+
         const uploadResponse = await apiUploadRequest<{
           categoryImage?: string;
           categoryLogo?: string;
@@ -166,78 +197,69 @@ export default function CategoriesListPage() {
           return;
         }
 
-        payloadToSave = {
-          ...payloadToSave,
-          categoryImage: payloadToSave.categoryImage,
-          categoryLogo: payloadToSave.categoryLogo,
-          categoryBanner: payloadToSave.categoryBanner,
-        };
+        categoryImage = uploadResponse.data?.categoryImage ?? categoryImage;
+        categoryLogo = uploadResponse.data?.categoryLogo ?? categoryLogo;
+        categoryBanner = uploadResponse.data?.categoryBanner ?? categoryBanner;
       }
 
-      const response = await apiPutRequest("/categories", formdata);
-      if (response.success) {
-        setFormData(initialFormData);
-        toast.success("response.message");
+      const response = await apiPutRequest("/categories", {
+        categoryId: editForm.categoryId,
+        slug: editForm.slug,
+        categoryDescription: editForm.categoryDescription,
+        categoryImage,
+        categoryLogo,
+        categoryBanner,
+        categoryStatus: editForm.categoryStatus,
+      });
+
+      if (!response.success) {
+        toast.error(response.message ?? "Failed to update category");
         setLoading(false);
-        fetchCategories();
-        // reset form
         return;
-      } else {
-        toast.error(response.message ?? "");
-
-        setLoading(false);
-        console.log(response.message);
       }
+
+      toast.success(response.message ?? "Category updated successfully");
+      setEditForm(emptyForm);
+      setCategoryImageFile(null);
+      setCategoryLogoFile(null);
+      setCategoryBannerFile(null);
+      await fetchCategories();
     } catch (error) {
+      console.error(error);
+      toast.error("Failed to update category");
+    } finally {
       setLoading(false);
-      alert("Network error:");
-      console.error("Network error:", error);
     }
   };
 
-  // Delete category
-  async function handleDelete(id: number) {
+  const handleDelete = (categoryId: number) => {
     openConfirm({
       title: "Delete Category",
       message:
         "Are you sure you want to delete this category? This action cannot be undone.",
       onConfirm: async () => {
-        const payLoad = {
-          categoryId: id,
-        };
         try {
-          const response = await apiDeleteRequest("/categories", payLoad);
-          if (response.success) {
-            toast.success("response.message");
-            setLoading(false);
-            fetchCategories();
-            // reset form
+          const response = await apiDeleteRequest("/categories", { categoryId });
+          if (!response.success) {
+            toast.error(response.message ?? "Failed to delete category");
             return;
-          } else {
-            toast.error(response.message ?? "");
-
-            setLoading(false);
-            console.log(response.message);
           }
+          toast.success(response.message ?? "Category deleted");
+          await fetchCategories();
         } catch (error) {
-          setLoading(false);
-          alert("Network error:");
-          console.error("Network error:", error);
+          console.error(error);
+          toast.error("Failed to delete category");
         }
       },
     });
-  }
-
-  if (loading)
-    return <p className="text-center mt-10">Loading categories...</p>;
+  };
 
   return (
     <div className="p-6">
       <div className="min-h-screen bg-gray-50 p-6">
-        {/* Filters */}
         <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
-          <div className="flex  gap-4">
-            <div className="relative flex text-gray-900 ">
+          <div className="flex gap-4 items-center">
+            <div className="relative text-gray-900">
               <Search
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                 size={20}
@@ -247,27 +269,26 @@ export default function CategoriesListPage() {
                 placeholder="Search category..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className=" pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-
-            <div className="flex-1 text-center  items-center text-2xl text-gray-800 font-semibold">
+            <div className="flex-1 text-center text-2xl text-gray-800 font-semibold">
               Categories
             </div>
-            {/* 
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-          >
-            <option value="">All Categories</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.category}
-              </option>
-            ))}
-          </select> */}
+            <button
+              onClick={handleOmsSync}
+              disabled={syncingOms}
+              className={`rounded-md px-4 py-2 text-sm font-semibold text-white ${
+                syncingOms ? "bg-gray-400 cursor-not-allowed" : "bg-[#1f6a45] hover:bg-[#155235]"
+              }`}
+            >
+              {syncingOms ? "Syncing..." : "OMS Data Sync"}
+            </button>
           </div>
+          <p className="mt-3 text-sm text-gray-500">
+            External API categories are synced automatically. You can only update
+            <strong> slug, description and images</strong> here.
+          </p>
         </div>
 
         <div className="overflow-x-auto">
@@ -278,105 +299,79 @@ export default function CategoriesListPage() {
                 <th className="p-2 text-center text-xs border">Name</th>
                 <th className="p-2 text-center text-xs border">Slug</th>
                 <th className="p-2 text-center text-xs border">Description</th>
-                <th className="p-2 text-center text-xs border">
-                  Category Image
-                </th>
-                <th className="p-2 text-center text-xs border">
-                  Category Logo
-                </th>
-                <th className="p-2 text-center text-xs border">
-                  Category Banner
-                </th>
+                <th className="p-2 text-center text-xs border">Category Image</th>
+                <th className="p-2 text-center text-xs border">Category Logo</th>
+                <th className="p-2 text-center text-xs border">Category Banner</th>
                 <th className="p-2 text-center text-xs border">Created At</th>
+                <th className="p-2 text-center text-xs border">Status</th>
                 <th className="p-2 text-center text-xs border">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {categories.length === 0 ? (
+              {filteredCategories.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="text-center py-4">
+                  <td colSpan={10} className="text-center py-4">
                     No categories found.
                   </td>
                 </tr>
               ) : (
-                categories.map((cat) => (
-                  <tr
-                    key={cat.categoryId}
-                    className="hover:bg-green-100 text-sm text-gray-900 cursor-pointer"
-                  >
-                    <td className="p-1 text-center">{cat.categoryId}</td>
-                    {/* <td className="px-4 py-2 border-b">{cat.}</td> */}
-                    <td className="p-1 text-center">{cat.categoryName}</td>
-                    <td className="p-1 text-center">{cat.slug ?? "N/A"}</td>
+                filteredCategories.map((category) => (
+                  <tr key={category.categoryId} className="hover:bg-green-100 text-sm text-gray-900">
+                    <td className="p-1 text-center">{category.categoryId}</td>
+                    <td className="p-1 text-center">{category.categoryName}</td>
+                    <td className="p-1 text-center">{category.slug ?? "N/A"}</td>
+                    <td className="p-1 text-center">{category.categoryDescription ?? "N/A"}</td>
                     <td className="p-1 text-center">
-                      {cat.categoryDescription ?? "N/A"}
-                    </td>
-                    <td className="p-1 text-center">
-                      {cat.categoryImage ? (
+                      {category.categoryImage ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={cat.categoryImage}
-                          alt={`${cat.categoryName} category`}
-                          className="h-12 w-12 rounded object-cover border"
-                        />
+                        <img src={category.categoryImage} alt="" className="h-12 w-12 rounded object-cover border mx-auto" />
                       ) : (
                         "N/A"
                       )}
                     </td>
                     <td className="p-1 text-center">
-                      {cat.categoryLogo ? (
+                      {category.categoryLogo ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={cat.categoryLogo}
-                          alt={`${cat.categoryName} logo`}
-                          className="h-12 w-12 rounded object-cover border"
-                        />
+                        <img src={category.categoryLogo} alt="" className="h-12 w-12 rounded object-cover border mx-auto" />
                       ) : (
                         "N/A"
                       )}
                     </td>
                     <td className="p-1 text-center">
-                      {cat.categoryBanner ? (
+                      {category.categoryBanner ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={cat.categoryBanner}
-                          alt={`${cat.categoryName} banner`}
-                          className="h-12 w-24 rounded object-cover border"
-                        />
+                        <img src={category.categoryBanner} alt="" className="h-12 w-24 rounded object-cover border mx-auto" />
                       ) : (
                         "N/A"
                       )}
                     </td>
+                    <td className="p-1 text-center">{new Date(category.createdAt).toLocaleString()}</td>
                     <td className="p-1 text-center">
-                      {new Date(cat.createdAt).toLocaleString()}
+                      <span
+                        className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                          category.categoryStatus
+                            ? "bg-green-100 text-green-700"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {category.categoryStatus ? "Active" : "Inactive"}
+                      </span>
                     </td>
-                    <td className="px-4 py-2  text-center space-x-2">
+                    <td className="px-4 py-2 text-center space-x-2">
                       <button
-                        onClick={() => setInfoDialog(cat)}
+                        onClick={() => setInfoDialog(category)}
                         className="p-1 text-blue-600 hover:bg-blue-50 rounded-lg transition"
                       >
                         <Info size={16} />
                       </button>
-                      <button className="p-1 text-green-600 hover:bg-green-50 rounded-lg transition">
-                        <Edit
-                          size={16}
-                          onClick={() => {
-                            setFormData((prev) => ({
-                              ...prev,
-                              categoryId: String(cat.categoryId),
-                              categoryName: cat.categoryName,
-                              slug: cat.slug,
-                              categoryDescription: cat.categoryDescription,
-                              categoryImage: null,
-                              categoryLogo: cat.categoryLogo,
-                              categoryBanner: cat.categoryBanner,
-                              userId: "1",
-                            }));
-                          }}
-                        />
+                      <button
+                        onClick={() => handleEditOpen(category)}
+                        className="p-1 text-green-600 hover:bg-green-50 rounded-lg transition"
+                      >
+                        <Edit2 size={16} />
                       </button>
                       <button
-                        onClick={() => handleDelete(cat.categoryId)}
+                        onClick={() => handleDelete(category.categoryId)}
                         className="p-1 text-red-600 hover:bg-red-50 rounded-lg transition"
                       >
                         <Trash2 size={16} />
@@ -389,193 +384,185 @@ export default function CategoriesListPage() {
           </table>
         </div>
       </div>
-      {/* Info Dialog */}
-      {infoDialg && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 pointer-events-none">
-          {/* Modal box (clickable) */}
-          <div className="bg-white p-5 rounded shadow-lg w-md pointer-events-auto ">
-            <h2 className="text-lg text-slate-500 font-semibold mb-4">
-              Category Info {infoDialg.categoryName}
-            </h2>
 
-            <label className="block text-gray-700 font-medium mb-2">
-              Category Name
-              <input
-                readOnly
-                value={infoDialg.categoryName}
-                className="w-full border text-black rounded-lg px-4 py-2"
-              />
-            </label>
-
-            <label className="block text-gray-700 font-medium mb-2">
-              Slug
-              <input
-                readOnly
-                value={infoDialg.slug}
-                className="w-full border rounded-lg px-4 py-2 text-black"
-              />
-            </label>
-
-            <label className="block text-gray-700 font-medium mb-2">
-              Description
-              <textarea
-                readOnly
-                value={infoDialg.categoryDescription}
-                rows={4}
-                className="w-full border rounded-lg px-4 py-2 text-black"
-              />
-            </label>
-
-            <div className="grid grid-cols-1 gap-3">
+      {infoDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+          <div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-[#0072bc] to-blue-600 px-6 py-5 text-white flex justify-between items-center">
               <div>
-                <p className="text-gray-700 font-medium mb-1">Category Image</p>
-                {infoDialg.categoryImage ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={infoDialg.categoryImage}
-                    alt="Category preview"
-                    className="h-24 w-24 object-cover rounded border"
-                  />
-                ) : (
-                  <p className="text-gray-500">N/A</p>
-                )}
+                <h2 className="text-xl font-bold">Category Details</h2>
+                <p className="text-sm text-blue-100 mt-1">View complete category information</p>
               </div>
-              <div>
-                <p className="text-gray-700 font-medium mb-1">Category Logo</p>
-                {infoDialg.categoryLogo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={infoDialg.categoryLogo}
-                    alt="Category logo preview"
-                    className="h-24 w-24 object-cover rounded border"
-                  />
-                ) : (
-                  <p className="text-gray-500">N/A</p>
-                )}
-              </div>
-              <div>
-                <p className="text-gray-700 font-medium mb-1">
-                  Category Banner
-                </p>
-                {infoDialg.categoryBanner ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={infoDialg.categoryBanner}
-                    alt="Category banner preview"
-                    className="h-24 w-full object-cover rounded border"
-                  />
-                ) : (
-                  <p className="text-gray-500">N/A</p>
-                )}
-              </div>
+              <button
+                onClick={() => setInfoDialog(null)}
+                className="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 transition flex items-center justify-center text-lg"
+              >
+                ✕
+              </button>
             </div>
 
-            <div className="flex justify-end gap-2">
-              <button
-                className="px-3 py-1 cursor-pointer bg-gray-300 hover:bg-slate-600 rounded"
-                onClick={() => setInfoDialog(null)}
-              >
-                Cancel
-              </button>
+            <div className="p-6 space-y-5">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Category Name</label>
+                <div className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 font-medium">
+                  {infoDialog.categoryName || "-"}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Slug</label>
+                <div className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-800">
+                  {infoDialog.slug || "-"}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                <div className="min-h-[120px] w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 whitespace-pre-wrap leading-relaxed">
+                  {infoDialog.categoryDescription || "No description available"}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="rounded-xl bg-blue-50 border border-blue-100 p-4">
+                  <p className="text-xs text-gray-500 mb-1">Category ID</p>
+                  <p className="font-semibold text-gray-800">#{infoDialog.categoryId}</p>
+                </div>
+                <div className="rounded-xl bg-green-50 border border-green-100 p-4">
+                  <p className="text-xs text-gray-500 mb-1">Status</p>
+                  <p className={`font-semibold ${infoDialog.categoryStatus ? "text-green-600" : "text-gray-600"}`}>
+                    {infoDialog.categoryStatus ? "Active" : "Inactive"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-5 border-t flex justify-end">
+                <button
+                  onClick={() => setInfoDialog(null)}
+                  className="px-6 py-2.5 rounded-xl bg-[#0072bc] text-white font-medium hover:bg-blue-700 transition"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
-      {/* Edit Dialog */}
-      {formdata.categoryName && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 ">
-          {/* Modal box (clickable) */}
-          <div className="bg-white p-5 rounded shadow-lg w-md ">
-            <h2 className="text-lg text-slate-500 font-semibold mb-4">
-              Edit Category Info {formdata.categoryName}
-            </h2>
 
-            <form  onSubmit={updateSubmit}>
-              <label className="block text-gray-700 font-medium mb-2">
-                Category Name
+      {editForm.categoryId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+          <div className="w-full max-w-3xl rounded-2xl bg-white shadow-2xl border border-gray-200 overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-5 border-b bg-gradient-to-r from-[#0072bc] to-blue-600 text-white">
+              <div>
+                <h2 className="text-xl font-bold">Edit Category</h2>
+                <p className="text-sm text-blue-100 mt-1">Update category details and media assets</p>
+              </div>
+              <button
+                onClick={() => setEditForm(emptyForm)}
+                className="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 transition flex items-center justify-center text-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="p-6 space-y-5">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Category Name</label>
                 <input
-                  value={formdata.categoryName ?? ""}
-                  onChange={(e) => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      categoryName: e.target.value,
-                    }));
-                  }}
-                  className="w-full border text-black rounded-lg px-4 py-2"
+                  readOnly
+                  value={editForm.categoryName}
+                  className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-gray-600 outline-none"
                 />
-              </label>
-              <label className="block text-gray-700 font-medium mb-2">
-                Slug
+                <p className="text-xs text-gray-400 mt-1">Category name is synced from OMS and non-editable</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Slug</label>
                 <input
-                  value={formdata.slug ?? ""}
-                  onChange={(e) => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      slug: e.target.value,
-                    }));
-                  }}
-                  className="w-full border rounded-lg px-4 py-2 text-black"
+                  value={editForm.slug}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, slug: e.target.value }))}
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-black outline-none focus:ring-2 focus:ring-blue-500"
                 />
-              </label>
-              <label className="block text-gray-700 font-medium mb-2">
-                Description
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
                 <textarea
-                  value={formdata.categoryDescription ?? ""}
-                  onChange={(e) => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      categoryDescription: e.target.value,
-                    }));
-                  }}
+                  value={editForm.categoryDescription}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({ ...prev, categoryDescription: e.target.value }))
+                  }
                   rows={4}
-                  className="w-full border rounded-lg px-4 py-2 text-black"
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-black outline-none resize-none focus:ring-2 focus:ring-blue-500"
                 />
-              </label>
-              <div className="grid grid-cols-1 gap-3">
-                {/* Category Image */}
+              </div>
 
-                <div className="grid grid-cols-3 gap-2">
-                  <input
-                    type="file"
-                    onChange={(e) =>
-                      setImageFile(e.target.files?.[0] || null)
-                    }
-                  />
-
-                  <input
-                    type="file"
-                    onChange={(e) =>
-                      setImageFile(e.target.files?.[0] || null)
-                    }
-                  />
-
-                  <input
-                    type="file"
-                    onChange={(e) =>
-                      setImageFile(e.target.files?.[0] || null)
-                    }
-                  />
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">Media Uploads</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[
+                    { title: "Category Image", current: editForm.categoryImage, setter: setCategoryImageFile },
+                    { title: "Category Logo", current: editForm.categoryLogo, setter: setCategoryLogoFile },
+                    { title: "Category Banner", current: editForm.categoryBanner, setter: setCategoryBannerFile },
+                  ].map((item) => (
+                    <label
+                      key={item.title}
+                      className="group cursor-pointer rounded-2xl border-2 border-dashed border-gray-300 hover:border-blue-500 bg-gray-50 hover:bg-blue-50 transition p-5 text-center"
+                    >
+                      {item.current ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={item.current}
+                          alt=""
+                          className="mx-auto mb-2 h-14 w-14 rounded border object-cover"
+                        />
+                      ) : (
+                        <div className="text-3xl mb-2">📁</div>
+                      )}
+                      <p className="font-medium text-gray-700 group-hover:text-blue-600">{item.title}</p>
+                      <p className="text-xs text-gray-400 mt-1">Click to replace</p>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => item.setter(e.target.files?.[0] || null)}
+                      />
+                    </label>
+                  ))}
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2">
+              <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+                <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={editForm.categoryStatus}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({ ...prev, categoryStatus: e.target.checked }))
+                    }
+                  />
+                  Set this category Active
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-5 border-t">
                 <button
-                  className="px-3 py-1 cursor-pointer bg-gray-300 hover:bg-slate-600 rounded"
-                  onClick={() =>
-                    setFormData((prev) => ({ ...prev, categoryName: "" }))
-                  }
+                  type="button"
+                  onClick={() => setEditForm(emptyForm)}
+                  className="px-5 py-2.5 rounded-xl bg-gray-200 text-gray-700 hover:bg-gray-300 font-medium transition"
                 >
                   Cancel
                 </button>
-                {/* Submit Button */}
                 <button
                   type="submit"
                   disabled={loading}
-                  className={` bg-[#0072bc] text-white py-2 px-4 cursor-pointer rounded-lg font-medium hover:bg-blue-700 transition-colors ${
-                    loading ? "opacity-60 cursor-not-allowed" : ""
+                  className={`px-6 py-2.5 rounded-xl text-white font-medium transition ${
+                    loading
+                      ? "bg-blue-300 cursor-not-allowed"
+                      : "bg-[#0072bc] hover:bg-blue-700"
                   }`}
                 >
-                  {loading ? "Processing..." : "Edit"}
+                  {loading ? "Processing..." : "Update Category"}
                 </button>
               </div>
             </form>
@@ -585,3 +572,4 @@ export default function CategoriesListPage() {
     </div>
   );
 }
+

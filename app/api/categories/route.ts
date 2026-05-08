@@ -1,8 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { getCategoryImageDir } from "@/utils/imageUpload";
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
@@ -17,6 +14,7 @@ type CategoryDTO = {
   categoryLogo: string;
   categoryBanner: string;
   userId: string;
+  categoryStatus?: boolean;
 };
 // ✅ Preflight handler
 export async function OPTIONS() {
@@ -155,6 +153,8 @@ export async function POST(req: Request) {
           categoryBanner: normalizeCategoryAssetUrl(p.categoryBanner),
 
           userId: BigInt(p.userId),
+          categoryStatus:
+            typeof p.categoryStatus === "boolean" ? p.categoryStatus : false,
         })),
 
         // ✅ Prisma duplicate protection
@@ -352,98 +352,68 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
-    // ✅ Read form data
-    const formData = await req.formData();
+    const body = await req.json();
 
-    const categoryId = formData.get("categoryId")?.toString();
-
-    const categoryName = formData.get("categoryName")?.toString();
-
-    const slug = formData.get("slug")?.toString();
-
-    const categoryDescription = formData
-      .get("categoryDescription")
-      ?.toString();
-
-    const categoryStatus = formData.get("categoryStatus");
-
-    // ✅ File
-    const file = formData.get("categoryImage") as File | null;
+    const {
+      categoryId,
+      slug,
+      categoryDescription,
+      categoryImage,
+      categoryLogo,
+      categoryBanner,
+      categoryStatus,
+    } = body;
 
     if (!categoryId) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "categoryId is required",
-        },
-        {
-          status: 400,
-          headers: corsHeaders,
-        }
+        { success: false, message: "categoryId is required" },
+        { status: 400, headers: corsHeaders },
       );
     }
 
-    let imagePath: string | undefined;
+    const normalizeCategoryAssetUrl = (value: unknown) => {
+      if (value === null || value === undefined || value === "") return null;
+      if (typeof value !== "string") return null;
+      const trimmed = value.trim();
+      if (!trimmed) return null;
+      if (trimmed.startsWith("/categories/")) return trimmed;
+      if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+        return trimmed;
+      }
+      return `/categories/${trimmed.replace(/^\/+/, "")}`;
+    };
 
-    // ✅ Upload image
-    if (file && file.size > 0) {
-      const uploadDir = getCategoryImageDir();
-
-      fs.mkdirSync(uploadDir, { recursive: true });
-
-      const bytes = await file.arrayBuffer();
-
-      const buffer = Buffer.from(bytes);
-
-      const fileName = `${Date.now()}-${file.name.replace(/\s+/g, "")}`;
-
-      const fullPath = path.join(uploadDir, fileName);
-
-      fs.writeFileSync(fullPath, buffer);
-
-      imagePath = `/uploads/categories/${fileName}`;
-    }
-
-    // ✅ Update DB
     const category = await prisma.categories.update({
-      where: {
-        categoryId: BigInt(categoryId),
-      },
-
+      where: { categoryId: BigInt(categoryId) },
       data: {
-        ...(categoryName !== undefined && {
-          categoryName: categoryName.trim(),
-        }),
-
         ...(slug !== undefined && {
-          slug: slug.trim() || null,
+          slug: typeof slug === "string" ? slug.trim() || null : null,
         }),
-
         ...(categoryDescription !== undefined && {
           categoryDescription:
-            categoryDescription.trim() || null,
+            typeof categoryDescription === "string"
+              ? categoryDescription.trim() || null
+              : null,
         }),
-
-        ...(imagePath && {
-          categoryImage: imagePath,
-          categoryLogo: imagePath,
-          categoryBanner: imagePath,
+        ...(categoryImage !== undefined && {
+          categoryImage: normalizeCategoryAssetUrl(categoryImage),
         }),
-
-        // ...(categoryStatus !== null && {
-        //   categoryStatus:
-        //     categoryStatus === "true",
-        // }),
+        ...(categoryLogo !== undefined && {
+          categoryLogo: normalizeCategoryAssetUrl(categoryLogo),
+        }),
+        ...(categoryBanner !== undefined && {
+          categoryBanner: normalizeCategoryAssetUrl(categoryBanner),
+        }),
+        ...(categoryStatus !== undefined && {
+          categoryStatus: Boolean(categoryStatus),
+        }),
       },
     });
 
-    // ✅ Convert bigint
     const safeData = JSON.parse(
       JSON.stringify(category, (_, value) =>
-        typeof value === "bigint"
-          ? value.toString()
-          : value
-      )
+        typeof value === "bigint" ? value.toString() : value,
+      ),
     );
 
     return NextResponse.json(
@@ -452,23 +422,12 @@ export async function PUT(req: Request) {
         message: "Category updated successfully",
         data: safeData,
       },
-      {
-        status: 200,
-        headers: corsHeaders,
-      }
+      { status: 200, headers: corsHeaders },
     );
   } catch (error) {
-    console.error(error);
-
     return NextResponse.json(
-      {
-        success: false,
-        message: String(error),
-      },
-      {
-        status: 500,
-        headers: corsHeaders,
-      }
+      { success: false, message: String(error) },
+      { status: 500, headers: corsHeaders },
     );
   }
 }
