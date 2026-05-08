@@ -1,10 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "http://localhost:3000",
+  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
 type CategoryDTO = {
@@ -15,6 +14,7 @@ type CategoryDTO = {
   categoryLogo: string;
   categoryBanner: string;
   userId: string;
+  categoryStatus?: boolean;
 };
 // ✅ Preflight handler
 export async function OPTIONS() {
@@ -50,81 +50,224 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    // ✅ read ONLY ONCE
+    // ✅ Read body only once
     const { categories }: { categories: CategoryDTO[] } = await req.json();
 
+    // ✅ Validation
     if (!categories || categories.length === 0) {
       return NextResponse.json(
-        { success: false, message: "categories are required" },
-        { status: 400 },
+        {
+          success: false,
+          message: "Categories are required",
+        },
+        {
+          status: 400,
+          headers: corsHeaders,
+        },
       );
     }
+
+    // ✅ Normalize image path
     const normalizeCategoryAssetUrl = (value: unknown) => {
-      if (value === null || value === undefined || value === "") return null;
-      if (typeof value !== "string") return null;
+      if (value === null || value === undefined || value === "") {
+        return null;
+      }
+
+      if (typeof value !== "string") {
+        return null;
+      }
+
       const trimmed = value.trim();
 
-      if (!trimmed) return null;
-      if (trimmed.startsWith("/categories/")) return trimmed;
+      if (!trimmed) {
+        return null;
+      }
+
+      if (trimmed.startsWith("/categories/")) {
+        return trimmed;
+      }
+
       if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
         return trimmed;
       }
 
       const cleanName = trimmed.replace(/^\/+/, "");
+
       return `/categories/${cleanName}`;
     };
 
-    // ✅ 1. Find existing category names
-    const existing = await prisma.categories.findMany({
+    // ✅ Find existing category names in DB
+    const existingCategories = await prisma.categories.findMany({
       where: {
         categoryName: {
           in: categories.map((c) => c.categoryName),
         },
       },
-      select: { categoryName: true },
+      select: {
+        categoryName: true,
+      },
     });
 
-    const existingNames = new Set(existing.map((e) => e.categoryName));
-
-    // ✅ 2. Split data
-    const newCategories = categories.filter(
-      (c) => !existingNames.has(c.categoryName),
+    const existingNames = new Set(
+      existingCategories.map((e) => e.categoryName),
     );
-    // ✅ 3. Insert only new
+
+    // ✅ Remove duplicates from incoming request also
+    const addedNames = new Set<string>();
+
+    const newCategories = categories.filter((c) => {
+      // already exists in DB
+      if (existingNames.has(c.categoryName)) {
+        return false;
+      }
+
+      // duplicate inside request array
+      if (addedNames.has(c.categoryName)) {
+        return false;
+      }
+
+      addedNames.add(c.categoryName);
+
+      return true;
+    });
+
+    // ✅ Insert only unique categories
     let insertedCount = 0;
 
     if (newCategories.length > 0) {
       const details = await prisma.categories.createMany({
-        data: categories.map((p) => ({
+        data: newCategories.map((p) => ({
           categoryName: p.categoryName,
-          slug: p.slug === "string" ? p.slug || null : null,
+
+          slug: typeof p.slug === "string" ? p.slug || null : null,
+
           categoryDescription:
             typeof p.categoryDescription === "string"
               ? p.categoryDescription || null
               : null,
+
           categoryImage: normalizeCategoryAssetUrl(p.categoryImage),
-          categoryLogo: normalizeCategoryAssetUrl(p.categoryImage),
-          categoryBanner: normalizeCategoryAssetUrl(p.categoryImage),
+
+          categoryLogo: normalizeCategoryAssetUrl(p.categoryLogo),
+
+          categoryBanner: normalizeCategoryAssetUrl(p.categoryBanner),
+
           userId: BigInt(p.userId),
+          categoryStatus:
+            typeof p.categoryStatus === "boolean" ? p.categoryStatus : false,
         })),
+
+        // ✅ Prisma duplicate protection
+        skipDuplicates: true,
       });
+
       insertedCount = details.count;
     }
+
     return NextResponse.json(
       {
         success: true,
         count: insertedCount,
         message: "Category saved successfully",
       },
-      { status: 200, headers: corsHeaders },
+      {
+        status: 200,
+        headers: corsHeaders,
+      },
     );
   } catch (error) {
+    console.error(error);
+
     return NextResponse.json(
-      { success: false, message: String(error) },
-      { status: 500, headers: corsHeaders },
+      {
+        success: false,
+        message: String(error),
+      },
+      {
+        status: 500,
+        headers: corsHeaders,
+      },
     );
   }
 }
+
+// export async function POST(req: Request) {
+//   try {
+//     // ✅ read ONLY ONCE
+//     const { categories }: { categories: CategoryDTO[] } = await req.json();
+
+//     if (!categories || categories.length === 0) {
+//       return NextResponse.json(
+//         { success: false, message: "categories are required" },
+//         { status: 400 },
+//       );
+//     }
+//     const normalizeCategoryAssetUrl = (value: unknown) => {
+//       if (value === null || value === undefined || value === "") return null;
+//       if (typeof value !== "string") return null;
+//       const trimmed = value.trim();
+
+//       if (!trimmed) return null;
+//       if (trimmed.startsWith("/categories/")) return trimmed;
+//       if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+//         return trimmed;
+//       }
+
+//       const cleanName = trimmed.replace(/^\/+/, "");
+//       return `/categories/${cleanName}`;
+//     };
+
+//     // ✅ 1. Find existing category names
+//     const existing = await prisma.categories.findMany({
+//       where: {
+//         categoryName: {
+//           in: categories.map((c) => c.categoryName),
+//         },
+//       },
+//       select: { categoryName: true },
+//     });
+
+//     const existingNames = new Set(existing.map((e) => e.categoryName));
+
+//     // ✅ 2. Split data
+//     const newCategories = categories.filter(
+//       (c) => !existingNames.has(c.categoryName),
+//     );
+//     // ✅ 3. Insert only new
+//     let insertedCount = 0;
+
+//     if (newCategories.length > 0) {
+//       const details = await prisma.categories.createMany({
+//         data: categories.map((p) => ({
+//           categoryName: p.categoryName,
+//           slug: p.slug === "string" ? p.slug || null : null,
+//           categoryDescription:
+//             typeof p.categoryDescription === "string"
+//               ? p.categoryDescription || null
+//               : null,
+//           categoryImage: normalizeCategoryAssetUrl(p.categoryImage),
+//           categoryLogo: normalizeCategoryAssetUrl(p.categoryImage),
+//           categoryBanner: normalizeCategoryAssetUrl(p.categoryImage),
+//           userId: BigInt(p.userId),
+//         })),
+//       });
+//       insertedCount = details.count;
+//     }
+//     return NextResponse.json(
+//       {
+//         success: true,
+//         count: insertedCount,
+//         message: "Category saved successfully",
+//       },
+//       { status: 200, headers: corsHeaders },
+//     );
+//   } catch (error) {
+//     return NextResponse.json(
+//       { success: false, message: String(error) },
+//       { status: 500, headers: corsHeaders },
+//     );
+//   }
+// }
 
 // export async function POST(req: Request) {
 //   try {
@@ -204,52 +347,45 @@ export async function POST(req: Request) {
 //   }
 // }
 
+
+
+
 export async function PUT(req: Request) {
-  const body = await req.json();
+  try {
+    const body = await req.json();
 
-  const {
-    categoryId,
-    categoryName,
-    slug,
-    categoryDescription,
-    categoryImage,
-    categoryLogo,
-    categoryBanner,
-    categoryStatus,
-  } = body;
+    const {
+      categoryId,
+      slug,
+      categoryDescription,
+      categoryImage,
+      categoryLogo,
+      categoryBanner,
+      categoryStatus,
+    } = body;
 
-  if (!categoryId) {
-    return NextResponse.json(
-      { success: false, message: "categoryId  is required" },
-      { status: 400, headers: corsHeaders },
-    );
-  }
-
-  const normalizeCategoryAssetUrl = (value: unknown) => {
-    if (value === null || value === undefined || value === "") return null;
-    if (typeof value !== "string") return null;
-    const trimmed = value.trim();
-
-    if (!trimmed) return null;
-    if (trimmed.startsWith("/categories/")) return trimmed;
-    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-      return trimmed;
+    if (!categoryId) {
+      return NextResponse.json(
+        { success: false, message: "categoryId is required" },
+        { status: 400, headers: corsHeaders },
+      );
     }
 
-    const cleanName = trimmed.replace(/^\/+/, "");
-    return `/categories/${cleanName}`;
-  };
+    const normalizeCategoryAssetUrl = (value: unknown) => {
+      if (value === null || value === undefined || value === "") return null;
+      if (typeof value !== "string") return null;
+      const trimmed = value.trim();
+      if (!trimmed) return null;
+      if (trimmed.startsWith("/categories/")) return trimmed;
+      if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+        return trimmed;
+      }
+      return `/categories/${trimmed.replace(/^\/+/, "")}`;
+    };
 
-  try {
     const category = await prisma.categories.update({
       where: { categoryId: BigInt(categoryId) },
       data: {
-        ...(categoryName !== undefined && {
-          categoryName:
-            typeof categoryName === "string"
-              ? categoryName.trim()
-              : categoryName,
-        }),
         ...(slug !== undefined && {
           slug: typeof slug === "string" ? slug.trim() || null : null,
         }),
@@ -279,6 +415,7 @@ export async function PUT(req: Request) {
         typeof value === "bigint" ? value.toString() : value,
       ),
     );
+
     return NextResponse.json(
       {
         success: true,

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from 'react';
-import { MapPin, Phone, Mail, Globe, Facebook, Instagram, Youtube, Video, Save, ArrowLeft } from 'lucide-react';
+import { MapPin, Phone, Mail, Globe, Video, Save } from 'lucide-react';
 
 export default function AdminContactPage() {
   const [contactData, setContactData] = useState({
@@ -170,7 +170,7 @@ export default function AdminContactPage() {
               <div className="space-y-4">
                 <div>
                   <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
-                    <Facebook className="w-4 h-4 mr-2 text-orange-600" />
+                    <Globe className="w-4 h-4 mr-2 text-orange-600" />
                     Facebook URL
                   </label>
                   <input
@@ -185,7 +185,7 @@ export default function AdminContactPage() {
 
                 <div>
                   <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
-                    <Instagram className="w-4 h-4 mr-2 text-pink-600" />
+                    <Globe className="w-4 h-4 mr-2 text-pink-600" />
                     Instagram URL
                   </label>
                   <input
@@ -200,7 +200,7 @@ export default function AdminContactPage() {
 
                 <div>
                   <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
-                    <Youtube className="w-4 h-4 mr-2 text-red-600" />
+                    <Globe className="w-4 h-4 mr-2 text-red-600" />
                     YouTube URL
                   </label>
                   <input

@@ -267,7 +267,7 @@ export default function ProductSection() {
         {/* ── Category Tabs ── */}
         {/* width:1360 · height:86.56 · minHeight:80 · gap:12 · px:20 · pb:13 */}
         <div
-          className="flex items-end justify-center mt-4"
+          className="flex items-end justify-center mt-4 "
           style={{
             width: "100%",
             height: "86.56px",
@@ -289,7 +289,7 @@ export default function ProductSection() {
               >
                 {/* Icon container: width:72 · height:75.56 · pb:1 */}
                 <div
-                  className="flex flex-col items-center justify-end "
+                  className="flex flex-col items-center justify-end cursor-pointer"
                   style={{
                     width: "72px",
                     height: "75.56px",

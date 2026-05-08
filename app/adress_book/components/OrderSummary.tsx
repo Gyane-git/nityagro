@@ -14,7 +14,8 @@ export default function OrderSummary({ onProceed }: OrderSummaryProps) {
   const checkoutItem = useCheckoutStore((state) => state.checkoutItem);
   const sourceItems = checkoutItems.length > 0 ? checkoutItems : checkoutItem ? [checkoutItem] : [];
   const itemTotal = sourceItems.reduce(
-    (sum, item) => sum + Number(item.total ?? item.unitPrice ?? 0),
+    (sum: number, item: { total?: number; unitPrice?: number }) =>
+      sum + Number(item.total ?? item.unitPrice ?? 0),
     0,
   );
   const discount = 0;

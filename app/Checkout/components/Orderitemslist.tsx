@@ -20,8 +20,17 @@ function formatNPR(amount: number) {
 export default function OrderItemsList() {
   const checkoutItems = useCheckoutStore((state) => state.checkoutItems);
   const checkoutItem = useCheckoutStore((state) => state.checkoutItem);
+  type CheckoutSourceItem = {
+    id: number;
+    name: string;
+    weight?: string;
+    unitPrice?: number;
+    qty?: number;
+    total?: number;
+    image?: string;
+  };
   const sourceItems = checkoutItems.length > 0 ? checkoutItems : checkoutItem ? [checkoutItem] : [];
-  const items: OrderItem[] = sourceItems.map((item) => ({
+  const items: OrderItem[] = sourceItems.map((item: CheckoutSourceItem) => ({
     id: item.id,
     name: item.name,
     weight: item.weight ?? "100 gm",
