@@ -233,6 +233,7 @@ export default function CategoriesListPage() {
       const requestDataSubGroup = {
         productsubGroup,
       };
+      console.log(JSON.stringify(requestDataSubGroup))
 
       const response = await apiPostRequest("/categories", payload);
       const response2 = await apiPostRequest("/products", requestDataProduct);
