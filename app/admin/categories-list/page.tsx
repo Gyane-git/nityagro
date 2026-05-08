@@ -28,7 +28,7 @@ type FormData = {
   categoryName: string;
   slug: string | null;
   categoryDescription: string | null;
-  categoryImage: string | null;
+  categoryImage: File | null;
   categoryLogo: string | null;
   categoryBanner: string | null;
   userId: string;
@@ -109,13 +109,17 @@ export default function CategoriesListPage() {
     //   "categoryStatus",
     //   String(formdata.categoryStatus ?? false)
     // );
-    alert(JSON.stringify(formdata.categoryId))
-    if (categoryImage) {
-      formDatas.append("categoryImage", categoryImage);
-    }
+    
+    setFormData((prev)=>({
+      ...prev,
+      categoryImage:imageFile
+    }))
+    // if (categoryImage) {
+    //   formDatas.append("categoryImage", categoryImage);
+    // }
 
-    console.log(JSON.stringify(formDatas))
-
+    console.log(JSON.stringify(formdata))
+    alert(JSON.stringify(formdata))
      const response = await apiPutRequest("/categories", formdata);
       if (response.success) {
         setFormData(initialFormData);
@@ -365,7 +369,7 @@ export default function CategoriesListPage() {
                               categoryName: cat.categoryName,
                               slug: cat.slug,
                               categoryDescription: cat.categoryDescription,
-                              categoryImage: cat.categoryImage,
+                              categoryImage: null,
                               categoryLogo: cat.categoryLogo,
                               categoryBanner: cat.categoryBanner,
                               userId: "1",
@@ -536,21 +540,21 @@ export default function CategoriesListPage() {
                   <input
                     type="file"
                     onChange={(e) =>
-                      setCategoryImage(e.target.files?.[0] || null)
+                      setImageFile(e.target.files?.[0] || null)
                     }
                   />
 
                   <input
                     type="file"
                     onChange={(e) =>
-                      setCategoryLogo(e.target.files?.[0] || null)
+                      setImageFile(e.target.files?.[0] || null)
                     }
                   />
 
                   <input
                     type="file"
                     onChange={(e) =>
-                      setCategoryBanner(e.target.files?.[0] || null)
+                      setImageFile(e.target.files?.[0] || null)
                     }
                   />
                 </div>
