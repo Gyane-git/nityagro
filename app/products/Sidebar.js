@@ -35,7 +35,11 @@ function StarRow({ count, checked, onChange }) {
   );
 }
 
-export default function Sidebar({ onCategoryChange, onRatingChange, onPriceChange }) {
+export default function Sidebar({
+  onCategoryChange,
+  onRatingChange,
+  onPriceChange,
+}) {
   const [minPrice, setMinPrice] = useState(500);
   const [maxPrice, setMaxPrice] = useState(2500);
   const [selectedCategories, setSelectedCategories] = useState([]);
@@ -77,10 +81,7 @@ export default function Sidebar({ onCategoryChange, onRatingChange, onPriceChang
   const maxPct = ((maxPrice - MIN) / (MAX - MIN)) * 100;
 
   return (
-    <aside
-      className="bg-white flex flex-col gap-0"
-      style={{ width: "190px", flexShrink: 0 }}
-    >
+    <aside className="w-full md:w-[190px]">
       {/* ── Filter by Price ── */}
       <div className="mb-6">
         <h3
@@ -130,8 +131,18 @@ export default function Sidebar({ onCategoryChange, onRatingChange, onPriceChang
         </div>
 
         <div className="flex justify-between mt-2 text-xs text-gray-600 font-medium">
-          <span>Min: <span className="text-gray-800 font-bold">NPR {minPrice.toLocaleString()}</span></span>
-          <span>Max: <span className="text-gray-800 font-bold">NPR {maxPrice.toLocaleString()}</span></span>
+          <span>
+            Min:{" "}
+            <span className="text-gray-800 font-bold">
+              NPR {minPrice.toLocaleString()}
+            </span>
+          </span>
+          <span>
+            Max:{" "}
+            <span className="text-gray-800 font-bold">
+              NPR {maxPrice.toLocaleString()}
+            </span>
+          </span>
         </div>
       </div>
 
@@ -148,10 +159,7 @@ export default function Sidebar({ onCategoryChange, onRatingChange, onPriceChang
         </h3>
         <div className="flex flex-col gap-2.5">
           {CATEGORIES.map((cat) => (
-            <label
-              key={cat}
-              className="flex items-center gap-2 cursor-pointer"
-            >
+            <label key={cat} className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={selectedCategories.includes(cat)}

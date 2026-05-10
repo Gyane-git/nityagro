@@ -6,7 +6,7 @@ export default function PhilosophyHero() {
       {/* Background image + dark overlay */}
       <div
         className="absolute inset-0 z-0 bg-center bg-cover"
-        style={{ backgroundImage: "url('/images/philosophy-farm.jpgjj')" }}
+        style={{ backgroundImage: "url('/images/hero-img.jpeg')" }}
       >
         <div className="absolute inset-0 bg-[#143c23]/45" />
       </div>

@@ -112,8 +112,6 @@ export const ALL_PRODUCTS = Array.from({ length: 35 }, (_, index) => {
       "/products/red-chilli.png",
       "/products/chickpea-flour.png",
       "/products/jaggery1.png",
-     
-      
     ],
   };
 });

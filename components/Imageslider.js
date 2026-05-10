@@ -4,22 +4,12 @@ import Image from "next/image";
 import { useState, useEffect, useRef, useCallback } from "react";
 
 /**
- * ImageSlider
+ * ImageSlider — Responsive
  *
- * Shows 3 cards at a time, auto-slides every `interval` ms.
- * Each card: width 442px · height 213px · border-radius 8px · image only.
- *
- * Props:
- *  - slides       {Array}   Array of { src, alt } objects
- *  - interval     {number}  Auto-slide interval in ms  (default: 3000)
- *  - gap          {number}  Gap between cards in px    (default: 24)
- *  - showDots     {boolean} Show dot indicators        (default: true)
- *  - showArrows   {boolean} Show prev/next arrows      (default: true)
+ * Mobile  (<640px):  1 card
+ * Tablet  (640–1023px): 2 cards
+ * Desktop (≥1024px): 3 cards
  */
-
-const CARD_WIDTH = 500;
-const CARD_HEIGHT = 230;
-const CARD_RADIUS = 8;
 
 const DEFAULT_SLIDES = [
   { src: "/slider1.png", alt: "Slide 1" },
@@ -29,31 +19,57 @@ const DEFAULT_SLIDES = [
   { src: "/slider3.png", alt: "Slide 5" },
 ];
 
+function useVisibleCount() {
+  const [visible, setVisible] = useState(3);
+
+  useEffect(() => {
+    const update = () => {
+      if (window.innerWidth < 640) setVisible(1);
+      else if (window.innerWidth < 1024) setVisible(2);
+      else setVisible(3);
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  return visible;
+}
+
+const CARD_HEIGHT = 213;
+const CARD_RADIUS = 8;
 
 export default function ImageSlider({
   slides = DEFAULT_SLIDES,
   interval = 3000,
-  gap = 24,
+  gap = 16,
   showDots = true,
   showArrows = true,
 }) {
-  const VISIBLE = 3;
+  const visibleCount = useVisibleCount();
   const [current, setCurrent] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(true);
   const timerRef = useRef(null);
   const total = slides.length;
 
-  // Cloned list for infinite feel: [...last, ...all, ...first]
+  // Cloned list for infinite loop
   const cloned = [
-    ...slides.slice(-VISIBLE),
+    ...slides.slice(-visibleCount),
     ...slides,
-    ...slides.slice(0, VISIBLE),
+    ...slides.slice(0, visibleCount),
   ];
 
-  const trackWidth = CARD_WIDTH * VISIBLE + gap * (VISIBLE - 1);
-  // Offset: skip the cloned prefix (VISIBLE cards)
-  const getOffset = (idx) =>
-    -(VISIBLE * (CARD_WIDTH + gap)) - idx * (CARD_WIDTH + gap);
+  // Card width as percentage of track, accounting for gaps
+  // e.g. 3 visible: each card = (100% - 2*gap) / 3
+  const cardWidthPct = `calc((100% - ${
+    gap * (visibleCount - 1)
+  }px) / ${visibleCount})`;
+
+  // Offset in percentage units: each step = 100%/visibleCount of the track
+  const getOffsetPct = (idx) => {
+    const stepsFromStart = visibleCount + idx;
+    return -(stepsFromStart * (100 / visibleCount));
+  };
 
   const resetTimer = useCallback(() => {
     clearInterval(timerRef.current);
@@ -67,7 +83,6 @@ export default function ImageSlider({
     return () => clearInterval(timerRef.current);
   }, [resetTimer]);
 
-  // Infinite loop: when we hit the cloned boundary, jump silently
   useEffect(() => {
     if (current === total) {
       setTimeout(() => {
@@ -83,6 +98,12 @@ export default function ImageSlider({
       setIsTransitioning(true);
     }
   }, [current, total]);
+
+  // Reset current index when visible count changes to avoid out-of-range
+  useEffect(() => {
+    setCurrent(0);
+    setIsTransitioning(false);
+  }, [visibleCount]);
 
   const prev = () => {
     setIsTransitioning(true);
@@ -105,18 +126,23 @@ export default function ImageSlider({
   const activeDot = ((current % total) + total) % total;
 
   return (
-    <div className="flex flex-col items-center gap-5 w-full ">
-      {/* ── Slider track wrapper ── */}
+    <div className="flex flex-col items-center gap-5 w-full px-2 sm:px-4">
+      {/* Track wrapper — full width, clips overflow */}
       <div
-        className="relative overflow-hidden top-10"
-        style={{ width: trackWidth, height: CARD_HEIGHT }}
+        className="relative w-full overflow-hidden mt-10"
+        style={{ height: CARD_HEIGHT }}
       >
-        {/* Track */}
+        {/* Sliding track */}
         <div
-          className="flex"
+          className="flex h-full"
           style={{
             gap: `${gap}px`,
-            transform: `translateX(${getOffset(current)}px)`,
+            // Each cloned card is cardWidthPct wide; offset by step count
+            transform: `translateX(calc(${getOffsetPct(current)}% - ${
+              // Adjust for gaps: each step also shifts by (gap * stepIndex / visibleCount)
+              // We handle this by computing the full pixel offset for gaps separately
+              ((visibleCount + current) * gap) / visibleCount
+            }px))`,
             transition: isTransitioning
               ? "transform 0.45s cubic-bezier(0.4, 0, 0.2, 1)"
               : "none",
@@ -128,7 +154,7 @@ export default function ImageSlider({
               key={i}
               className="flex-shrink-0 overflow-hidden"
               style={{
-                width: CARD_WIDTH,
+                width: cardWidthPct,
                 height: CARD_HEIGHT,
                 borderRadius: CARD_RADIUS,
               }}
@@ -139,28 +165,28 @@ export default function ImageSlider({
                   alt={slide.alt || ""}
                   fill
                   className="object-cover"
-                  sizes={`${CARD_WIDTH}px`}
-                  priority={i < VISIBLE * 2}
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  priority={i < visibleCount * 2}
                 />
               </div>
             </div>
           ))}
         </div>
 
-        {/* ── Arrow buttons ── */}
+        {/* Arrow buttons */}
         {showArrows && (
           <>
             <button
               onClick={prev}
               aria-label="Previous"
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center transition-all hover:scale-110"
+              className="absolute left-1 sm:left-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center transition-all hover:scale-110"
             >
               <ChevronLeft />
             </button>
             <button
               onClick={next}
               aria-label="Next"
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center transition-all hover:scale-110"
+              className="absolute right-1 sm:right-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center transition-all hover:scale-110"
             >
               <ChevronRight />
             </button>
@@ -168,8 +194,8 @@ export default function ImageSlider({
         )}
       </div>
 
-      {/* ── Dot indicators ── */}
-      {showDots && total > VISIBLE && (
+      {/* Dot indicators */}
+      {showDots && total > visibleCount && (
         <div className="flex items-center gap-2">
           {slides.map((_, i) => (
             <button
@@ -191,15 +217,32 @@ export default function ImageSlider({
   );
 }
 
-// Icons
 const ChevronLeft = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00462C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="#00462C"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <polyline points="15 18 9 12 15 6" />
   </svg>
 );
 
 const ChevronRight = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00462C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="#00462C"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <polyline points="9 18 15 12 9 6" />
   </svg>
 );

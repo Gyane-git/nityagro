@@ -4,11 +4,13 @@ export default function AddCategoryPage() {
   return (
     <div className="min-h-[70vh] flex items-center justify-center p-6">
       <div className="max-w-xl w-full rounded-2xl border border-gray-200 bg-white p-8 shadow-sm text-center">
-        <h1 className="text-2xl font-bold text-gray-800 mb-3">Category Creation Moved</h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-3">
+          Category Creation Moved
+        </h1>
         <p className="text-gray-600 mb-6">
           Categories are now synced from OMS only. Please use{" "}
-          <strong>OMS Data Sync</strong> in Categories List and then edit metadata
-          (slug, description, images, status) there.
+          <strong>OMS Data Sync</strong> in Categories List and then edit
+          metadata (slug, description, images, status) there.
         </p>
         <Link
           href="/admin/categories-list"
@@ -20,4 +22,3 @@ export default function AddCategoryPage() {
     </div>
   );
 }
-

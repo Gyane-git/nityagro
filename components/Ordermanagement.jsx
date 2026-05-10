@@ -56,7 +56,9 @@ function getFirstProduct(order) {
 }
 
 function getAllowedPaymentStatuses(currentStatus) {
-  const normalized = String(currentStatus || "").toLowerCase().trim();
+  const normalized = String(currentStatus || "")
+    .toLowerCase()
+    .trim();
   if (normalized === "paid") return ["paid", "refunded"];
   if (normalized === "refunded") return ["refunded"];
   if (normalized === "partial") return ["partial", "paid", "refunded"];
@@ -155,7 +157,7 @@ export default function Ordermanagement() {
     const token = getAdminToken();
     if (!token) {
       toast.error("Admin login required");
-      router.replace("/login-admin");
+      // router.replace("/login-admin");
       return;
     }
 
@@ -235,8 +237,10 @@ export default function Ordermanagement() {
 
         setOrders((prev) =>
           prev.map((item) =>
-            String(item.id) === String(orderId) ? { ...item, ...updated } : item
-          )
+            String(item.id) === String(orderId)
+              ? { ...item, ...updated }
+              : item,
+          ),
         );
 
         setSelectedOrder((prev) => {
@@ -251,7 +255,7 @@ export default function Ordermanagement() {
         setUpdatingId(null);
       }
     },
-    [router]
+    [router],
   );
 
   const openStatusModal = async (order, nextStatus) => {
@@ -321,7 +325,10 @@ export default function Ordermanagement() {
 
   const submitStatusModal = async () => {
     if (!statusModal.orderId || !statusModal.nextStatus) return;
-    if (statusModal.nextStatus === "shipped" && !statusModal.courierName.trim()) {
+    if (
+      statusModal.nextStatus === "shipped" &&
+      !statusModal.courierName.trim()
+    ) {
       toast.error("Courier name is required");
       return;
     }
@@ -333,7 +340,10 @@ export default function Ordermanagement() {
       toast.error("Please select serial number");
       return;
     }
-    if (statusModal.nextStatus === "cancelled" && !statusModal.cancelReason.trim()) {
+    if (
+      statusModal.nextStatus === "cancelled" &&
+      !statusModal.cancelReason.trim()
+    ) {
       toast.error("Cancel reason is required");
       return;
     }
@@ -426,7 +436,8 @@ export default function Ordermanagement() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const payload = await res.json();
-      if (!res.ok) throw new Error(payload?.message || "Failed to load order details");
+      if (!res.ok)
+        throw new Error(payload?.message || "Failed to load order details");
       setSelectedOrder(payload?.data || order);
     } catch (error) {
       toast.error(error?.message || "Failed to load order details");
@@ -452,13 +463,16 @@ export default function Ordermanagement() {
     return {
       payment: logs.filter((log) => log.eventType === "payment_status"),
       shipped: logs.filter(
-        (log) => log.eventType === "order_status" && log.toOrderStatus === "shipped"
+        (log) =>
+          log.eventType === "order_status" && log.toOrderStatus === "shipped",
       ),
       cancelled: logs.filter(
-        (log) => log.eventType === "order_status" && log.toOrderStatus === "cancelled"
+        (log) =>
+          log.eventType === "order_status" && log.toOrderStatus === "cancelled",
       ),
       returns: logs.filter(
-        (log) => log.eventType === "order_status" && log.toOrderStatus === "returns"
+        (log) =>
+          log.eventType === "order_status" && log.toOrderStatus === "returns",
       ),
     };
   }, [selectedOrder]);
@@ -470,7 +484,9 @@ export default function Ordermanagement() {
           <h1 className="text-2xl font-bold text-gray-900">Order Management</h1>
           <p className="text-sm text-gray-500">Secure admin order operations</p>
         </div>
-        <div className="text-sm text-gray-600">Total Orders: {meta.total || 0}</div>
+        <div className="text-sm text-gray-600">
+          Total Orders: {meta.total || 0}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
@@ -529,7 +545,7 @@ export default function Ordermanagement() {
               setStatusFilter("processing");
               setPage(1);
             }}
-            className="w-full rounded-lg border px-3 py-2 text-sm hover:bg-gray-50"
+            className="w-full bg-gray-800 rounded-lg border px-3 py-2 text-sm hover:bg-gray-50"
           >
             Reset Filters
           </button>
@@ -540,7 +556,7 @@ export default function Ordermanagement() {
               setDateFrom(e.target.value);
               setPage(1);
             }}
-            className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-200"
+            className="w-full bg-gray-100 text-black rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-200"
           />
           <input
             type="date"
@@ -549,7 +565,7 @@ export default function Ordermanagement() {
               setDateTo(e.target.value);
               setPage(1);
             }}
-            className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-200"
+            className="w-full bg-gray-100 text-black rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-200"
           />
         </div>
       </div>
@@ -561,7 +577,7 @@ export default function Ordermanagement() {
           <div className="p-6 text-sm text-gray-500">No orders found.</div>
         ) : (
           <div className="overflow-auto">
-            <table className="w-full min-w-[1000px] text-sm">
+            <table className="w-full min-w-250 text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr className="text-left">
                   <th className="px-4 py-3">Order</th>
@@ -577,22 +593,34 @@ export default function Ordermanagement() {
               <tbody>
                 {orders.map((order) => {
                   const id = String(order.id);
-                  const transitionOptions =
-                    ALLOWED_TRANSITIONS[order.orderStatus] || [order.orderStatus];
-                  const paymentOptions = getAllowedPaymentStatuses(order.paymentStatus);
+                  const transitionOptions = ALLOWED_TRANSITIONS[
+                    order.orderStatus
+                  ] || [order.orderStatus];
+                  const paymentOptions = getAllowedPaymentStatuses(
+                    order.paymentStatus,
+                  );
 
                   return (
                     <tr key={id} className="border-b last:border-0">
                       <td className="px-4 py-3">
-                        <div className="font-semibold">#{order.orderNumber}</div>
+                        <div className="font-semibold">
+                          #{order.orderNumber}
+                        </div>
                         <div className="text-xs text-gray-500">ID: {id}</div>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="font-medium">{order.user?.fullName || "N/A"}</div>
-                        <div className="text-xs text-gray-500">{order.user?.email || "-"}</div>
+                        <div className="font-medium">
+                          {order.user?.fullName || "N/A"}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {order.user?.email || "-"}
+                        </div>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="max-w-[220px] truncate" title={getFirstProduct(order)}>
+                        <div
+                          className="max-w-55 truncate"
+                          title={getFirstProduct(order)}
+                        >
                           {getFirstProduct(order)}
                         </div>
                         <div className="text-xs text-gray-500">
@@ -602,7 +630,9 @@ export default function Ordermanagement() {
                       <td className="px-4 py-3 font-semibold">
                         {formatMoney(order.totalAmount)}
                       </td>
-                      <td className="px-4 py-3">{formatDate(order.createdAt)}</td>
+                      <td className="px-4 py-3">
+                        {formatDate(order.createdAt)}
+                      </td>
                       <td className="px-4 py-3">
                         <div className="space-y-2">
                           <StatusBadge value={order.orderStatus} />
@@ -612,7 +642,10 @@ export default function Ordermanagement() {
                             onChange={(e) => {
                               const nextStatus = e.target.value;
                               if (nextStatus === order.orderStatus) return;
-                              if (nextStatus === "shipped" || nextStatus === "cancelled") {
+                              if (
+                                nextStatus === "shipped" ||
+                                nextStatus === "cancelled"
+                              ) {
                                 openStatusModal(order, nextStatus);
                                 return;
                               }
@@ -636,7 +669,8 @@ export default function Ordermanagement() {
                             value={order.paymentStatus}
                             onChange={(e) => {
                               const nextPaymentStatus = e.target.value;
-                              if (nextPaymentStatus === order.paymentStatus) return;
+                              if (nextPaymentStatus === order.paymentStatus)
+                                return;
                               if (
                                 nextPaymentStatus === "paid" ||
                                 nextPaymentStatus === "refunded"
@@ -644,7 +678,9 @@ export default function Ordermanagement() {
                                 openPaymentModal(order, nextPaymentStatus);
                                 return;
                               }
-                              updateOrder(id, { paymentStatus: nextPaymentStatus });
+                              updateOrder(id, {
+                                paymentStatus: nextPaymentStatus,
+                              });
                             }}
                             className="w-full rounded-md border px-2 py-1 text-xs"
                           >
@@ -717,7 +753,9 @@ export default function Ordermanagement() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
               <div>
                 <div className="text-gray-500">Customer</div>
-                <div className="font-medium">{selectedOrder.user?.fullName || "N/A"}</div>
+                <div className="font-medium">
+                  {selectedOrder.user?.fullName || "N/A"}
+                </div>
                 <div>{selectedOrder.user?.email || "-"}</div>
                 <div>{selectedOrder.user?.phone || "-"}</div>
               </div>
@@ -726,17 +764,25 @@ export default function Ordermanagement() {
                 <div>Subtotal: {formatMoney(selectedOrder.subtotal)}</div>
                 <div>Shipping: {formatMoney(selectedOrder.shippingCost)}</div>
                 <div>Tax: {formatMoney(selectedOrder.tax)}</div>
-                <div className="font-semibold">Total: {formatMoney(selectedOrder.totalAmount)}</div>
+                <div className="font-semibold">
+                  Total: {formatMoney(selectedOrder.totalAmount)}
+                </div>
               </div>
             </div>
 
-            {String(selectedOrder.paymentStatus || "").toLowerCase() === "paid" &&
-              getOrderPaymentMode(selectedOrder).toLowerCase() === "connectips" && (
+            {String(selectedOrder.paymentStatus || "").toLowerCase() ===
+              "paid" &&
+              getOrderPaymentMode(selectedOrder).toLowerCase() ===
+                "connectips" && (
                 <div className="rounded-md border p-3 bg-gray-50 text-sm space-y-2">
-                  <div className="font-semibold text-gray-800">ConnectIPS Payment</div>
+                  <div className="font-semibold text-gray-800">
+                    ConnectIPS Payment
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-xs text-gray-600">Payment Mode</label>
+                      <label className="text-xs text-gray-600">
+                        Payment Mode
+                      </label>
                       <input
                         value={getOrderPaymentMode(selectedOrder)}
                         readOnly
@@ -744,7 +790,9 @@ export default function Ordermanagement() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs text-gray-600">Transaction ID</label>
+                      <label className="text-xs text-gray-600">
+                        Transaction ID
+                      </label>
                       <input
                         value={getOrderTransactionId(selectedOrder)}
                         readOnly
@@ -774,148 +822,203 @@ export default function Ordermanagement() {
                         Serial: {item.serialNumber || "-"}
                       </div>
                     </div>
-                    <div className="font-semibold">{formatMoney(item.subtotal)}</div>
+                    <div className="font-semibold">
+                      {formatMoney(item.subtotal)}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
 
             {detailLogGroups.payment.length > 0 && (
-            <div>
-              <div className="text-sm font-semibold mb-2">Payment Details</div>
-              <div className="overflow-auto rounded-md border">
-                <table className="w-full text-xs">
-                  <thead className="bg-gray-50 border-b">
-                    <tr className="text-left">
-                      <th className="px-3 py-2">From</th>
-                      <th className="px-3 py-2">To</th>
-                      <th className="px-3 py-2">Mode</th>
-                      <th className="px-3 py-2">Txn No.</th>
-                      <th className="px-3 py-2">Remark</th>
-                      <th className="px-3 py-2">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {detailLogGroups.payment.map((log) => (
-                        <tr key={`p-${log.id}`} className="border-b last:border-0">
-                          <td className="px-3 py-2 capitalize">{log.fromPaymentStatus || "-"}</td>
-                          <td className="px-3 py-2 capitalize font-medium">{log.toPaymentStatus || "-"}</td>
-                          <td className="px-3 py-2">{log.paymentMode || "-"}</td>
-                          <td className="px-3 py-2 font-mono">{log.transactionId || "-"}</td>
-                          <td className="px-3 py-2">{log.remark || "-"}</td>
-                          <td className="px-3 py-2">{formatDate(log.createdAt)}</td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            )}
-
-            {detailLogGroups.shipped.length > 0 && (
-            <div>
-              <div className="text-sm font-semibold mb-2">Shipment Details</div>
-              <div className="overflow-auto rounded-md border">
-                <table className="w-full text-xs">
-                  <thead className="bg-gray-50 border-b">
-                    <tr className="text-left">
-                      <th className="px-3 py-2">From</th>
-                      <th className="px-3 py-2">To</th>
-                      <th className="px-3 py-2">Courier</th>
-                      <th className="px-3 py-2">CN Number</th>
-                      <th className="px-3 py-2">CN Date</th>
-                      <th className="px-3 py-2">Remark</th>
-                      <th className="px-3 py-2">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {detailLogGroups.shipped.map((log) => (
-                        <tr key={`s-${log.id}`} className="border-b last:border-0">
-                          <td className="px-3 py-2 capitalize">{log.fromOrderStatus || "-"}</td>
-                          <td className="px-3 py-2 capitalize font-medium">{log.toOrderStatus || "-"}</td>
-                          <td className="px-3 py-2">{log.courierName || "-"}</td>
-                          <td className="px-3 py-2">{log.cnNumber || "-"}</td>
-                          <td className="px-3 py-2">{log.cnDate ? String(log.cnDate).slice(0, 10) : "-"}</td>
-                          <td className="px-3 py-2">{log.remark || "-"}</td>
-                          <td className="px-3 py-2">{formatDate(log.createdAt)}</td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            )}
-
-            {(detailLogGroups.cancelled.length > 0 ||
-              detailLogGroups.returns.length > 0) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {detailLogGroups.cancelled.length > 0 && (
               <div>
-                <div className="text-sm font-semibold mb-2">Cancelled Details</div>
-                <div className="overflow-auto rounded-md border">
-                  <table className="w-full text-xs">
-                    <thead className="bg-gray-50 border-b">
-                      <tr className="text-left">
-                        <th className="px-3 py-2">Reason</th>
-                        <th className="px-3 py-2">Remark</th>
-                        <th className="px-3 py-2">Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {detailLogGroups.cancelled.map((log) => (
-                          <tr key={`c-${log.id}`} className="border-b last:border-0">
-                            <td className="px-3 py-2">{log.cancelReason || "-"}</td>
-                            <td className="px-3 py-2">{log.remark || "-"}</td>
-                            <td className="px-3 py-2">{formatDate(log.createdAt)}</td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
+                <div className="text-sm font-semibold mb-2">
+                  Payment Details
                 </div>
-              </div>
-              )}
-
-              {detailLogGroups.returns.length > 0 && (
-              <div>
-                <div className="text-sm font-semibold mb-2">Return Details</div>
                 <div className="overflow-auto rounded-md border">
                   <table className="w-full text-xs">
                     <thead className="bg-gray-50 border-b">
                       <tr className="text-left">
                         <th className="px-3 py-2">From</th>
                         <th className="px-3 py-2">To</th>
+                        <th className="px-3 py-2">Mode</th>
+                        <th className="px-3 py-2">Txn No.</th>
                         <th className="px-3 py-2">Remark</th>
                         <th className="px-3 py-2">Date</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {detailLogGroups.returns.map((log) => (
-                          <tr key={`r-${log.id}`} className="border-b last:border-0">
-                            <td className="px-3 py-2 capitalize">{log.fromOrderStatus || "-"}</td>
-                            <td className="px-3 py-2 capitalize font-medium">{log.toOrderStatus || "-"}</td>
-                            <td className="px-3 py-2">{log.remark || "-"}</td>
-                            <td className="px-3 py-2">{formatDate(log.createdAt)}</td>
-                          </tr>
-                        ))}
+                      {detailLogGroups.payment.map((log) => (
+                        <tr
+                          key={`p-${log.id}`}
+                          className="border-b last:border-0"
+                        >
+                          <td className="px-3 py-2 capitalize">
+                            {log.fromPaymentStatus || "-"}
+                          </td>
+                          <td className="px-3 py-2 capitalize font-medium">
+                            {log.toPaymentStatus || "-"}
+                          </td>
+                          <td className="px-3 py-2">
+                            {log.paymentMode || "-"}
+                          </td>
+                          <td className="px-3 py-2 font-mono">
+                            {log.transactionId || "-"}
+                          </td>
+                          <td className="px-3 py-2">{log.remark || "-"}</td>
+                          <td className="px-3 py-2">
+                            {formatDate(log.createdAt)}
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
               </div>
-              )}
-            </div>
+            )}
+
+            {detailLogGroups.shipped.length > 0 && (
+              <div>
+                <div className="text-sm font-semibold mb-2">
+                  Shipment Details
+                </div>
+                <div className="overflow-auto rounded-md border">
+                  <table className="w-full text-xs">
+                    <thead className="bg-gray-50 border-b">
+                      <tr className="text-left">
+                        <th className="px-3 py-2">From</th>
+                        <th className="px-3 py-2">To</th>
+                        <th className="px-3 py-2">Courier</th>
+                        <th className="px-3 py-2">CN Number</th>
+                        <th className="px-3 py-2">CN Date</th>
+                        <th className="px-3 py-2">Remark</th>
+                        <th className="px-3 py-2">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {detailLogGroups.shipped.map((log) => (
+                        <tr
+                          key={`s-${log.id}`}
+                          className="border-b last:border-0"
+                        >
+                          <td className="px-3 py-2 capitalize">
+                            {log.fromOrderStatus || "-"}
+                          </td>
+                          <td className="px-3 py-2 capitalize font-medium">
+                            {log.toOrderStatus || "-"}
+                          </td>
+                          <td className="px-3 py-2">
+                            {log.courierName || "-"}
+                          </td>
+                          <td className="px-3 py-2">{log.cnNumber || "-"}</td>
+                          <td className="px-3 py-2">
+                            {log.cnDate ? String(log.cnDate).slice(0, 10) : "-"}
+                          </td>
+                          <td className="px-3 py-2">{log.remark || "-"}</td>
+                          <td className="px-3 py-2">
+                            {formatDate(log.createdAt)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {(detailLogGroups.cancelled.length > 0 ||
+              detailLogGroups.returns.length > 0) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {detailLogGroups.cancelled.length > 0 && (
+                  <div>
+                    <div className="text-sm font-semibold mb-2">
+                      Cancelled Details
+                    </div>
+                    <div className="overflow-auto rounded-md border">
+                      <table className="w-full text-xs">
+                        <thead className="bg-gray-50 border-b">
+                          <tr className="text-left">
+                            <th className="px-3 py-2">Reason</th>
+                            <th className="px-3 py-2">Remark</th>
+                            <th className="px-3 py-2">Date</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {detailLogGroups.cancelled.map((log) => (
+                            <tr
+                              key={`c-${log.id}`}
+                              className="border-b last:border-0"
+                            >
+                              <td className="px-3 py-2">
+                                {log.cancelReason || "-"}
+                              </td>
+                              <td className="px-3 py-2">{log.remark || "-"}</td>
+                              <td className="px-3 py-2">
+                                {formatDate(log.createdAt)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {detailLogGroups.returns.length > 0 && (
+                  <div>
+                    <div className="text-sm font-semibold mb-2">
+                      Return Details
+                    </div>
+                    <div className="overflow-auto rounded-md border">
+                      <table className="w-full text-xs">
+                        <thead className="bg-gray-50 border-b">
+                          <tr className="text-left">
+                            <th className="px-3 py-2">From</th>
+                            <th className="px-3 py-2">To</th>
+                            <th className="px-3 py-2">Remark</th>
+                            <th className="px-3 py-2">Date</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {detailLogGroups.returns.map((log) => (
+                            <tr
+                              key={`r-${log.id}`}
+                              className="border-b last:border-0"
+                            >
+                              <td className="px-3 py-2 capitalize">
+                                {log.fromOrderStatus || "-"}
+                              </td>
+                              <td className="px-3 py-2 capitalize font-medium">
+                                {log.toOrderStatus || "-"}
+                              </td>
+                              <td className="px-3 py-2">{log.remark || "-"}</td>
+                              <td className="px-3 py-2">
+                                {formatDate(log.createdAt)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
       )}
 
       {statusModal.open && (
-        <div className="fixed inset-0 bg-black/40 z-[60] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/40 z-60 flex items-center justify-center p-4">
           <div className="w-full max-w-lg rounded-xl bg-white border p-5 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-gray-900 capitalize">
                 {statusModal.nextStatus} Order
               </h3>
-              <button onClick={closeStatusModal} className="text-gray-500 hover:text-gray-700">
+              <button
+                onClick={closeStatusModal}
+                className="text-gray-500 hover:text-gray-700"
+              >
                 Close
               </button>
             </div>
@@ -923,14 +1026,22 @@ export default function Ordermanagement() {
             {statusModal.nextStatus === "shipped" && (
               <div className="space-y-3">
                 <div className="space-y-1">
-                  <label className="text-sm text-gray-700">Choose warranty serial number</label>
+                  <label className="text-sm text-gray-700">
+                    Choose warranty serial number
+                  </label>
                   <select
                     value={statusModal.serialNumber}
                     onChange={(e) =>
-                      setStatusModal((prev) => ({ ...prev, serialNumber: e.target.value }))
+                      setStatusModal((prev) => ({
+                        ...prev,
+                        serialNumber: e.target.value,
+                      }))
                     }
                     className="w-full rounded-md border px-3 py-2 text-sm"
-                    disabled={statusModal.serialLoading || !statusModal.serialSelectionRequired}
+                    disabled={
+                      statusModal.serialLoading ||
+                      !statusModal.serialSelectionRequired
+                    }
                   >
                     {!statusModal.serialSelectionRequired ? (
                       <option value="">No serial number required</option>
@@ -942,16 +1053,23 @@ export default function Ordermanagement() {
                         key={`${serialItem.productCode}-${serialItem.serialNumber}`}
                         value={serialItem.serialNumber}
                       >
-                        {`${serialItem.productName || serialItem.productCode || "Product"} - ${serialItem.serialNumber}`}
+                        {`${
+                          serialItem.productName ||
+                          serialItem.productCode ||
+                          "Product"
+                        } - ${serialItem.serialNumber}`}
                       </option>
                     ))}
                   </select>
                   {statusModal.serialLoading && (
-                    <p className="text-xs text-gray-500">Loading serial numbers...</p>
+                    <p className="text-xs text-gray-500">
+                      Loading serial numbers...
+                    </p>
                   )}
                   {statusModal.serialSelectionRequired &&
                     !statusModal.serialLoading &&
-                    (!statusModal.serialNumbers || statusModal.serialNumbers.length === 0) && (
+                    (!statusModal.serialNumbers ||
+                      statusModal.serialNumbers.length === 0) && (
                       <p className="text-xs text-red-600">
                         No in-stock serial numbers available for this order.
                       </p>
@@ -961,7 +1079,10 @@ export default function Ordermanagement() {
                   <input
                     value={statusModal.courierName}
                     onChange={(e) =>
-                      setStatusModal((prev) => ({ ...prev, courierName: e.target.value }))
+                      setStatusModal((prev) => ({
+                        ...prev,
+                        courierName: e.target.value,
+                      }))
                     }
                     className="w-full rounded-md border px-3 py-2 text-sm"
                     placeholder="Enter Courier Name."
@@ -969,23 +1090,33 @@ export default function Ordermanagement() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-sm text-gray-700">CN Number (optional)</label>
+                    <label className="text-sm text-gray-700">
+                      CN Number (optional)
+                    </label>
                     <input
                       value={statusModal.cnNumber}
                       onChange={(e) =>
-                        setStatusModal((prev) => ({ ...prev, cnNumber: e.target.value }))
+                        setStatusModal((prev) => ({
+                          ...prev,
+                          cnNumber: e.target.value,
+                        }))
                       }
                       className="w-full rounded-md border px-3 py-2 text-sm"
                       placeholder="Consignment number"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm text-gray-700">CN Date (optional)</label>
+                    <label className="text-sm text-gray-700">
+                      CN Date (optional)
+                    </label>
                     <input
                       type="date"
                       value={statusModal.cnDate}
                       onChange={(e) =>
-                        setStatusModal((prev) => ({ ...prev, cnDate: e.target.value }))
+                        setStatusModal((prev) => ({
+                          ...prev,
+                          cnDate: e.target.value,
+                        }))
                       }
                       className="w-full rounded-md border px-3 py-2 text-sm"
                     />
@@ -996,11 +1127,16 @@ export default function Ordermanagement() {
 
             {statusModal.nextStatus === "cancelled" && (
               <div className="space-y-1">
-                <label className="text-sm text-gray-700">Cancelled Reason</label>
+                <label className="text-sm text-gray-700">
+                  Cancelled Reason
+                </label>
                 <textarea
                   value={statusModal.cancelReason}
                   onChange={(e) =>
-                    setStatusModal((prev) => ({ ...prev, cancelReason: e.target.value }))
+                    setStatusModal((prev) => ({
+                      ...prev,
+                      cancelReason: e.target.value,
+                    }))
                   }
                   rows={3}
                   className="w-full rounded-md border px-3 py-2 text-sm"
@@ -1014,7 +1150,10 @@ export default function Ordermanagement() {
               <textarea
                 value={statusModal.remark}
                 onChange={(e) =>
-                  setStatusModal((prev) => ({ ...prev, remark: e.target.value }))
+                  setStatusModal((prev) => ({
+                    ...prev,
+                    remark: e.target.value,
+                  }))
                 }
                 rows={2}
                 className="w-full rounded-md border px-3 py-2 text-sm"
@@ -1041,13 +1180,16 @@ export default function Ordermanagement() {
       )}
 
       {paymentModal.open && (
-        <div className="fixed inset-0 bg-black/40 z-[60] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/40 z-60 flex items-center justify-center p-4">
           <div className="w-full max-w-lg rounded-xl bg-white border p-5 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-gray-900 capitalize">
                 Mark Payment as {paymentModal.nextStatus}
               </h3>
-              <button onClick={closePaymentModal} className="text-gray-500 hover:text-gray-700">
+              <button
+                onClick={closePaymentModal}
+                className="text-gray-500 hover:text-gray-700"
+              >
                 Close
               </button>
             </div>
@@ -1057,7 +1199,10 @@ export default function Ordermanagement() {
               <select
                 value={paymentModal.paymentMode}
                 onChange={(e) =>
-                  setPaymentModal((prev) => ({ ...prev, paymentMode: e.target.value }))
+                  setPaymentModal((prev) => ({
+                    ...prev,
+                    paymentMode: e.target.value,
+                  }))
                 }
                 className="w-full rounded-md border px-3 py-2 text-sm"
               >
@@ -1071,12 +1216,16 @@ export default function Ordermanagement() {
 
             <div className="space-y-1">
               <label className="text-sm text-gray-700">
-                Transaction Number {paymentModal.paymentMode === "COD" ? "(optional)" : "*"}
+                Transaction Number{" "}
+                {paymentModal.paymentMode === "COD" ? "(optional)" : "*"}
               </label>
               <input
                 value={paymentModal.transactionId}
                 onChange={(e) =>
-                  setPaymentModal((prev) => ({ ...prev, transactionId: e.target.value }))
+                  setPaymentModal((prev) => ({
+                    ...prev,
+                    transactionId: e.target.value,
+                  }))
                 }
                 readOnly={
                   paymentModal.paymentMode.toLowerCase() === "connectips" &&
@@ -1100,7 +1249,10 @@ export default function Ordermanagement() {
               <textarea
                 value={paymentModal.remark}
                 onChange={(e) =>
-                  setPaymentModal((prev) => ({ ...prev, remark: e.target.value }))
+                  setPaymentModal((prev) => ({
+                    ...prev,
+                    remark: e.target.value,
+                  }))
                 }
                 rows={2}
                 className="w-full rounded-md border px-3 py-2 text-sm"
@@ -1129,19 +1281,23 @@ export default function Ordermanagement() {
       )}
 
       {updatingId && (
-        <div className="fixed inset-0 z-[80] bg-black/35 flex items-center justify-center">
+        <div className="fixed inset-0 z-80 bg-black/35 flex items-center justify-center">
           <div className="bg-white rounded-xl shadow-xl border px-6 py-5 flex items-center gap-3">
             <div className="h-6 w-6 rounded-full border-2 border-orange-500 border-t-transparent animate-spin" />
-            <div className="text-sm font-medium text-gray-800">Updating order status...</div>
+            <div className="text-sm font-medium text-gray-800">
+              Updating order status...
+            </div>
           </div>
         </div>
       )}
 
       {detailLoading && (
-        <div className="fixed inset-0 z-[85] bg-black/35 flex items-center justify-center">
+        <div className="fixed inset-0 z-85 bg-black/35 flex items-center justify-center">
           <div className="bg-white rounded-xl shadow-xl border px-6 py-5 flex items-center gap-3">
             <div className="h-6 w-6 rounded-full border-2 border-orange-500 border-t-transparent animate-spin" />
-            <div className="text-sm font-medium text-gray-800">Loading order details...</div>
+            <div className="text-sm font-medium text-gray-800">
+              Loading order details...
+            </div>
           </div>
         </div>
       )}
