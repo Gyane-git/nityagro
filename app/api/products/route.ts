@@ -41,10 +41,10 @@ type ProductDTO = {
 
 export async function GET() {
   try {
-    const categories = await prisma.products.findMany();
+    const productGroupWise = await prisma.products.findMany();
     // 🔥 Fix BigInt serialization
     const safeData = JSON.parse(
-      JSON.stringify(categories, (_, value) =>
+      JSON.stringify(productGroupWise, (_, value) =>
         typeof value === "bigint" ? value.toString() : value,
       ),
     );
@@ -85,29 +85,29 @@ export async function POST(req: Request) {
     // ✅ Find existing product names
     const existingProducts = await prisma.products.findMany({
       where: {
-        productName: {
-          in: product.map((p) => p.productName),
+        subGroupName: {
+          in: product.map((p) => p.subGroupName || ""),
         },
       },
       select: {
-        productName: true,
+        subGroupName: true,
       },
     });
 
-    const existingNames = new Set(existingProducts.map((e) => e.productName));
+    const existingNames = new Set(existingProducts.map((e) => e.subGroupName));
 
     // ✅ Remove duplicate names inside request itself
     const addedNames = new Set<string>();
     const newProducts = product.filter((p) => {
       // already exists in DB
-      if (existingNames.has(p.productName)) {
+      if (existingNames.has(p.subGroupName ?? "")) {
         return false;
       }
       // duplicate inside incoming array
-      if (addedNames.has(p.productName)) {
+      if (addedNames.has(p.subGroupName ?? "")) {
         return false;
       }
-      addedNames.add(p.productName);
+      addedNames.add(p.subGroupName ?? "");
       return true;
     });
 
@@ -169,6 +169,82 @@ export async function POST(req: Request) {
         status: 500,
         headers: corsHeaders,
       },
+    );
+  }
+}
+export async function PUT(req: Request) {
+  try {
+    const body = await req.json();
+
+    const {
+      productCode,
+      productDescription	,
+      nutritionalInformation,
+      cookingDescription,
+      storageInstruction,
+      productStatus,
+      delivaryTargetDays,
+    
+    } = body;
+
+    if (!productCode) {
+      return NextResponse.json(
+        { success: false, message: "productCode is required" },
+        { status: 400, headers: corsHeaders },
+      );
+    }
+
+  
+
+    const product = await prisma.products.update({
+      where: { productCode: productCode },
+      data: {
+        ...(productDescription	 !== undefined && {
+          productDescription	: typeof productDescription	 === "string" ? productDescription	.trim() || null : null,
+        }),
+        ...(nutritionalInformation !== undefined && {
+          nutritionInfo: typeof nutritionalInformation === "string" ? nutritionalInformation.trim() || null : null,
+        }),
+        ...(cookingDescription !== undefined && {
+          cookingInstruction:
+            typeof cookingDescription === "string"
+              ? cookingDescription.trim() || null
+              : null,
+        }),
+         ...(storageInstruction !== undefined && {
+          storageInstruction:
+            typeof storageInstruction === "string"
+              ? storageInstruction.trim() || null
+              : null,
+        }),
+         ...(productStatus !== undefined && {
+          productStatus: Boolean(productStatus),
+        }),
+        ...(delivaryTargetDays !== undefined && {
+          deliveryTargetDays: delivaryTargetDays,
+        }),
+       
+      },
+    });
+
+    const safeData = JSON.parse(
+      JSON.stringify(product, (_, value) =>
+        typeof value === "bigint" ? value.toString() : value,
+      ),
+    );
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: `product updated successfully`,
+        data: safeData,
+      },
+      { status: 200, headers: corsHeaders },
+    );
+  } catch (error) {
+    return NextResponse.json(
+      { success: false, message: String(error) },
+      { status: 500, headers: corsHeaders },
     );
   }
 }

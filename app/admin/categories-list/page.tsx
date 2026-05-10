@@ -179,7 +179,7 @@ export default function CategoriesListPage() {
               storageInstruction: null,
               pImage: null,
               productStatus: true,
-              actualPrice: item.BuyRate,
+              actualPrice: item.MRP,
               sellingPrice: item.SalesRate,
               deliveryTargetDays: null,
               stockQuantity: item.StockQty,

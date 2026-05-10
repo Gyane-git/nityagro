@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Edit, Trash2, Info, Plus, Search } from "lucide-react";
+import { Edit, Trash2, Info, Plus, Search, X } from "lucide-react";
 import Link from "next/link";
 import useConfirmModalStore from "@/store/confirmModalStore";
 
@@ -37,12 +37,25 @@ interface Products {
   updatedAt: string;
 }
 
+interface ProductVariant {
+  variantId: string;
+  pCode: string;
+  subGroupName: string;
+  variationName: string;
+  salesRate: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function ProductListPage() {
-  const [products, setProducts] = useState<Products []>([]);
-  const [categories, setCategories] = useState([]);
+  const [products, setProducts] = useState<Products[]>([]);
+  const [productsVariant, setProductsVariant] = useState<ProductVariant[]>([]);
+  const [open, setOpen] = useState(false);
+  const [subGroupName, setSubGroupName] = useState("");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [modelVaraiation, setModelVaraiation] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
   // const [showConfirm, setShowConfirm] = useState(false);
@@ -57,22 +70,37 @@ export default function ProductListPage() {
 
   // Fetch Products
   const fetchProduct = async () => {
-    setLoading(true)
-      try {
-        const response = await apiGetRequest<Products[]>("/products");
-        if (response.success) {
-          setLoading(false);
-          setProducts(response.data || []);
-        }
-      } catch (error) {
-        console.error("Error fetching ledger:", error);
+    setLoading(true);
+    try {
+      const response = await apiGetRequest<Products[]>("/products");
+      if (response.success) {
+        setLoading(false);
+        setProducts(response.data || []);
       }
-    };
-    useEffect(() => {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      fetchProduct();
-    }, []);
+    } catch (error) {
+      console.error("Error fetching ledger:", error);
+    }
+  };
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchProduct();
+  }, []);
 
+  // Fetch Products
+  const fetchProductVariant = async (productId: string) => {
+    setLoading(true);
+    try {
+      const response = await apiGetRequest<ProductVariant[]>(
+        `/subcategories/${productId}`,
+      );
+      if (response.success) {
+        setOpen(true);
+        setProductsVariant(response.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching ledger:", error);
+    }
+  };
 
   // Filter Products by search & category
   const filteredProducts = products.filter((p) => {
@@ -93,26 +121,6 @@ export default function ProductListPage() {
     startIndex + itemsPerPage,
   );
 
-  // Delete product
-  const handleDelete = (id : string) => {
-    openConfirm({
-      title: "Delete Product",
-      message:
-        "Are you sure you want to delete this product? This action cannot be undone.",
-      onConfirm: async () => {
-        try {
-          await fetch(`${PRODUCT_API}/${id}`, { method: "DELETE" });
-
-          setProducts((prev) => prev.filter((p) => p.id !== id));
-          toast.success("Product deleted successfully 🗑️");
-        } catch (err) {
-          console.error(err);
-          toast.error("Failed to delete product!");
-        }
-      },
-    });
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       {/* Filters */}
@@ -132,8 +140,10 @@ export default function ProductListPage() {
             />
           </div>
 
-          <div className="flex-1 text-center  items-center text-2xl text-gray-800 font-semibold">Products</div>
-{/* 
+          <div className="flex-1 text-center  items-center text-2xl text-gray-800 font-semibold">
+            Products
+          </div>
+          {/* 
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
@@ -152,94 +162,59 @@ export default function ProductListPage() {
       {/* Product Table */}
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         <table className="min-w-full border text-black border-gray-200 rounded-lg">
-           <thead className="bg-slate-500 border-b text-white border-gray-200">
+          <thead className="bg-slate-500 border-b text-white border-gray-200">
             <tr>
-               <th className="p-2 text-center text-xs border">
-                S.n
-              </th>
-              <th className="p-2 text-center text-xs border">
-                Product Name
-              </th>
-                <th className="p-2 text-center text-xs border">
-                Code
-              </th>
-              <th className="p-2 text-center text-xs border">
-                Image
-              </th>
-              <th className="p-2 text-center text-xs border">
-                Category
-              </th>
-              <th className="p-2 text-center text-xs border">
-                Sub Category
-              </th>
-              <th className="p-2 text-center text-xs border">
-                Price
-              </th>
-              <th className="p-2 text-center text-xs border">
-                Stock
-              </th>
-             
-              <th className="p-2 text-center text-xs border">
-                Status
-              </th>
-              <th className="p-2 text-center text-xs border">
-                Actions
-              </th>
+              <th className="p-2 text-center text-xs border">S.n</th>
+              <th className="p-2 text-center text-xs border">Product Name</th>
+              <th className="p-2 text-center text-xs border">Code</th>
+              <th className="p-2 text-center text-xs border">Image</th>
+              <th className="p-2 text-center text-xs border">Category</th>
+
+              <th className="p-2 text-center text-xs border">Price</th>
+              <th className="p-2 text-center text-xs border">Stock</th>
+
+              <th className="p-2 text-center text-xs border">Status</th>
+              <th className="p-2 text-center text-xs border">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {currentItems.map((product,index) => (
-               <tr
+            {currentItems.map((product, index) => (
+              <tr
                 key={product.productCode}
                 className="hover:bg-green-100 text-sm text-gray-900 cursor-pointer"
               >
-                 <td className="p-1 text-center">{index +1}</td>
-               
+                <td className="p-1 text-center">{index + 1}</td>
 
                 {/* Catalog */}
-              <td className="p-1 text-left">
-
-                { product.subGroupName === "NO Sub GROUP" ? product.productName :     product.subGroupName
-
-                }
+                <td className="p-1 text-left">
+                  {product.subGroupName}
                   {/* {product.productName}  {product.subGroupName} */}
-               </td>
+                </td>
 
                 {/* Code */}
-               <td className="p-1 text-center">
+                <td className="p-1 text-center">
                   <span className="text-sm font-medium text-gray-900">
                     {product.productCode}
                   </span>
                 </td>
- {/* Image */}
-               <td className="p-1 text-center">
+                {/* Image */}
+                <td className="p-1 text-center">
                   <div className="w-8 h-8 relative rounded-lg overflow-hidden bg-gray-100">
                     <img
-                      src={resolveImageUrl(
-                        product.pImage ,
-                      )}
+                      src={resolveImageUrl(product.pImage)}
                       alt={product.productName}
                       className="object-cover"
                     />
                   </div>
                 </td>
                 {/* Product Name */}
-               <td className="p-1 text-center">
+                <td className="p-1 text-center">
                   <div>
                     <div className="text-sm font-semibold text-gray-900">
                       {product.categoryId || "Yuemi"}
                     </div>
                   </div>
                 </td>
-                 <td className="p-1 text-center">
-                  <div>
-                    <div className="text-sm font-semibold text-gray-900">
-                      {product.subGroupName || "Yuemi"}
-                    </div>
-                  </div>
-                </td>
-
-               
 
                 {/* Price */}
                 <td className="p-1 text-center">
@@ -254,16 +229,14 @@ export default function ProductListPage() {
                 </td>
 
                 {/* Stock */}
-              <td className="p-1 text-center">
+                <td className="p-1 text-center">
                   <span className="text-sm font-medium text-gray-900">
                     {product.availableQuantity || 0}
                   </span>
                 </td>
 
-             
-
                 {/* Status */}
-               <td className="p-1 text-center">
+                <td className="p-1 text-center">
                   {Number(product.availableQuantity) > 0 ? (
                     <span className="inline-flex px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
                       In Stock
@@ -277,8 +250,14 @@ export default function ProductListPage() {
 
                 {/* Actions */}
                 <td className="p-1 text-center">
-                  <div className="flex items-center gap-2 justify-center items-end">
-                    <button className="p-1 text-blue-600 hover:bg-blue-50 rounded-lg transition">
+                  <div className="flex items-center gap-2 justify-center ">
+                    <button
+                      onClick={(e) => {
+                        fetchProductVariant(product.subGroupName);
+                        setSubGroupName(product.subGroupName);
+                      }}
+                      className="p-1 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                    >
                       <Info size={18} />
                     </button>
                     <Link
@@ -287,12 +266,6 @@ export default function ProductListPage() {
                     >
                       <Edit size={18} />
                     </Link>
-                    <button
-                      onClick={() => handleDelete(product.productCode)}
-                      className="p-1 text-red-600 hover:bg-red-50 rounded-lg transition"
-                    >
-                      <Trash2 size={18} />
-                    </button>
                   </div>
                 </td>
               </tr>
@@ -324,6 +297,37 @@ export default function ProductListPage() {
               {i + 1}
             </button>
           ))}
+        </div>
+      )}
+
+      {open && (
+        <div className="fixed inset-0 bg-black/50 text-slate-600 flex items-center justify-center">
+          <div className="bg-white p-4 rounded w-[500px]">
+          <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold mb-4">{subGroupName}</h2>
+              <X
+              onClick={() => setOpen(false)}
+               className="bg-slate-400 cursor-pointer text-black hover:bg-green-700 hover:text-white"></X>
+          </div>
+
+            {productsVariant.length > 0 ? (
+              <div className="space-y-3">
+                {productsVariant.map((item) => (
+                  <button
+                    key={item.variantId}
+                    //  onClick={() => setSelectedWeight(w)}
+                    className="px-4 py-2 cursor-pointer text-sm bg-green-700 hover:bg-green-900 text-white font-medium border rounded-md transition-all duration-150"
+                  >
+                    {item.variationName}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p>No variants found</p>
+            )}
+
+            
+          </div>
         </div>
       )}
     </div>
