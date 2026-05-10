@@ -24,7 +24,7 @@ export default function SideHeaderBar() {
   const pathname = usePathname();
 
   const [expandedItems, setExpandedItems] = useState({
-    Products: true,
+    Products: false,
     Categories: false,
     Banners: false,
     "Manage Address": false,

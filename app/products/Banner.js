@@ -4,11 +4,8 @@ import Image from "next/image";
 
 export default function Banner() {
   return (
-    <div
-      className="relative w-full overflow-hidden"
-      style={{ height: "170px", borderRadius: "10px" }}
-    >
-      {/* Background image */}
+    <div className="relative w-full aspect-3/1 sm:aspect-4/1 overflow-hidden rounded-lg">
+      Background image
       <Image
         src="/banner1.jpg"
         alt="Nityagro Banner"
@@ -16,7 +13,6 @@ export default function Banner() {
         className="object-cover object-center"
         priority
       />
-
       {/* Overlay tint */}
       <div
         className="absolute inset-0"
@@ -25,9 +21,7 @@ export default function Banner() {
             "linear-gradient(90deg, rgba(0,0,0,0.38) 0%, rgba(0,0,0,0.08) 60%, transparent 100%)",
         }}
       />
-
       {/* Content */}
-      
     </div>
   );
 }

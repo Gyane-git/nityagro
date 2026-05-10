@@ -1,3 +1,4 @@
+import { Cog } from "lucide-react";
 import SeedToBottle from "./components/SeedToBottle";
 import SideBySide from "./components/SideBySide";
 
@@ -44,7 +45,7 @@ export const METHODS = {
         },
         {
           step: "Step 02",
-          icon: "⚙️",
+          icon: <Cog className="text-green-500" size={30} />,
           title: "Traditional Wooden Ghani",
           desc: "Seeds are crushed slowly in heritage wooden kolhus made from neem and sheesham. The press turns under 30 RPM, never letting temperatures cross 40°C.",
           image: "/methods/wooden-ghani.jpeg",

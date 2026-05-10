@@ -41,7 +41,7 @@ export default function MyAccountPage() {
       <div className="flex items-start gap-5 px-6 pb-10">
         <Sidebar activeTab={activeTab} onTabChange={setActiveTab} user={USER} />
 
-        {/* Right content panel — wider */}
+        {/* Right content panel*/}
         <main className="flex-1 bg-white rounded-lg shadow-sm p-8 min-h-100">
           {TAB_COMPONENTS[activeTab]}
         </main>
