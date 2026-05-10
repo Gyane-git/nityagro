@@ -1,9 +1,12 @@
 "use client";
 
-import { Ticket } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { MailIcon, PhoneIcon } from "lucide-react";
 
-// Social Icons
+// ─── Social Icons ─────────────────────────────────────────────────────────────
+
 const FacebookIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
     <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
@@ -11,13 +14,7 @@ const FacebookIcon = () => (
 );
 
 const TikTokIcon = () => (
-  <svg
-    width="18"
-    height="18"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    xmlns="http://www.w3.org/2000/svg"
-  >
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
     <path d="M16 2c.6 2.6 2.4 4.7 5 5v3c-2.2-.1-4.2-.9-5.8-2.2V16c0 3.3-2.7 6-6 6s-6-2.7-6-6 2.7-6 6-6c.3 0 .7 0 1 .1v3.2c-.3-.1-.6-.2-1-.2-1.7 0-3 1.3-3 3s1.3 3 3 3 3-1.3 3-3V2h3z" />
   </svg>
 );
@@ -39,36 +36,84 @@ const InstagramIcon = () => (
   </svg>
 );
 
-const PhoneIcon = () => (
-  <svg
-    width="17"
-    height="17"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9a16 16 0 0 0 6 6l1.09-1.09a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16z" />
+// ─── Mobile Nav Icons ─────────────────────────────────────────────────────────
+
+const HomeIcon = ({ filled }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path
+      d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"
+      fill={filled ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M9 21V12h6v9"
+      stroke={filled ? "white" : "currentColor"}
+      strokeWidth="1.8"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
-const MailIcon = () => (
-  <svg
-    width="17"
-    height="17"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-    <polyline points="22,6 12,13 2,6" />
+const ProductsIcon = ({ filled }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path
+      d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinejoin="round"
+      fill={filled ? "currentColor" : "none"}
+    />
+    <line
+      x1="3"
+      y1="6"
+      x2="21"
+      y2="6"
+      stroke={filled ? "white" : "currentColor"}
+      strokeWidth="1.8"
+    />
+    <path
+      d="M16 10a4 4 0 0 1-8 0"
+      stroke={filled ? "white" : "currentColor"}
+      strokeWidth="1.8"
+      strokeLinecap="round"
+    />
   </svg>
 );
+
+const WishlistIcon = ({ filled }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path
+      d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinejoin="round"
+      fill={filled ? "currentColor" : "none"}
+    />
+  </svg>
+);
+
+const AccountIcon = ({ filled }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <path
+      d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+    />
+    <circle
+      cx="12"
+      cy="7"
+      r="4"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      fill={filled ? "currentColor" : "none"}
+    />
+  </svg>
+);
+
+// ─── Data ─────────────────────────────────────────────────────────────────────
 
 const CUSTOMER_SUPPORT = [
   { label: "FAQs", href: "/faqs" },
@@ -87,282 +132,200 @@ const LEGAL = [
   { label: "Terms & Conditions", href: "/terms" },
 ];
 
+const MOBILE_NAV = [
+  { label: "Home", href: "/", icon: HomeIcon },
+  { label: "Products", href: "/products", icon: ProductsIcon },
+  { label: "Wishlist", href: "/wishlist", icon: WishlistIcon },
+  { label: "Account", href: "/account", icon: AccountIcon },
+];
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export default function Footer() {
+  const pathname = usePathname();
+
   return (
-    <footer className="relative w-full overflow-hidden">
-      {/* ── Mountain background image (decorative top section) ── */}
-      <div className="relative w-full" style={{ height: "670px" }}>
-        <Image
-          src="/footer-bg image.png"
-          alt=""
-          fill
-          className="object-cover object-top"
-          priority
-          aria-hidden="true"
-        />
-        {/* ── Dark green content area ── */}
-        <div className="  absolute inset-0 bg-transparent w-full top-65">
-          {/* Inner container: ax 1220px centered, matching Figma frame */}
-          <div className="mx-auto px-8" style={{ maxWidth: "1220px" }}>
-            {/* ── Top grid: 4 columns ── */}
-            {/*
-            Col 1: width 345.99 / gap 19.99  → GET IN TOUCH block (height ~180)
-            Col 2–4: width 207.3 / gap 18    → Customer Support / Company / Legal (height ~222)
-          */}
-            <div
-              className="grid pt-12 pb-10"
-              style={{
-                gridTemplateColumns: "345.99px 207.3px 207.3px 207.3px",
-                columnGap: "20px",
-              }}
-            >
-              {/* ── GET IN TOUCH ── */}
-              <div
-                className="flex flex-col"
-                style={{ height: "180px", gap: "19.99px" }}
-              >
-                <h3
-                  className="text-white"
-                  style={{
-                    fontFamily: "Roboto Slab",
-                    fontWeight: 500,
-                    fontSize: "20px",
-                    lineHeight: "32px",
-                    letterSpacing: "0%",
-                    verticalAlign: "middle",
-                    color: "#FFFFFF",
-                  }}
-                >
-                  GET IN TOUCH
-                </h3>
+    <>
+      {/* ── DESKTOP FOOTER (md and above) ── */}
+      <footer className="relative w-full overflow-hidden hidden md:block">
+        <div className="relative w-full min-h-130 lg:min-h-167.5">
+          <Image
+            src="/footer-bg image.png"
+            alt=""
+            fill
+            className="object-cover object-top"
+            priority
+          />
 
-                <p
-                  style={{
-                    fontFamily: "Roboto Slab",
-                    fontWeight: 400,
-                    fontSize: "14px",
-                    lineHeight: "20px",
-                    letterSpacing: "0%",
-                    verticalAlign: "middle",
-                    color: "#FFFFFF",
-                  }}
-                >
-                  Join our network of trusted partners and bring traditional,
-                  organic products to your community
-                </p>
+          <div className="absolute inset-0 flex items-end">
+            <div className="w-full bg-transparent pt-32 lg:pt-48">
+              <div className="mx-auto px-6 lg:px-8 max-w-305">
+                {/* Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-10 pb-10">
+                  {/* GET IN TOUCH */}
+                  <div className="flex flex-col gap-5 max-w-85">
+                    <h3 className="text-white text-lg lg:text-xl font-medium">
+                      GET IN TOUCH
+                    </h3>
+                    <p className="text-white text-sm leading-5">
+                      Join our network of trusted partners and bring
+                      traditional, organic products to your community
+                    </p>
+                    <div className="flex flex-col gap-3 text-white text-sm">
+                      <a
+                        href="tel:+915400025124553"
+                        className="flex items-center gap-3"
+                      >
+                        <PhoneIcon size={17} />
+                        <span>(+91)-540-025-124553</span>
+                      </a>
+                      <a
+                        href="mailto:sale@nityagro.com"
+                        className="flex items-center gap-3"
+                      >
+                        <MailIcon size={17} />
+                        <span>sale@nityagro.com</span>
+                      </a>
+                    </div>
+                  </div>
 
-                <div className="flex flex-col gap-3">
-                  <a
-                    href="tel:+915400025124553"
-                    className="flex items-center gap-3 hover:text-white transition-colors group"
-                    style={{
-                      fontFamily: "Roboto Slab",
-                      fontWeight: 400,
-                      fontSize: "14px",
-                      lineHeight: "20px",
-                      letterSpacing: "0%",
-                      verticalAlign: "middle",
-                      color: "#FFFFFF",
-                    }}
-                  >
-                    <span className="opacity-75 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                      <PhoneIcon />
-                    </span>
-                    <span>(+91)-540-025-124553</span>
-                  </a>
+                  {/* Customer Support */}
+                  <div className="flex flex-col gap-5">
+                    <h3 className="text-white text-lg lg:text-xl font-medium">
+                      Customer Support
+                    </h3>
+                    <div className="flex flex-col gap-4 text-white text-sm">
+                      {CUSTOMER_SUPPORT.map((item) => (
+                        <a key={item.label} href={item.href}>
+                          {item.label}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
 
-                  <a
-                    href="mailto:sale@nityagro.com"
-                    className="flex items-center gap-3 hover:text-white transition-colors group"
-                    style={{
-                      fontFamily: "Roboto Slab",
-                      fontWeight: 400,
-                      fontSize: "14px",
-                      lineHeight: "20px",
-                      letterSpacing: "0%",
-                      verticalAlign: "middle",
-                      color: "#FFFFFF",
-                    }}
-                  >
-                    <span className="opacity-75 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                      <MailIcon />
-                    </span>
-                    <span>sale@nityagro.com</span>
-                  </a>
+                  {/* Company */}
+                  <div className="flex flex-col gap-5">
+                    <h3 className="text-white text-lg lg:text-xl font-medium">
+                      Company
+                    </h3>
+                    <div className="flex flex-col gap-4 text-white text-sm">
+                      {COMPANY.map((item) => (
+                        <a key={item.label} href={item.href}>
+                          {item.label}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Legal */}
+                  <div className="flex flex-col gap-5">
+                    <h3 className="text-white text-lg lg:text-xl font-medium">
+                      Legal
+                    </h3>
+                    <div className="flex flex-col gap-4 text-white text-sm">
+                      {LEGAL.map((item) => (
+                        <a key={item.label} href={item.href}>
+                          {item.label}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              {/* ── Customer Support ── */}
-              <div
-                className="flex flex-col"
-                style={{ height: "222px", gap: "18px" }}
-              >
-                <h3
-                  className="text-white"
-                  style={{
-                    fontFamily: "Roboto Slab",
-                    fontWeight: 500,
-                    fontSize: "20px",
-                    lineHeight: "32px",
-                    letterSpacing: "0%",
-                    verticalAlign: "middle",
-                    color: "#FFFFFF",
-                  }}
-                >
-                  Customer Support
-                </h3>
-                <div className="flex flex-col" style={{ gap: "18px" }}>
-                  {CUSTOMER_SUPPORT.map((item) => (
-                    <a
-                      key={item.label}
-                      href={item.href}
-                      className="hover:text-white transition-colors"
-                      style={{
-                        fontFamily: "Roboto Slab",
-                        fontWeight: 400,
-                        fontSize: "14px",
-                        lineHeight: "20px",
-                        letterSpacing: "0%",
-                        verticalAlign: "middle",
-                        color: "#FFFFFF",
-                      }}
-                    >
-                      {item.label}
-                    </a>
-                  ))}
-                </div>
-              </div>
+                {/* Divider */}
+                <div className="border-t border-[#E6ECF0]" />
 
-              {/* ── Company ── */}
-              <div
-                className="flex flex-col"
-                style={{ height: "222px", gap: "18px" }}
-              >
-                <h3
-                  className="text-white"
-                  style={{
-                    fontFamily: "Roboto Slab",
-                    fontWeight: 500,
-                    fontSize: "20px",
-                    lineHeight: "32px",
-                    letterSpacing: "0%",
-                    verticalAlign: "middle",
-                    color: "#FFFFFF",
-                  }}
-                >
-                  Company
-                </h3>
-                <div className="flex flex-col" style={{ gap: "18px" }}>
-                  {CUSTOMER_SUPPORT.map((item) => (
-                    <a
-                      key={item.label}
-                      href={item.href}
-                      className="hover:text-white transition-colors"
-                      style={{
-                        fontFamily: "Roboto Slab",
-                        fontWeight: 400,
-                        fontSize: "14px",
-                        lineHeight: "20px",
-                        letterSpacing: "0%",
-                        verticalAlign: "middle",
-                        color: "#FFFFFF",
-                      }}
-                    >
-                      {item.label}
-                    </a>
-                  ))}
+                {/* Bottom bar */}
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4 py-4 text-white text-sm">
+                  <p>© 2022, Nityagro - All rights reserved</p>
+                  <div className="flex items-center gap-4">
+                    <span className="font-semibold">Follow Us</span>
+                    <div className="flex gap-3">
+                      {[
+                        {
+                          icon: <FacebookIcon />,
+                          href: "#",
+                          label: "Facebook",
+                        },
+                        {
+                          icon: <TikTokIcon />,
+                          href: "https://www.tiktok.com/@nityagro.np",
+                          label: "TikTok",
+                        },
+                        {
+                          icon: <InstagramIcon />,
+                          href: "https://www.instagram.com/nityamagro.np",
+                          label: "Instagram",
+                        },
+                      ].map(({ icon, href, label }) => (
+                        <a
+                          key={label}
+                          href={href}
+                          aria-label={label}
+                          className="w-9 h-9 rounded-full bg-white text-[#00462C] flex items-center justify-center hover:scale-110 transition-all duration-200"
+                        >
+                          {icon}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              {/* ── Legal ── */}
-              <div
-                className="flex flex-col"
-                style={{ height: "222px", gap: "18px" }}
-              >
-                <h3
-                  className="text-white"
-                  style={{
-                    fontFamily: "Roboto Slab",
-                    fontWeight: 500,
-                    fontSize: "20px",
-                    lineHeight: "32px",
-                    letterSpacing: "0%",
-                    verticalAlign: "middle",
-                    color: "#FFFFFF",
-                  }}
-                >
-                  Legal
-                </h3>
-                <div className="flex flex-col" style={{ gap: "18px" }}>
-                  {CUSTOMER_SUPPORT.map((item) => (
-                    <a
-                      key={item.label}
-                      href={item.href}
-                      className="hover:text-white transition-colors"
-                      style={{
-                        fontFamily: "Roboto Slab",
-                        fontWeight: 400,
-                        fontSize: "14px",
-                        lineHeight: "20px",
-                        letterSpacing: "0%",
-                        verticalAlign: "middle",
-                        color: "#FFFFFF",
-                      }}
-                    >
-                      {item.label}
-                    </a>
-                  ))}
-                </div>
+                <div className="border-t border-[#E6ECF0]" />
               </div>
             </div>
-
-            {/* ── Divider ── */}
-            <div className="border-t border-[#E6ECF0] " />
-
-            {/* ── Bottom bar ── */}
-            <div className="flex items-center justify-between py-3 ">
-              <p
-                  style={{
-                    fontFamily: "Roboto Slab",
-                    fontWeight: 400,
-                    fontSize: "14px",
-                    lineHeight: "20px",
-                    letterSpacing: "0%",
-                    verticalAlign: "middle",
-                    color: "#FFFFFF",
-                  }}
-                >
-                © 2022, Nityagro - All rights reserved
-              </p>
-
-              <div className="flex items-center gap-4">
-                <span className="text-white font-semibold text-sm">
-                  Follow Us
-                </span>
-                <div className="flex items-center gap-3">
-                  {[
-                    { icon: <FacebookIcon />, href: "#", label: "Facebook" },
-                    { icon: <TikTokIcon />, href: "https://www.tiktok.com/@nityagro.np?_r=1&_t=ZS-964Is7j2GEC", label: "TikTok" },
-                    { icon: <InstagramIcon />, href: "https://www.instagram.com/nityamagro.np?igsh=MmlzcXVvcnBqYjRz", label: "Instagram" },
-                  ].map(({ icon, href, label }) => (
-                    <a
-                      key={label}
-                      href={href}
-                      aria-label={label}
-                      className="w-9 h-9 rounded-full bg-white text-[#00462C] flex items-center justify-center hover:bg-white/90 hover:scale-110 transition-all duration-200"
-                    >
-                      {icon}
-                    </a>
-                  ))}
-                </div>
-              </div>
-            </div>
-      
-            <div className="border-t border-[#E6ECF0] " />
           </div>
-          
         </div>
-      </div>
-    </footer>
+      </footer>
+
+      {/* ── MOBILE BOTTOM NAV BAR (below md) ── */}
+      <nav
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100"
+        style={{
+          boxShadow: "0 -2px 16px rgba(0,0,0,0.08)",
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        }}
+      >
+        <div className="flex items-center justify-around px-2 py-2">
+          {MOBILE_NAV.map(({ label, href, icon: Icon }) => {
+            const isActive =
+              href === "/" ? pathname === "/" : pathname.startsWith(href);
+            return (
+              <Link
+                key={label}
+                href={href}
+                className="flex flex-col items-center gap-1 min-w-15 pt-1"
+              >
+                <span
+                  className="transition-colors duration-200"
+                  style={{ color: isActive ? "#00462C" : "#9CA3AF" }}
+                >
+                  <Icon filled={isActive} />
+                </span>
+                <span
+                  className="font-medium transition-colors duration-200"
+                  style={{
+                    color: isActive ? "#00462C" : "#9CA3AF",
+                    fontSize: "11px",
+                    lineHeight: "16px",
+                  }}
+                >
+                  {label}
+                </span>
+                {isActive && (
+                  <span
+                    className="w-1 h-1 rounded-full"
+                    style={{ backgroundColor: "#00462C" }}
+                  />
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+
+      {/* Spacer so page content isn't hidden behind the fixed mobile nav */}
+      <div className="md:hidden h-16" />
+    </>
   );
 }

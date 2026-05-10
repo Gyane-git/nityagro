@@ -142,7 +142,7 @@ function ProductCard({ product }) {
   };
 
   return (
-    <div className="relative flex flex-col border border-gray-200 overflow-hidden rounded-lg w-full h-full">
+    <div className="relative flex flex-col border border-gray-200 overflow-hidden rounded-lg w-full">
       {/* Discount */}
       {product.discount && (
         <div
@@ -176,11 +176,9 @@ function ProductCard({ product }) {
         </div>
       )}
 
-      <Link
-        href={`/products/${detailProduct.id}`}
-        className="flex flex-col flex-1 min-h-0"
-      >
-        {/* Image */}
+      {/* Wrap image + info in Link — NO flex-1 so height is driven by fixed children */}
+      <Link href={`/products/${detailProduct.id}`} className="flex flex-col">
+        {/* Image — fixed height */}
         <div className="relative w-full bg-gray-50" style={{ height: "160px" }}>
           <Image
             src={product.image}
@@ -191,8 +189,11 @@ function ProductCard({ product }) {
           />
         </div>
 
-        {/* Info */}
-        <div className="flex flex-col flex-1 px-2.5 py-2">
+        {/* Info — fixed height keeps all cards uniform */}
+        <div
+          className="px-2.5 pt-2 pb-1 overflow-hidden"
+          style={{ height: "84px" }}
+        >
           <StarRating rating={product.rating} reviews={product.reviews} />
           <p className="text-xs sm:text-sm font-medium text-gray-800 line-clamp-2 mt-1 leading-tight">
             {product.name}
@@ -203,8 +204,8 @@ function ProductCard({ product }) {
         </div>
       </Link>
 
-      {/* Add to Cart */}
-      <div className="px-2.5 pb-2.5">
+      {/* Add to Cart — always at the bottom */}
+      <div className="px-2.5 pb-2.5 pt-1">
         <button
           onClick={handleAdd}
           className="w-full py-2 rounded text-white font-semibold flex items-center justify-center gap-1.5 text-sm transition-colors"
@@ -227,34 +228,17 @@ export default function ProductSection() {
       ? PRODUCTS
       : PRODUCTS.filter((p) => p.category === activeCategory);
 
+  const newLocal = "mx-auto w-full max-w-319.5";
   return (
     <section className="w-full bg-white">
       <style>{`
-        .product-card-item {
-          width: calc((100vw - 48px) / 2.5);
-        }
-        @media (min-width: 640px) {
-          .product-card-item {
-            width: calc((100vw - 64px) / 3.5);
-          }
-        }
-        @media (min-width: 1024px) {
-          .product-card-item {
-            width: calc((100vw - 80px) / 4.5);
-          }
-        }
-        @media (min-width: 1280px) {
-          .product-card-item {
-            width: calc((100vw - 96px) / 5.5);
-          }
-        }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
-      <div className="mx-auto w-full max-w-[1278px]">
+      <div className={newLocal}>
         {/* ── Welcome Header ── */}
-        <div className="flex flex-col items-center text-center pt-8 sm:pt-10 lg:pt-[45px] pb-2 gap-1 px-4">
+        <div className="flex flex-col items-center text-center pt-8 sm:pt-10 lg:pt-11.25 pb-2 gap-1 px-4">
           <h1
             className="font-bold text-xl sm:text-2xl lg:text-[32px] leading-tight tracking-[0.6px] text-[#235A49]"
             style={{ fontFamily: "Roboto Slab" }}
@@ -277,7 +261,7 @@ export default function ProductSection() {
               <button
                 key={id}
                 onClick={() => setActiveCategory(id)}
-                className="flex flex-col items-center relative transition-all flex-shrink-0"
+                className="flex flex-col items-center relative transition-all shrink-0"
                 style={{ minWidth: "52px" }}
               >
                 <div className="flex flex-col items-center justify-end cursor-pointer pb-2">
@@ -300,6 +284,7 @@ export default function ProductSection() {
                     {label}
                   </span>
                 </div>
+                {/* Active underline indicator */}
                 <div
                   className="absolute bottom-0 left-1/2 -translate-x-1/2 transition-all duration-200"
                   style={{
@@ -335,13 +320,14 @@ export default function ProductSection() {
 
         {filtered.length > 0 ? (
           <>
-            {/* 🔹 Mobile & Tablet → Slider */}
-            <div className="lg:hidden overflow-x-auto scrollbar-hide pb-6 px-4">
+            {/* Mobile & Tablet → horizontal scroll slider */}
+            <div className="lg:hidden overflow-x-auto scrollbar pb-6 px-4">
               <div className="flex gap-3" style={{ width: "max-content" }}>
                 {filtered.map((product) => (
                   <div
                     key={product.id}
-                    className="shrink-0 product-card-item"
+                    className="shrink-0"
+                    style={{ width: "160px" }}
                   >
                     <ProductCard product={product} />
                   </div>
@@ -349,7 +335,7 @@ export default function ProductSection() {
               </div>
             </div>
 
-            {/* 🔹 Large Screen → Grid */}
+            {/* Large screen → grid */}
             <div className="hidden lg:grid grid-cols-4 xl:grid-cols-5 gap-4 px-4 pb-8">
               {filtered.map((product) => (
                 <ProductCard key={product.id} product={product} />
