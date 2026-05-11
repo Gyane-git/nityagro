@@ -172,79 +172,209 @@ export async function POST(req: Request) {
     );
   }
 }
+
+
 export async function PUT(req: Request) {
   try {
-    const body = await req.json();
+    const formData = await req.formData();
 
-    const {
-      productCode,
-      productDescription	,
-      nutritionalInformation,
-      cookingDescription,
-      storageInstruction,
-      productStatus,
-      delivaryTargetDays,
-    
-    } = body;
+    const productCode = formData.get("productCode") as string;
+
+    const productDescription = formData.get("productDescription") as string;
+
+    const nutritionalInformation = formData.get(
+      "nutritionalInformation"
+    ) as string;
+
+    const cookingDescription = formData.get(
+      "cookingDescription"
+    ) as string;
+
+    const storageInstruction = formData.get(
+      "storageInstruction"
+    ) as string;
+
+    const delivaryTargetDays = formData.get(
+      "delivaryTargetDays"
+    ) as string;
+
+    const productStatus =
+      formData.get("productStatus") === "true";
+
+    const productImage = formData.get("productImage") as File | null;
 
     if (!productCode) {
       return NextResponse.json(
-        { success: false, message: "productCode is required" },
-        { status: 400, headers: corsHeaders },
+        {
+          success: false,
+          message: "productCode is required",
+        },
+        {
+          status: 400,
+          headers: corsHeaders,
+        }
       );
     }
 
-  
+    let imagePath: string | null = null;
+
+    // ✅ save file
+    if (productImage && productImage.size > 0) {
+      const bytes = await productImage.arrayBuffer();
+
+      const buffer = Buffer.from(bytes);
+
+      const fileName = `${Date.now()}-${productImage.name}`;
+
+      const path = `/uploads/products/${fileName}`;
+
+      const fs = require("fs");
+
+      fs.writeFileSync(path, buffer);
+
+      imagePath = `/uploads/products/${fileName}`;
+    }
 
     const product = await prisma.products.update({
-      where: { productCode: productCode },
+      where: {
+        productCode,
+      },
       data: {
-        ...(productDescription	 !== undefined && {
-          productDescription	: typeof productDescription	 === "string" ? productDescription	.trim() || null : null,
+        ...(productDescription !== undefined && {
+          productDescription:
+            productDescription.trim() || null,
         }),
+
         ...(nutritionalInformation !== undefined && {
-          nutritionInfo: typeof nutritionalInformation === "string" ? nutritionalInformation.trim() || null : null,
+          nutritionInfo:
+            nutritionalInformation.trim() || null,
         }),
+
         ...(cookingDescription !== undefined && {
           cookingInstruction:
-            typeof cookingDescription === "string"
-              ? cookingDescription.trim() || null
-              : null,
+            cookingDescription.trim() || null,
         }),
-         ...(storageInstruction !== undefined && {
+
+        ...(storageInstruction !== undefined && {
           storageInstruction:
-            typeof storageInstruction === "string"
-              ? storageInstruction.trim() || null
-              : null,
+            storageInstruction.trim() || null,
         }),
-         ...(productStatus !== undefined && {
-          productStatus: Boolean(productStatus),
-        }),
+
         ...(delivaryTargetDays !== undefined && {
-          deliveryTargetDays: delivaryTargetDays,
+          deliveryTargetDays: Number(delivaryTargetDays),
         }),
-       
+
+        productStatus,
+
+        ...(imagePath && {
+          pImage: imagePath,
+        }),
       },
     });
-
-    const safeData = JSON.parse(
-      JSON.stringify(product, (_, value) =>
-        typeof value === "bigint" ? value.toString() : value,
-      ),
-    );
 
     return NextResponse.json(
       {
         success: true,
-        message: `product updated successfully`,
-        data: safeData,
+        message: "Product updated successfully",
+        data: product,
       },
-      { status: 200, headers: corsHeaders },
+      {
+        status: 200,
+        headers: corsHeaders,
+      }
     );
   } catch (error) {
     return NextResponse.json(
-      { success: false, message: String(error) },
-      { status: 500, headers: corsHeaders },
+      {
+        success: false,
+        message: String(error),
+      },
+      {
+        status: 500,
+        headers: corsHeaders,
+      }
     );
   }
 }
+
+// export async function PUT(req: Request) {
+//   try {
+//     const body = await req.json();
+
+//     const {
+//       productCode,
+//       productDescription	,
+//       nutritionalInformation,
+//       cookingDescription,
+//       storageInstruction,
+//       productStatus,
+//       delivaryTargetDays,
+//       productImage,
+    
+//     } = body;
+
+//     if (!productCode) {
+//       return NextResponse.json(
+//         { success: false, message: "productCode is required" },
+//         { status: 400, headers: corsHeaders },
+//       );
+//     }
+
+  
+
+//     const product = await prisma.products.update({
+//       where: { productCode: productCode },
+//       data: {
+//         ...(productDescription	 !== undefined && {
+//           productDescription	: typeof productDescription	 === "string" ? productDescription	.trim() || null : null,
+//         }),
+//         ...(nutritionalInformation !== undefined && {
+//           nutritionInfo: typeof nutritionalInformation === "string" ? nutritionalInformation.trim() || null : null,
+//         }),
+//         ...(cookingDescription !== undefined && {
+//           cookingInstruction:
+//             typeof cookingDescription === "string"
+//               ? cookingDescription.trim() || null
+//               : null,
+//         }),
+//          ...(storageInstruction !== undefined && {
+//           storageInstruction:
+//             typeof storageInstruction === "string"
+//               ? storageInstruction.trim() || null
+//               : null,
+//         }),
+//          ...(productStatus !== undefined && {
+//           productStatus: Boolean(productStatus),
+//         }),
+//         ...(delivaryTargetDays !== undefined && {
+//           deliveryTargetDays: delivaryTargetDays,
+//         }),
+//         ...(productImage !== undefined && {
+//           pImage: productImage,
+//         }),
+       
+       
+//       },
+//     });
+
+//     const safeData = JSON.parse(
+//       JSON.stringify(product, (_, value) =>
+//         typeof value === "bigint" ? value.toString() : value,
+//       ),
+//     );
+
+//     return NextResponse.json(
+//       {
+//         success: true,
+//         message: `product updated successfully`,
+//         data: safeData,
+//       },
+//       { status: 200, headers: corsHeaders },
+//     );
+//   } catch (error) {
+//     return NextResponse.json(
+//       { success: false, message: String(error) },
+//       { status: 500, headers: corsHeaders },
+//     );
+//   }
+// }

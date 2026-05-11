@@ -196,6 +196,10 @@ export default function EditProductPage() {
             productCode: response.data?.productCode || "",
             productName: response.data?.subGroupName || "",
             categoryId: response.data?.categoryId || "",
+             productDescription: response.data?.productDescription || "",
+               nutritionalInformation: response.data?.nutritionInfo || "",
+                 cookingDescription: response.data?.cookingInstruction || "",
+                   storageInstruction: response.data?.storageInstruction || "",
             actualPrice: String(response.data?.actualPrice) || "0.0",
             SellingPrice: String(response.data?.sellingPrice) || "0.0",
             availableQuantity:
@@ -210,23 +214,21 @@ export default function EditProductPage() {
     fetchProductById();
   }, []);
 
-  const handleMainImageChange = (
-  e: React.ChangeEvent<HTMLInputElement>
-) => {
-  const file = e.target.files?.[0];
+  const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
 
-  console.log("file:", file);
+    console.log("file:", file);
 
-  if (!file) return;
+    if (!file) return;
 
-   const data = new FormData();
-  data.append("productImage", formData.productImage || "");
-   alert(data.name);
-  setFormData((prev) => ({
-    ...prev,
-    productImage: file,
-  }));
-};
+    alert(file);
+    setFormData((prev) => ({
+      ...prev,
+      productImage: file,
+    }));
+  };
+
+
   const handleMultipleImageChange = (e) => {
     const files = Array.from(e.target.files);
     // setFormData((prev) => ({ ...prev, productImages: files }));
@@ -241,25 +243,40 @@ export default function EditProductPage() {
       [name]: type === "checkbox" ? checked : value,
     }));
   };
-// "productCode":"5",
-//      "productDescription":"asdklfjsk",
-//       "nutritionalInformation":"nuwer",
-//       "cookingRecommendedUses":"askdfysukdf",
-//       "storageInstruction":"asdkuhy",
-//       "productStatus":false,
-//       "deliveryTargetDays":2
+
   const handleSubmit = async () => {
-    console.log(JSON.stringify(formData));
+   
 
-    try{
-      const response = await apiPutRequest("/products",formData);
-      if(response.success){
-       alert(response.message)
+
+     const data = new FormData();
+
+  data.append("productCode", formData.productCode);
+  data.append("productDescription", formData.productDescription);
+  data.append("nutritionalInformation", formData.nutritionalInformation);
+  data.append("cookingDescription", formData.cookingDescription);
+  data.append("storageInstruction", formData.storageInstruction);
+  data.append("productStatus", "true");
+  data.append("delivaryTargetDays", formData.delivaryTargetDays);
+
+
+
+  if (formData.productImage) {
+    data.append("productImage", formData.productImage);
+    alert(formData.productImage);
+  }
+  for (const [key, value] of data.entries()) {
+  console.log(key, value);
+}
+  const obj = Object.fromEntries(data.entries());
+console.log(JSON.stringify(obj));
+console.log(formData.productImage);
+console.log(formData.productImage?.name);
+    try {
+      const response = await apiPutRequest("/products", data);
+      if (response.success) {
+        alert(response.message);
       }
-    }catch(e){
-
-    }
-
+    } catch (e) {}
   };
   // Shared style tokens ──
   const inputClass =
@@ -649,6 +666,13 @@ export default function EditProductPage() {
                   <div className="px-5 pb-5 border-t border-gray-100 space-y-4 mt-4">
                     {/* model: productImage */}
                     <div>
+                      {formData.productImage && (
+                        <img
+                          src={URL.createObjectURL(formData.productImage)}
+                          alt="preview"
+                          className="w-32 h-32 object-cover"
+                        />
+                      )}
                       <label htmlFor="productImage" className={labelClass}>
                         {" "}
                         Main Image

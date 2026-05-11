@@ -281,6 +281,7 @@ export default function CategoriesListPage() {
       if (
         [categoryImageFile, categoryLogoFile, categoryBannerFile].some(Boolean)
       ) {
+        
         const uploadFormData = new FormData();
         if (categoryImageFile)
           uploadFormData.append("categoryImage", categoryImageFile);
@@ -603,7 +604,7 @@ export default function CategoriesListPage() {
 
       {editForm.categoryId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-          <div className="w-full max-w-3xl rounded-2xl bg-white shadow-2xl border border-gray-200 overflow-hidden">
+          <div className="max-w-2xl rounded-2xl bg-white shadow-2xl border border-gray-200 overflow-hidden">
             <div className="flex items-center justify-between px-6 py-5 border-b bg-gradient-to-r from-[#0072bc] to-blue-600 text-white">
               <div>
                 <h2 className="text-xl font-bold">Edit Category</h2>
