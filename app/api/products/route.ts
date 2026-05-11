@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,6 +40,80 @@ type ProductDTO = {
   specialOffer?: boolean;
 };
 
+const ALLOWED_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+]);
+
+function toOptionalString(value: FormDataEntryValue | null) {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed || null;
+}
+
+function toRequiredString(value: FormDataEntryValue | null, fallback = "") {
+  if (typeof value !== "string") return fallback;
+  return value.trim();
+}
+
+function toNumber(value: FormDataEntryValue | null, fallback = 0) {
+  if (typeof value !== "string") return fallback;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function toOptionalBigInt(value: FormDataEntryValue | null) {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  try {
+    return BigInt(trimmed);
+  } catch {
+    return null;
+  }
+}
+
+function fileExt(file: File) {
+  const extMap: Record<string, string> = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+    "image/gif": ".gif",
+  };
+  if (extMap[file.type]) return extMap[file.type];
+  const parsed = path.extname(file.name || "").toLowerCase();
+  return parsed || ".png";
+}
+
+function safeName(raw: string) {
+  return raw
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+}
+
+async function saveProductImage(file: File, type: "main" | "gallery") {
+  if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+    throw new Error("Invalid image type");
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const ext = fileExt(file);
+  const base = safeName(file.name.replace(/\.[^/.]+$/, "")) || "product-image";
+  const fileName = `${type}-${base}-${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2, 8)}${ext}`;
+  const uploadDir = path.join(process.cwd(), "public", "uploads", "products");
+
+  await mkdir(uploadDir, { recursive: true });
+  await writeFile(path.join(uploadDir, fileName), buffer);
+
+  return `/uploads/products/${fileName}`;
+}
+
 
 export async function GET() {
   try {
@@ -65,97 +141,167 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    // ✅ Read body once
-    const { product }: { product: ProductDTO[] } = await req.json();
+    const contentType = req.headers.get("content-type") || "";
 
-    // ✅ Validation
-    if (!product || product.length === 0) {
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await req.formData();
+      const productCode = toRequiredString(formData.get("productCode"));
+      const productName = toRequiredString(formData.get("productName"));
+      const categoryId = toRequiredString(formData.get("categoryId"));
+
+      if (!productCode || !productName || !categoryId) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "productCode, productName and categoryId are required",
+          },
+          { status: 400, headers: corsHeaders },
+        );
+      }
+
+      const mainImageFile = formData.get("productImage");
+      const productImages = formData.getAll("productImages");
+      let mainImageUrl: string | null = null;
+
+      if (mainImageFile instanceof File && mainImageFile.size > 0) {
+        mainImageUrl = await saveProductImage(mainImageFile, "main");
+      }
+
+      const createdProduct = await prisma.products.create({
+        data: {
+          productCode,
+          categoryId,
+          userId: BigInt(toNumber(formData.get("userId"), 1)),
+          productName,
+          subGroupName: toOptionalString(formData.get("subGroupName")),
+          slug: toOptionalString(formData.get("slug")),
+          productVariation: toOptionalString(formData.get("productVariation")),
+          productDescription: toOptionalString(formData.get("productDescription")),
+          nutritionInfo: toOptionalString(formData.get("nutritionInfo")),
+          cookingInstruction: toOptionalString(formData.get("cookingInstruction")),
+          storageInstruction: toOptionalString(formData.get("storageInstruction")),
+          pImage: mainImageUrl,
+          productStatus: formData.get("productStatus") === "true",
+          actualPrice: toNumber(formData.get("actualPrice")),
+          sellingPrice: toNumber(
+            formData.get("sellingPrice") || formData.get("SellingPrice"),
+          ),
+          deliveryTargetDays: toOptionalBigInt(
+            formData.get("deliveryTargetDays") || formData.get("delivaryTargetDays"),
+          ),
+          stockQuantity: toOptionalBigInt(formData.get("stockQuantity")),
+          availableQuantity: toOptionalBigInt(formData.get("availableQuantity")),
+          flashSale: formData.get("flashSale") === "true",
+          specialOffer: formData.get("specialOffer") === "true",
+        },
+      });
+
+      const galleryUrls: string[] = [];
+      for (const entry of productImages) {
+        if (entry instanceof File && entry.size > 0) {
+          const imageUrl = await saveProductImage(entry, "gallery");
+          galleryUrls.push(imageUrl);
+        }
+      }
+
+      if (galleryUrls.length > 0) {
+        await prisma.productImage.createMany({
+          data: galleryUrls.map((imageUrl) => ({
+            productId: createdProduct.productId,
+            imageUrl,
+          })),
+        });
+      }
+
       return NextResponse.json(
         {
-          success: false,
-          message: "Products are required",
+          success: true,
+          message: "Product saved successfully",
+          data: {
+            productId: createdProduct.productId.toString(),
+            productCode: createdProduct.productCode,
+            pImage: createdProduct.pImage,
+            galleryCount: galleryUrls.length,
+          },
         },
-        {
-          status: 400,
-          headers: corsHeaders,
-        },
+        { status: 200, headers: corsHeaders },
       );
     }
 
-    // ✅ Find existing product names
-    const existingProducts = await prisma.products.findMany({
-      where: {
-        subGroupName: {
-          in: product.map((p) => p.subGroupName || ""),
-        },
-      },
-      select: {
-        subGroupName: true,
-      },
-    });
+    const { product }: { product: ProductDTO[] } = await req.json();
+    if (!product || product.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "Products are required" },
+        { status: 400, headers: corsHeaders },
+      );
+    }
 
-    const existingNames = new Set(existingProducts.map((e) => e.subGroupName));
-
-    // ✅ Remove duplicate names inside request itself
-    const addedNames = new Set<string>();
-    const newProducts = product.filter((p) => {
-      // already exists in DB
-      if (existingNames.has(p.subGroupName ?? "")) {
-        return false;
-      }
-      // duplicate inside incoming array
-      if (addedNames.has(p.subGroupName ?? "")) {
-        return false;
-      }
-      addedNames.add(p.subGroupName ?? "");
-      return true;
-    });
-
-    // ✅ Insert only unique products
     let insertedCount = 0;
+    let updatedCount = 0;
 
-    if (newProducts.length > 0) {
-      const details = await prisma.products.createMany({
-        data: newProducts.map((p) => ({
-          productCode: p.productCode,
-          categoryId: p.categoryId,
-          userId: p.userId,
-          productName: p.productName,
-          subGroupName:p.subGroupName,
-          slug: p.slug,
-          productVariation: p.productVariation,
-          productDescription: p.productDescription,
-          nutritionInfo: p.nutritionInfo,
-          cookingInstruction: p.cookingInstruction,
-          storageInstruction: p.storageInstruction,
-          pImage: p.pImage,
-          productStatus: p.productStatus,
-          actualPrice: p.actualPrice,
-          sellingPrice: p.sellingPrice,
-          deliveryTargetDays: p.deliveryTargetDays,
-          stockQuantity: p.stockQuantity,
-          availableQuantity: p.availableQuantity,
-          flashSale: p.flashSale,
-          specialOffer: p.specialOffer,
-        })),
-
-        // ✅ Prisma skip duplicate safeguard
-        skipDuplicates: true,
+    for (const item of product) {
+      const existing = await prisma.products.findUnique({
+        where: { productCode: item.productCode },
+        select: { productCode: true },
       });
 
-      insertedCount = details.count;
+      const payload = {
+        categoryId: item.categoryId,
+        userId: BigInt(item.userId),
+        productName: item.productName,
+        subGroupName: item.subGroupName ?? null,
+        slug: item.slug ?? null,
+        productVariation: item.productVariation ?? null,
+        productDescription: item.productDescription ?? null,
+        nutritionInfo: item.nutritionInfo ?? null,
+        cookingInstruction: item.cookingInstruction ?? null,
+        storageInstruction: item.storageInstruction ?? null,
+        pImage: item.pImage ?? null,
+        productStatus:
+          typeof item.productStatus === "boolean" ? item.productStatus : true,
+        actualPrice: Number(item.actualPrice ?? 0),
+        sellingPrice: Number(item.sellingPrice ?? 0),
+        deliveryTargetDays:
+          item.deliveryTargetDays !== undefined && item.deliveryTargetDays !== null
+            ? BigInt(item.deliveryTargetDays)
+            : null,
+        stockQuantity:
+          item.stockQuantity !== undefined && item.stockQuantity !== null
+            ? BigInt(item.stockQuantity)
+            : null,
+        availableQuantity:
+          item.availableQuantity !== undefined && item.availableQuantity !== null
+            ? BigInt(item.availableQuantity)
+            : null,
+        flashSale: Boolean(item.flashSale),
+        specialOffer: Boolean(item.specialOffer),
+      };
+
+      if (existing) {
+        await prisma.products.update({
+          where: { productCode: item.productCode },
+          data: payload,
+        });
+        updatedCount += 1;
+      } else {
+        await prisma.products.create({
+          data: {
+            productCode: item.productCode,
+            ...payload,
+          },
+        });
+        insertedCount += 1;
+      }
     }
 
     return NextResponse.json(
       {
         success: true,
-        count: insertedCount,
-        message: "Products saved successfully",
+        insertedCount,
+        updatedCount,
+        message: "Products synced successfully",
       },
-      {
-        status: 200,
-        headers: corsHeaders,
-      },
+      { status: 200, headers: corsHeaders },
     );
   } catch (error) {
     console.error(error);
@@ -202,6 +348,9 @@ export async function PUT(req: Request) {
       formData.get("productStatus") === "true";
 
     const productImage = formData.get("productImage") as File | null;
+    const galleryImageFiles = formData
+      .getAll("productImages")
+      .filter((entry): entry is File => entry instanceof File && entry.size > 0);
 
     if (!productCode) {
       return NextResponse.json(
@@ -218,21 +367,8 @@ export async function PUT(req: Request) {
 
     let imagePath: string | null = null;
 
-    // ✅ save file
     if (productImage && productImage.size > 0) {
-      const bytes = await productImage.arrayBuffer();
-
-      const buffer = Buffer.from(bytes);
-
-      const fileName = `${Date.now()}-${productImage.name}`;
-
-      const path = `/uploads/products/${fileName}`;
-
-      const fs = require("fs");
-
-      fs.writeFileSync(path, buffer);
-
-      imagePath = `/uploads/products/${fileName}`;
+      imagePath = await saveProductImage(productImage, "main");
     }
 
     const product = await prisma.products.update({
@@ -272,11 +408,33 @@ export async function PUT(req: Request) {
       },
     });
 
+    if (galleryImageFiles.length > 0) {
+      const galleryUrls: string[] = [];
+      for (const file of galleryImageFiles) {
+        galleryUrls.push(await saveProductImage(file, "gallery"));
+      }
+
+      await prisma.$transaction([
+        prisma.productImage.deleteMany({
+          where: { productId: product.productId },
+        }),
+        prisma.productImage.createMany({
+          data: galleryUrls.map((imageUrl) => ({
+            productId: product.productId,
+            imageUrl,
+          })),
+        }),
+      ]);
+    }
+
     return NextResponse.json(
       {
         success: true,
         message: "Product updated successfully",
-        data: product,
+        data: {
+          ...product,
+          galleryCount: galleryImageFiles.length,
+        },
       },
       {
         status: 200,

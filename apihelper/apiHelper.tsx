@@ -37,7 +37,7 @@ export const apiRequest = async <T = unknown>(
     ...(tokenReq && token
       ? { Authorization: `Bearer ${token}` }
       : {}),
-    ...(options.body
+    ...(options.body && !(options.body instanceof FormData)
       ? { "Content-Type": "application/json" }
       : {}),
     ...options.headers,
@@ -97,9 +97,10 @@ export const apiPutRequest = async <T = unknown>(
   data: unknown,
   tokenReq: boolean = true
 ): Promise<ApiResponse<T>> => {
+  const isFormData = data instanceof FormData;
   return apiRequest<T>(url, tokenReq, {
     method: "PUT",
-    body: JSON.stringify(data),
+    body: isFormData ? data : JSON.stringify(data),
   });
 };
 

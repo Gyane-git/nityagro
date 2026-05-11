@@ -5,10 +5,18 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "http://localhost:3000",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
+
+function buildCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin");
+  return {
+    ...corsHeaders,
+    "Access-Control-Allow-Origin": origin || "*",
+    Vary: "Origin",
+  };
+}
 
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 const ALLOWED_MIME_TYPES = new Set([
@@ -62,10 +70,10 @@ async function persistImage(file: File, variant: string) {
   return `/categories/${uniqueName}`;
 }
 
-export async function OPTIONS() {
+export async function OPTIONS(req: Request) {
   return new NextResponse(null, {
     status: 200,
-    headers: corsHeaders,
+    headers: buildCorsHeaders(req),
   });
 }
 
@@ -99,7 +107,7 @@ export async function POST(req: Request) {
         message: "Category assets uploaded successfully",
         data: payload,
       },
-      { status: 200, headers: corsHeaders },
+      { status: 200, headers: buildCorsHeaders(req) },
     );
   } catch (error) {
     return NextResponse.json(
@@ -107,7 +115,7 @@ export async function POST(req: Request) {
         success: false,
         message: error instanceof Error ? error.message : "Upload failed",
       },
-      { status: 400, headers: corsHeaders },
+      { status: 400, headers: buildCorsHeaders(req) },
     );
   }
 }

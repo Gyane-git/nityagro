@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ALL_PRODUCTS } from "@/app/products/productsData";
 import useCartStore from "@/store/cartStore";
 import useToastStore from "@/store/toastStore";
+import { apiGetRequest } from "@/apihelper/apiHelper";
 
 // ─── Icons ─────────────────────────────────────────────────────────────────
 const CartIcon = () => (
@@ -39,73 +40,7 @@ const StarIcon = ({ filled }) => (
 );
 
 // ─── Data ──────────────────────────────────────────────────────────────────
-const CATEGORIES = [
-  { id: "all", label: "All", image: "/categories/all.png" },
-  { id: "oils", label: "Oils", image: "/categories/oils.png" },
-  { id: "flours", label: "Flours", image: "/categories/flours.png" },
-  { id: "spices", label: "Spices", image: "/categories/spieces.png" },
-  { id: "jaggery", label: "Jaggery", image: "/categories/jaggery.png" },
-  { id: "dailya", label: "Dailya", image: "/categories/dailya.png" },
-  { id: "sattu", label: "Sattu", image: "/categories/satu.png" },
-];
-
-const PRODUCTS = [
-  {
-    id: 1,
-    name: "Yellow Mustard Oil",
-    price: 250,
-    rating: 4,
-    reviews: 711,
-    category: "oils",
-    badge: "Best Seller",
-    discount: "BES\n30%\nOFF",
-    image: "/products/mustard-oil.png",
-  },
-  {
-    id: 2,
-    name: "Red Chilli Powder",
-    price: 250,
-    rating: 4,
-    reviews: 711,
-    category: "spices",
-    badge: null,
-    discount: null,
-    image: "/products/red-chilli.png",
-  },
-  {
-    id: 3,
-    name: "Gran (Chickpea) Flour",
-    price: 250,
-    rating: 4,
-    reviews: 711,
-    category: "flours",
-    badge: null,
-    discount: "BES\n30%\nOFF",
-    image: "/products/chickpea-flour.png",
-  },
-  {
-    id: 4,
-    name: "Jaggery Powder",
-    price: 250,
-    rating: 4,
-    reviews: 711,
-    category: "jaggery",
-    badge: "Best Seller",
-    discount: null,
-    image: "/products/jaggery1.png",
-  },
-  {
-    id: 5,
-    name: "Red Chilli Powder",
-    price: 250,
-    rating: 4,
-    reviews: 711,
-    category: "spices",
-    badge: null,
-    discount: null,
-    image: "/products/red-chilli1.png",
-  },
-];
+const DEFAULT_CATEGORIES = [{ id: "all", label: "All", image: "/categories/all.png" }];
 
 // ─── Star Rating ───────────────────────────────────────────────────────────
 function StarRating({ rating, reviews }) {
@@ -222,11 +157,76 @@ function ProductCard({ product }) {
 // ─── Main Component ────────────────────────────────────────────────────────
 export default function ProductSection() {
   const [activeCategory, setActiveCategory] = useState("all");
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+  const [products, setProducts] = useState([]);
 
-  const filtered =
+  useEffect(() => {
+    const fetchSectionData = async () => {
+      const [categoryResponse, productResponse] = await Promise.all([
+        apiGetRequest("/categories"),
+        apiGetRequest("/products"),
+      ]);
+
+      const categoryRows = Array.isArray(categoryResponse?.data)
+        ? categoryResponse.data
+        : [];
+      const mappedCategories = categoryRows.map((item) => ({
+        id: (item.categoryName || "").trim().toLowerCase(),
+        label: item.categoryName || "",
+        image: item.categoryLogo || "/categories/all.png",
+      }));
+
+      const productRows = Array.isArray(productResponse?.data)
+        ? productResponse.data
+        : [];
+      const mappedProducts = productRows
+        .filter((item) => item.productStatus)
+        .map((item) => ({
+          id: Number(item.productId),
+          name: item.subGroupName || item.productName || "Unnamed Product",
+          price: Number(item.sellingPrice ?? item.actualPrice ?? 0),
+          rating: 4,
+          reviews: 0,
+          category: String(item.categoryId || "")
+            .trim()
+            .toLowerCase(),
+          badge: item.specialOffer ? "Special Offer" : null,
+          discount:
+            Number(item.actualPrice || 0) > Number(item.sellingPrice || 0)
+              ? `SAVE\n${Math.round(
+                  ((Number(item.actualPrice) - Number(item.sellingPrice)) /
+                    Number(item.actualPrice)) *
+                    100,
+                )}%`
+              : null,
+          image: item.pImage || "/products/mustard-oil.png",
+          createdAt: item.createdAt || null,
+        }));
+
+      setCategories([
+        ...DEFAULT_CATEGORIES,
+        ...mappedCategories.filter((c) => c.id),
+      ]);
+      setProducts(mappedProducts);
+    };
+    fetchSectionData();
+  }, []);
+
+  const filtered = (
     activeCategory === "all"
-      ? PRODUCTS
-      : PRODUCTS.filter((p) => p.category === activeCategory);
+      ? products
+      : products.filter((p) => p.category === activeCategory)
+  )
+    .slice()
+    .sort((a, b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bTime - aTime;
+    });
+  const activeCategoryLabel = useMemo(
+    () => categories.find((c) => c.id === activeCategory)?.label,
+    [categories, activeCategory],
+  );
 
   const newLocal = "mx-auto w-full max-w-319.5";
   return (
@@ -255,7 +255,7 @@ export default function ProductSection() {
 
         {/* ── Category Tabs ── */}
         <div className="flex items-end overflow-x-auto scrollbar-hide gap-1 sm:gap-3 sm:justify-center pb-3 mt-4 px-4">
-          {CATEGORIES.map(({ id, label, image }) => {
+          {categories.map(({ id, label, image }) => {
             const isActive = activeCategory === id;
             return (
               <button
@@ -307,7 +307,7 @@ export default function ProductSection() {
           <h2 className="font-bold text-lg sm:text-xl lg:text-[22px] text-[#00462C]">
             {activeCategory === "all"
               ? "All Products"
-              : CATEGORIES.find((c) => c.id === activeCategory)?.label}
+              : activeCategoryLabel}
           </h2>
           <Link
             href="/products"
@@ -335,10 +335,12 @@ export default function ProductSection() {
               </div>
             </div>
 
-            {/* Large screen → grid */}
-            <div className="hidden lg:grid grid-cols-4 xl:grid-cols-5 gap-4 px-4 pb-8">
+            {/* Large screen -> single row */}
+            <div className="hidden lg:flex gap-4 px-4 pb-8 overflow-x-auto scrollbar-hide">
               {filtered.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <div key={product.id} className="shrink-0" style={{ width: "220px" }}>
+                  <ProductCard product={product} />
+                </div>
               ))}
             </div>
           </>

@@ -30,6 +30,7 @@ export default async function ProductDetailPage({ params }) {
   const { id } = await params;
   const products = await prisma.products.findMany({
     where: { productStatus: true },
+    include: { images: true },
     orderBy: { productId: "asc" },
   });
 
@@ -47,13 +48,23 @@ export default async function ProductDetailPage({ params }) {
     notFound();
   }
 
+  const galleryImages = [
+    ...(Array.isArray(product.images)
+      ? product.images.map((item) => item.imageUrl).filter(Boolean)
+      : []),
+    ...(product.pImage ? [product.pImage] : []),
+  ].filter((value, index, arr) => arr.indexOf(value) === index);
+
   const normalizedProduct = {
     id: Number(product.productId),
     productCode: product.productCode || "",
     name: product.subGroupName || product.productName || "Unnamed Product",
     label: product.productName || "",
     image: product.pImage || "/products/mustard-oil.png",
-    images: product.pImage ? [product.pImage] : [],
+    images:
+      galleryImages.length > 0
+        ? galleryImages
+        : ["/products/mustard-oil.png"],
     rating: 4,
     reviews: 0,
     price: Number(product.sellingPrice ?? product.actualPrice ?? 0),

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 interface Products {
   productId: string;
@@ -216,12 +217,7 @@ export default function EditProductPage() {
 
   const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-
-    console.log("file:", file);
-
     if (!file) return;
-
-    alert(file);
     setFormData((prev) => ({
       ...prev,
       productImage: file,
@@ -229,9 +225,11 @@ export default function EditProductPage() {
   };
 
 
-  const handleMultipleImageChange = (e) => {
-    const files = Array.from(e.target.files);
-    // setFormData((prev) => ({ ...prev, productImages: files }));
+  const handleMultipleImageChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const files = Array.from(e.target.files || []) as File[];
+    setFormData((prev) => ({ ...prev, productImages: files }));
   };
   const handleReset = () => {
     setActiveDescTab("productDetails");
@@ -262,21 +260,21 @@ export default function EditProductPage() {
 
   if (formData.productImage) {
     data.append("productImage", formData.productImage);
-    alert(formData.productImage);
   }
-  for (const [key, value] of data.entries()) {
-  console.log(key, value);
-}
-  const obj = Object.fromEntries(data.entries());
-console.log(JSON.stringify(obj));
-console.log(formData.productImage);
-console.log(formData.productImage?.name);
+  formData.productImages.forEach((file) => {
+    data.append("productImages", file);
+  });
+
     try {
       const response = await apiPutRequest("/products", data);
       if (response.success) {
-        alert(response.message);
+        toast.success(response.message || "Product updated successfully");
+      } else {
+        toast.error(response.message || "Product update failed");
       }
-    } catch (e) {}
+    } catch (e) {
+      toast.error("Product update failed");
+    }
   };
   // Shared style tokens ──
   const inputClass =

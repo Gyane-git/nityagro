@@ -187,9 +187,8 @@ export default function CategoriesListPage() {
             };
           }
 
-          acc[item.PDesc]; // ✅ full product object
           return acc;
-        }, {} as Record<string, any>),
+        }, {} as Record<string, OmsProduct>),
       );
 
       const productsubGroup = Object.values(
@@ -203,9 +202,8 @@ export default function CategoriesListPage() {
             };
           }
 
-          acc[item.PDesc]; // ✅ full product object
           return acc;
-        }, {} as Record<string, any>),
+        }, {} as Record<string, OmsSubGroupName>),
       );
 
       if (uniqueCategoryNames.length === 0) {
@@ -233,18 +231,23 @@ export default function CategoriesListPage() {
       const requestDataSubGroup = {
         productsubGroup,
       };
-      console.log(JSON.stringify(requestDataSubGroup))
-
-      const response = await apiPostRequest("/categories", payload);
-      const response2 = await apiPostRequest("/products", requestDataProduct);
-      const response3 = await apiPostRequest("/subcategories", requestDataSubGroup);
-      console.log(JSON.stringify(payload))
-      if (!response.success) {
-        toast.error(response.message ?? "OMS sync failed");
+      const categorySync = await apiPostRequest("/categories", payload);
+      const productSync = await apiPostRequest("/products", requestDataProduct);
+      const subCategorySync = await apiPostRequest(
+        "/subcategories",
+        requestDataSubGroup,
+      );
+      if (!categorySync.success || !productSync.success || !subCategorySync.success) {
+        toast.error(
+          categorySync.message ||
+            productSync.message ||
+            subCategorySync.message ||
+            "OMS sync failed",
+        );
         return;
       }
 
-      toast.success(response.message ?? "OMS sync completed");
+      toast.success("OMS sync completed");
       await fetchCategories();
     } catch (error) {
       console.error(error);
