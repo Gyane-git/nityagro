@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-;
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import useCartStore from "@/store/cartStore";
 import useCheckoutStore from "@/store/checkoutStore";
@@ -34,12 +34,12 @@ const PlusIcon = () => (
   </svg>
 );
 
-// Weight options exactly from screenshot
-const WEIGHTS = ["100 gm", "200 gm", "500 gm", "1 kg"];
-
 export default function ProductInfo({ product }) {
   const [qty, setQty] = useState(1);
-  const [selectedWeight, setSelectedWeight] = useState("100 gm");
+  const [variantsFromApi, setVariantsFromApi] = useState([]);
+  const [selectedVariantId, setSelectedVariantId] = useState(
+    Number(product?.id || 0)
+  );
   const [added, setAdded] = useState(false);
   const router = useRouter();
   const addToCart = useCartStore((state) => state.addToCart);
@@ -51,31 +51,100 @@ export default function ProductInfo({ product }) {
     rating: 4.5,
     reviews: 148,
     price: 499,
+    variants: [],
   };
+  useEffect(() => {
+    const fetchVariants = async () => {
+      const groupName = (p.subGroupName || p.name || "").trim();
+      if (!groupName) return;
+
+      try {
+        const response = await fetch(
+          `/api/subcategories/${encodeURIComponent(groupName)}`
+        );
+        const result = await response.json();
+        const rows = Array.isArray(result?.data) ? result.data : [];
+
+        const mapped = rows.map((item) => ({
+          id: Number(item.variantId),
+          productCode: item.pCode || "",
+          label: item.variationName || item.pCode || "Variant",
+          price: Number(item.salesRate ?? p.price ?? 0),
+          actualPrice: Number(item.salesRate ?? p.price ?? 0),
+          image: p.image || p.images?.[0] || "/products/mustard-oil.png",
+        }));
+
+        setVariantsFromApi(mapped);
+
+        const matched = mapped.find(
+          (v) => String(v.productCode) === String(p.productCode)
+        );
+        if (matched) {
+          setSelectedVariantId(Number(matched.id));
+        } else if (mapped[0]) {
+          setSelectedVariantId(Number(mapped[0].id));
+        }
+      } catch {
+        setVariantsFromApi([]);
+      }
+    };
+
+    fetchVariants();
+  }, [p.subGroupName, p.name, p.productCode, p.image, p.images, p.price]);
+
+  const variants = variantsFromApi.length
+    ? variantsFromApi
+    : [
+      {
+        id: p.id,
+        productCode: p.productCode || "",
+        label: p.label || p.name,
+        price: p.price,
+        actualPrice: p.actualPrice || p.price,
+        image: p.image || p.images?.[0] || "/products/mustard-oil.png",
+      },
+    ];
+  const selectedVariant =
+    variants.find((v) => Number(v.id) === Number(selectedVariantId)) ||
+    variants[0];
+  const currentPrice = Number(selectedVariant?.price ?? p.price ?? 0);
+  const currentActualPrice = Number(
+    selectedVariant?.actualPrice ?? p.actualPrice ?? currentPrice
+  );
+  const selectedLabel = selectedVariant?.label || p.label || p.name;
+  const displayName = `${p.name} - ${selectedLabel}`;
 
   const handleAdd = () => {
     addToCart({
-      id: p.id,
-      name: p.name,
-      price: p.price,
-      image: p.image || p.images?.[0] || "/products/mustard-oil.png",
+      id: selectedVariant?.id || p.id,
+      name: displayName,
+      price: currentPrice,
+      image:
+        selectedVariant?.image ||
+        p.image ||
+        p.images?.[0] ||
+        "/products/mustard-oil.png",
       qty,
-      weight: selectedWeight,
+      weight: selectedLabel,
     });
-    showToast(`${p.name} added to cart`);
+    showToast(`${displayName} added to cart`);
     setAdded(true);
     setTimeout(() => setAdded(false), 1400);
   };
 
   const handleBuyNow = () => {
     setCheckoutItem({
-      id: p.id,
-      name: p.name,
-      image: p.image || p.images?.[0] || "/products/mustard-oil.png",
-      weight: selectedWeight,
+      id: selectedVariant?.id || p.id,
+      name: displayName,
+      image:
+        selectedVariant?.image ||
+        p.image ||
+        p.images?.[0] ||
+        "/products/mustard-oil.png",
+      weight: selectedLabel,
       qty,
-      unitPrice: Number(p.price || 0),
-      total: Number(p.price || 0) * qty,
+      unitPrice: currentPrice,
+      total: currentPrice * qty,
     });
     router.push("/Checkout");
   };
@@ -103,22 +172,27 @@ export default function ProductInfo({ product }) {
 
       {/* ── Price ── */}
       <p className="font-bold" style={{ color: "#00462C", fontSize: "22px" }}>
-        NRP {p.price}
+        NPR {currentPrice}
+        {currentActualPrice > currentPrice && (
+          <span className="text-gray-400 line-through text-base ml-2">
+            NPR {currentActualPrice}
+          </span>
+        )}
       </p>
 
       {/* ── Divider ── */}
       <div className="border-t border-gray-200" />
 
-      {/* ── Weight selector ── */}
+      {/* ── Variant selector (subgroup products) ── */}
       <div className="flex flex-col gap-2">
-        <p className="text-sm font-semibold text-gray-700">Weight :</p>
+        <p className="text-sm font-semibold text-gray-700">Select Variant :</p>
         <div className="flex gap-2 flex-wrap">
-          {WEIGHTS.map((w) => {
-            const isActive = selectedWeight === w;
+          {variants.map((variant) => {
+            const isActive = Number(selectedVariantId) === Number(variant.id);
             return (
               <button
-                key={w}
-                onClick={() => setSelectedWeight(w)}
+                key={variant.id}
+                onClick={() => setSelectedVariantId(Number(variant.id))}
                 className="px-4 py-2 text-sm font-medium border rounded-md transition-all duration-150"
                 style={{
                   borderColor: isActive ? "#00462C" : "#D1D5DB",
@@ -127,7 +201,7 @@ export default function ProductInfo({ product }) {
                   minWidth: "78px",
                 }}
               >
-                {w}
+                {variant.label}
               </button>
             );
           })}

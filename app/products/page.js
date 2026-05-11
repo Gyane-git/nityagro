@@ -1,22 +1,10 @@
 "use client";
 
-import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Banner from "./Banner";
 import Sidebar from "./Sidebar";
 import ProductList from "./ProductList";
-import { ALL_PRODUCTS } from "./productsData";
-
-// ─── Breadcrumb ─────────────────────────────────────
-function Breadcrumb() {
-  return (
-    <nav className="flex items-center gap-1 text-xs text-gray-500 mb-4">
-      <Link href="/">Home</Link>
-      <span>›</span>
-      <span className="font-semibold text-gray-700">Products</span>
-    </nav>
-  );
-}
+import { apiGetRequest } from "@/apihelper/apiHelper";
 
 // ─── Filter Icon ───────────────────────────────────
 const FilterIcon = () => (
@@ -26,19 +14,54 @@ const FilterIcon = () => (
 );
 
 export default function ProductsPage() {
-  const [filteredProducts, setFilteredProducts] = useState(ALL_PRODUCTS);
+  const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedRatings, setSelectedRatings] = useState([]);
   const [priceRange, setPriceRange] = useState({ min: 0, max: 5000 });
-
+  const [loading, setLoading] = useState(true);
   const [filterOpen, setFilterOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      const response = await apiGetRequest("/products");
+      const rows = Array.isArray(response?.data) ? response.data : [];
+
+      const mapped = rows.map((item) => ({
+        id: Number(item.productId),
+        name: item.subGroupName || item.productName || "Unnamed Product",
+        category: item.categoryId || "",
+        price: Number(item.sellingPrice ?? item.actualPrice ?? 0),
+        image: item.pImage || "/products/mustard-oil.png",
+        rating: 4,
+        reviews: 0,
+        badge: item.specialOffer ? "Special Offer" : null,
+        discount:
+          item.actualPrice > item.sellingPrice
+            ? `SAVE\n${Math.round(
+                ((item.actualPrice - item.sellingPrice) / item.actualPrice) *
+                  100
+              )}%`
+            : null,
+      }));
+
+      setProducts(mapped);
+      setFilteredProducts(mapped);
+      setLoading(false);
+    };
+
+    fetchProducts();
+  }, []);
+
+  const totalItems = useMemo(() => filteredProducts.length, [filteredProducts]);
 
   const applyFilters = ({
     categories = selectedCategories,
     ratings = selectedRatings,
     price = priceRange,
   }) => {
-    let result = ALL_PRODUCTS;
+    let result = products;
 
     if (categories.length) {
       result = result.filter((p) => categories.includes(p.category));
@@ -78,8 +101,7 @@ export default function ProductsPage() {
 
         {/* Items count */}
         <p className="hidden lg:block text-sm text-gray-600 mt-3 mb-4">
-          Items 1 - {filteredProducts.length} of{" "}
-          <span className="font-bold">{filteredProducts.length}</span>
+          Items 1 - {totalItems} of <span className="font-bold">{totalItems}</span>
         </p>
 
         {/* Layout */}
@@ -104,7 +126,11 @@ export default function ProductsPage() {
 
           {/* PRODUCTS */}
           <div className="flex-1">
-            <ProductList products={filteredProducts} />
+            {loading ? (
+              <p className="text-sm text-gray-500">Loading products...</p>
+            ) : (
+              <ProductList products={filteredProducts} />
+            )}
           </div>
         </div>
       </div>

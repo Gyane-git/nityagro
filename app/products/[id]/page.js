@@ -6,7 +6,7 @@ import ProductTabs from "./Producttabs";
 import FrequentlyBoughtTogether from "./Frequentlyboughttogether";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ALL_PRODUCTS } from "../productsData";
+import { prisma } from "@/lib/prisma";
 
 // ─── Breadcrumb ─────────────────────────────────────────────────────────────
 function Breadcrumb({ productName }) {
@@ -28,12 +28,43 @@ function Breadcrumb({ productName }) {
 // ─── Page ────────────────────────────────────────────────────────────────────
 export default async function ProductDetailPage({ params }) {
   const { id } = await params;
-  const productId = Number(id);
-  const product = ALL_PRODUCTS.find((item) => item.id === productId);
+  const products = await prisma.products.findMany({
+    where: { productStatus: true },
+    orderBy: { productId: "asc" },
+  });
+
+  const safeProducts = JSON.parse(
+    JSON.stringify(products, (_, value) =>
+      typeof value === "bigint" ? value.toString() : value
+    )
+  );
+
+  const product =
+    safeProducts.find((item) => String(item.productId) === String(id)) ||
+    safeProducts.find((item) => String(item.productCode) === String(id));
 
   if (!product) {
     notFound();
   }
+
+  const normalizedProduct = {
+    id: Number(product.productId),
+    productCode: product.productCode || "",
+    name: product.subGroupName || product.productName || "Unnamed Product",
+    label: product.productName || "",
+    image: product.pImage || "/products/mustard-oil.png",
+    images: product.pImage ? [product.pImage] : [],
+    rating: 4,
+    reviews: 0,
+    price: Number(product.sellingPrice ?? product.actualPrice ?? 0),
+    actualPrice: Number(product.actualPrice ?? 0),
+    productDescription: product.productDescription || "",
+    nutritionInfo: product.nutritionInfo || "",
+    cookingInstruction: product.cookingInstruction || "",
+    storageInstruction: product.storageInstruction || "",
+    deliveryTargetDays: product.deliveryTargetDays || "",
+    subGroupName: product.subGroupName || "",
+  };
 
   return (
     <main className="min-h-screen bg-white">
@@ -42,22 +73,22 @@ export default async function ProductDetailPage({ params }) {
         <Banner />
 
         {/* ── Breadcrumb ── */}
-        <Breadcrumb productName={product.name} />
+        <Breadcrumb productName={normalizedProduct.name} />
 
         {/* ── Main row: Gallery | Info | Delivery Card ── */}
         <div className="flex gap-6 items-start mt-2 mb-8">
           {/* Left: image gallery (thumbnails + main) */}
-          <ProductImageGallery images={product.images} />
+          <ProductImageGallery images={normalizedProduct.images} />
 
           {/* Center: product info */}
-          <ProductInfo product={product} />
+          <ProductInfo product={normalizedProduct} />
 
           {/* Right: delivery + return card */}
           <DeliveryCard />
         </div>
 
         {/* ── Tabs ── */}
-        <ProductTabs />
+        <ProductTabs product={normalizedProduct} />
 
         {/* ── Divider ── */}
         <div className="border-t border-gray-200 my-10" />
