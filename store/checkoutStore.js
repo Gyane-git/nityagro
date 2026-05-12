@@ -29,6 +29,36 @@ const useCheckoutStore = create(
       clearCheckoutItem: () => set({ checkoutItem: null, checkoutItems: [] }),
 
       setSelectedAddress: (id) => set({ selectedAddressId: id }),
+      setAddressesFromServer: (addresses) =>
+        set((state) => {
+          if (!Array.isArray(addresses) || addresses.length === 0) {
+            return {
+              addresses: [INITIAL_ADDRESS],
+              selectedAddressId: INITIAL_ADDRESS.id,
+            };
+          }
+
+          const normalized = addresses.map((address, index) => ({
+            ...address,
+            id: Number(address.id),
+            isDefault: index === 0,
+          }));
+
+          const selectedExists = normalized.some(
+            (address) => address.id === state.selectedAddressId,
+          );
+          const nextSelectedId = selectedExists
+            ? state.selectedAddressId
+            : normalized[0].id;
+
+          return {
+            addresses: normalized.map((address) => ({
+              ...address,
+              isDefault: address.id === nextSelectedId,
+            })),
+            selectedAddressId: nextSelectedId,
+          };
+        }),
 
       saveAddress: (addressInput) =>
         set((state) => {

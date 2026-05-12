@@ -18,41 +18,8 @@ const CashIcon = () => (
   </svg>
 );
 
-const BankIcon = () => (
-  <svg
-    width="22"
-    height="22"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.8"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M3 22h18M3 10h18M5 10V6M19 10V6M12 10V6M2 6l10-4 10 4" />
-    <rect x="5" y="14" width="3" height="6" />
-    <rect x="10.5" y="14" width="3" height="6" />
-    <rect x="16" y="14" width="3" height="6" />
-  </svg>
-);
-
-// eSewa logo pill
-const ESewaLogo = () => (
-  <div className="flex items-center gap-2">
-    <div
-      className="w-8 h-8 rounded-full flex items-center justify-center"
-      style={{ background: "#60BB46" }}
-    >
-      <span className="text-white font-bold text-xs">e</span>
-    </div>
-    <span className="text-white font-bold text-lg tracking-wide">Sewa</span>
-  </div>
-);
-
 const METHODS = [
-  { id: "esewa", label: "eSewa", Icon: null, isESewa: true },
   { id: "cod", label: "Cash on Delivery", Icon: CashIcon, isESewa: false },
-  { id: "bank", label: "Bank Transfer", Icon: BankIcon, isESewa: false },
 ];
 
 export default function PaymentMethodSelector({
@@ -79,7 +46,7 @@ export default function PaymentMethodSelector({
       />
       {/* Method cards */}
       <div className="flex items-center gap-4">
-        {METHODS.map(({ id, label, Icon, isESewa }) => {
+        {METHODS.map(({ id, label, Icon }) => {
           const active = selected === id;
           return (
             <button
@@ -91,26 +58,13 @@ export default function PaymentMethodSelector({
                 width: "220px",
                 height: "72px",
                 borderColor: active ? "#00462C" : "#E5E7EB",
-                background:
-                  isESewa && active
-                    ? "#00462C"
-                    : isESewa
-                    ? "#00462C"
-                    : active
-                    ? "#F0FAF4"
-                    : "white",
-                color: isESewa ? "white" : active ? "#00462C" : "#374151",
-                boxShadow: active && !isESewa ? "0 0 0 1px #00462C22" : "none",
+                background: active ? "#F0FAF4" : "white",
+                color: active ? "#00462C" : "#374151",
+                boxShadow: active ? "0 0 0 1px #00462C22" : "none",
               }}
             >
-              {isESewa ? (
-                <ESewaLogo />
-              ) : (
-                <>
-                  {Icon && <Icon />}
-                  <span>{label}</span>
-                </>
-              )}
+              {Icon && <Icon />}
+              <span>{label}</span>
             </button>
           );
         })}

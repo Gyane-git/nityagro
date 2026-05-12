@@ -434,10 +434,14 @@ model SetShippingCost {
 model Address {
   addressId BigInt  @id @default(autoincrement())
   userId    BigInt
+  fullName  String
+  phone     String
+  email     String?
   province  String
   district  String
   city      String
   ward      String
+  addType   String
   locality  String?
   zipCode   String?
 

@@ -1,54 +1,88 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import OrderSummary from "@/app/adress_book/components/OrderSummary";
 import Breadcrumb from "@/app/adress_book/components/Breadcrumb";
 import PaymentMethodSelector from "@/app/Checkout/payment/Paymentmethodselector";
 import OrderConfirmedModal from "@/app/Checkout/payment/Orderconfirmedmodal";
+import useCheckoutStore from "@/store/checkoutStore";
+import useCartStore from "@/store/cartStore";
+import toast from "react-hot-toast";
 
 export default function CheckoutPaymentPage() {
-  const [paymentMethod, setPaymentMethod] = useState("esewa");
+  const router = useRouter();
+  const [paymentMethod, setPaymentMethod] = useState("cod");
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [confirmedOrderId, setConfirmedOrderId] = useState("");
+  const [placedAt, setPlacedAt] = useState("");
+  const checkoutItems = useCheckoutStore((state) => state.checkoutItems);
+  const checkoutItem = useCheckoutStore((state) => state.checkoutItem);
+  const clearCheckoutItem = useCheckoutStore((state) => state.clearCheckoutItem);
+  const getSelectedAddress = useCheckoutStore((state) => state.getSelectedAddress);
+  const removeItems = useCartStore((state) => state.removeItems);
 
-  const handleEsewaPayment = async () => {
+  const placeCodOrder = async () => {
+    const sourceItems =
+      checkoutItems.length > 0 ? checkoutItems : checkoutItem ? [checkoutItem] : [];
+
+    if (sourceItems.length === 0) {
+      toast.error("No checkout items selected");
+      return;
+    }
+
     try {
-      const res = await fetch("/api/esewa/pay", {
+      const selectedAddress = getSelectedAddress?.();
+      const payload = {
+        paymentMethod: "COD",
+        items: sourceItems.map((item) => ({
+          id: item.id,
+          qty: item.qty,
+          unitPrice: item.unitPrice,
+          total: item.total,
+          name: item.name,
+        })),
+        address: selectedAddress ?? null,
+        userId: 1,
+      };
+
+      const res = await fetch("/api/orders/cod", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          orderId: "YOUR_DYNAMIC_ORDER_ID", // replacable
+          ...payload,
         }),
       });
-
       const data = await res.json();
+      if (!res.ok || !data?.success) {
+        toast.error(data?.message || "Order placement failed");
+        return;
+      }
 
-      // Create form dynamically
-      const form = document.createElement("form");
-      form.method = "POST";
-      form.action = process.env.NEXT_PUBLIC_ESEWA_PAYMENT_URL!;
+      const orderedIds = sourceItems.map((item) => item.id);
+      removeItems(orderedIds);
+      clearCheckoutItem();
 
-      Object.entries(data).forEach(([key, value]) => {
-        const input = document.createElement("input");
-        input.name = key;
-        input.value = value as string;
-        form.appendChild(input);
-      });
-
-      document.body.appendChild(form);
-      form.submit();
+      setConfirmedOrderId(data?.data?.orderIds?.[0] || "");
+      setPlacedAt(new Date().toLocaleString());
+      setShowConfirmation(true);
+      toast.success("Order placed successfully");
     } catch (err) {
-      console.error("eSewa error:", err);
+      console.error("COD error:", err);
+      toast.error("Order placement failed");
     }
   };
 
   const handleProceed = () => {
-    if (paymentMethod === "esewa") {
-      handleEsewaPayment();
-    } else {
-      setShowConfirmation(true);
+    if (paymentMethod !== "cod") {
+      toast.error("Only Cash on Delivery is enabled right now");
+      return;
     }
+    placeCodOrder();
   };
 
   const handleContinue = () => {
     setShowConfirmation(false);
+    router.push("/products");
   };
 
   return (
@@ -89,8 +123,8 @@ export default function CheckoutPaymentPage() {
 
       {showConfirmation && (
         <OrderConfirmedModal
-          orderId="145028740"
-          placedAt="August 12, 2025 10:39:44 EST"
+          orderId={confirmedOrderId || "-"}
+          placedAt={placedAt || new Date().toLocaleString()}
           onContinue={handleContinue}
         />
       )}

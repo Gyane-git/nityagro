@@ -1,6 +1,93 @@
 "use client";
 
-export default function MyProfile({ user }) {
+import { useEffect, useMemo, useState } from "react";
+import toast from "react-hot-toast";
+import { apiPutRequest } from "@/apihelper/apiHelper";
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_REGEX = /^[+\d\s-]{7,20}$/;
+
+function splitName(name) {
+  const value = String(name || "").trim();
+  if (!value) return { firstName: "", lastName: "" };
+  const [firstName, ...rest] = value.split(/\s+/);
+  return { firstName, lastName: rest.join(" ") };
+}
+
+export default function MyProfile({ user, userId = "1", onProfileUpdated }) {
+  const initial = useMemo(() => {
+    const parts = splitName(user?.name || "");
+    return {
+      firstName: parts.firstName,
+      lastName: parts.lastName,
+      email: user?.email || "",
+      phone: user?.phone || "",
+      city: user?.city || "",
+      state: user?.state || "",
+      zipCode: user?.zipCode || "",
+      country: user?.country || "",
+    };
+  }, [user]);
+
+  const [form, setForm] = useState(initial);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setForm(initial);
+  }, [initial]);
+
+  const set = (key) => (event) => {
+    const value = event.target.value;
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const validate = () => {
+    if (!form.firstName.trim()) return "First name is required";
+    if (!form.lastName.trim()) return "Last name is required";
+    if (!EMAIL_REGEX.test(form.email.trim())) return "Valid email is required";
+    if (form.phone.trim() && !PHONE_REGEX.test(form.phone.trim())) {
+      return "Valid phone number is required";
+    }
+    return null;
+  };
+
+  const handleSubmit = async () => {
+    const message = validate();
+    if (message) {
+      toast.error(message);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const payload = {
+        userId,
+        name: `${form.firstName.trim()} ${form.lastName.trim()}`.trim(),
+        email: form.email.trim().toLowerCase(),
+        phone: form.phone.trim(),
+        city: form.city.trim(),
+        state: form.state.trim(),
+        zipCode: form.zipCode.trim(),
+        country: form.country.trim(),
+      };
+
+      const response = await apiPutRequest("/account/profile", payload, false);
+      if (!response.success) {
+        toast.error(response.message || "Failed to update profile");
+        return;
+      }
+
+      toast.success(response.message || "Profile updated successfully");
+      onProfileUpdated?.(response.data);
+    } catch (error) {
+      toast.error("Failed to update profile");
+      console.error(error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div>
       <h2 className="text-xl font-bold text-[#266A3F] mb-1">My Profile</h2>
@@ -8,75 +95,56 @@ export default function MyProfile({ user }) {
         Edit your personal details and login info.
       </p>
 
-      {/* Personal Info */}
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div className="flex flex-col gap-1.5">
           <label className="text-[13px] text-[#4C6759]">First name</label>
-          <input
-            type="text"
-            defaultValue="Archie"
-            className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-[13.5px] text-gray-700 outline-none focus:border-[#DB8F00] transition-colors"
-          />
+          <input type="text" value={form.firstName} onChange={set("firstName")}
+            className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-[13.5px] text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
         </div>
         <div className="flex flex-col gap-1.5">
           <label className="text-[13px] text-[#4C6759]">Last name</label>
-          <input
-            type="text"
-            defaultValue="Rai"
-            className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-[13.5px] text-gray-700 outline-none focus:border-[#DB8F00] transition-colors"
-          />
+          <input type="text" value={form.lastName} onChange={set("lastName")}
+            className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-[13.5px] text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[13px] text-gray-600">Email</label>
+          <input type="email" value={form.email} onChange={set("email")}
+            className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-[13.5px] text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[13px] text-[#4C6759]">Phone no</label>
+          <input type="text" value={form.phone} onChange={set("phone")}
+            className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-[13.5px] text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-8">
-        <div className="flex flex-col gap text-[#4C6759]-1.5">
-          <label className="text-[13px] text-gray-600">Email</label>
-          <input
-            type="email"
-            defaultValue={user.email}
-            className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-[13.5px] text-gray-700 outline-none focus:border-[#DB8F00] transition-colors"
-          />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <label className="text-[13px] text-[#4C6759]">Phone no</label>
-          <input
-            type="text"
-            defaultValue={user.phone}
-            className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-[13.5px] text-gray-700 outline-none focus:border-[#DB8F00] transition-colors"
-          />
-        </div>
+        <input type="text" placeholder="City" value={form.city} onChange={set("city")}
+          className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-[13.5px] text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
+        <input type="text" placeholder="State" value={form.state} onChange={set("state")}
+          className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-[13.5px] text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
+        <input type="text" placeholder="Zip Code" value={form.zipCode} onChange={set("zipCode")}
+          className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-[13.5px] text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
+        <input type="text" placeholder="Country" value={form.country} onChange={set("country")}
+          className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-[13.5px] text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
       </div>
 
-      {/* Password Changes */}
-      <h3 className="text-[15px] font-semibold text-[#266A3F] mb-4">
-        Password Changes
-      </h3>
-
-      <div className="flex flex-col gap-3 mb-8">
-        <input
-          type="password"
-          placeholder="Current Password"
-          className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-[13.5px] text-gray-700 placeholder-gray-400 outline-none focus:border-[#DB8F00] transition-colors"
-        />
-        <input
-          type="password"
-          placeholder="New Password"
-          className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-[13.5px] text-gray-700 placeholder-gray-400 outline-none focus:border-[#DB8F00] transition-colors"
-        />
-        <input
-          type="password"
-          placeholder="Confirm New Password"
-          className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-[13.5px] text-gray-700 placeholder-gray-400 outline-none focus:border-[#DB8F00] transition-colors"
-        />
-      </div>
-
-      {/* Action Buttons */}
       <div className="flex justify-end gap-4">
-        <button className="px-6 py-2.5 text-[13.5px] hover:bg-[#F9F6F0] rounded-md text-[#0A0A0A] hover:text-gray-700 transition-colors">
+        <button
+          onClick={() => setForm(initial)}
+          className="px-6 py-2.5 text-[13.5px] hover:bg-[#F9F6F0] rounded-md text-[#0A0A0A] hover:text-gray-700 transition-colors"
+        >
           Cancel
         </button>
-        <button className="px-7 py-2.5 bg-[#2e5e2e] text-white text-[13.5px] font-semibold rounded-md hover:opacity-90 transition-opacity">
-          Send Changes
+        <button
+          onClick={handleSubmit}
+          disabled={saving}
+          className="px-7 py-2.5 bg-[#2e5e2e] text-white text-[13.5px] font-semibold rounded-md hover:opacity-90 transition-opacity disabled:opacity-60"
+        >
+          {saving ? "Saving..." : "Save Changes"}
         </button>
       </div>
     </div>

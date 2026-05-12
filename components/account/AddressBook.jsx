@@ -1,39 +1,65 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import useCheckoutStore from "@/store/checkoutStore";
+import toast from "react-hot-toast";
+import { apiDeleteRequest, apiGetRequest, apiPostRequest, apiPutRequest } from "@/apihelper/apiHelper";
 
 const EMPTY_FORM = {
   fullName: "",
-  region: "",
+  province: "",
+  district: "",
   phone: "",
   city: "",
-  building: "",
-  area: "",
-  colony: "",
-  address: "",
+  ward: "",
+  locality: "",
   email: "",
-  label: "Home",
+  zipCode: "",
+  addType: "Home",
 };
 
-export default function AddressBook() {
+const PHONE_REGEX = /^[+\d\s-]{7,20}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export default function AddressBook({ userId = "1" }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get("next");
 
-  const addresses = useCheckoutStore((state) => state.addresses);
   const selectedAddressId = useCheckoutStore((state) => state.selectedAddressId);
-  const saveAddress = useCheckoutStore((state) => state.saveAddress);
-  const removeAddress = useCheckoutStore((state) => state.removeAddress);
   const setSelectedAddress = useCheckoutStore((state) => state.setSelectedAddress);
+  const setAddressesFromServer = useCheckoutStore((state) => state.setAddressesFromServer);
 
+  const [addresses, setAddresses] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const selectedAddress = useMemo(
     () => addresses.find((address) => address.id === editingId),
     [addresses, editingId],
   );
   const [form, setForm] = useState(EMPTY_FORM);
+  const [loading, setLoading] = useState(false);
+
+  const fetchAddresses = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await apiGetRequest(`/account/addresses?userId=${userId}`, false);
+      if (!response.success) {
+        toast.error(response.message || "Failed to fetch addresses");
+        return;
+      }
+      const rows = Array.isArray(response.data) ? response.data : [];
+      setAddresses(rows);
+      setAddressesFromServer(rows);
+    } finally {
+      setLoading(false);
+    }
+  }, [setAddressesFromServer, userId]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchAddresses();
+  }, [fetchAddresses]);
 
   const openAdd = () => {
     setEditingId(null);
@@ -44,29 +70,79 @@ export default function AddressBook() {
     setEditingId(address.id);
     setForm({
       fullName: address.fullName || "",
-      region: address.region || "",
+      province: address.region || "",
+      district: address.district || "",
       phone: address.phone || "",
       city: address.city || "",
-      building: address.building || "",
-      area: address.area || "",
-      colony: address.colony || "",
-      address: address.address || "",
+      ward: address.colony || "",
+      locality: address.area || "",
       email: address.email || "",
-      label: address.label || "Home",
+      zipCode: address.zipCode || "",
+      addType: address.addType || address.label || "Home",
     });
   };
 
-  const handleSubmit = (event) => {
+  const validate = () => {
+    if (!form.fullName.trim() || form.fullName.trim().length < 2) return "Full name is required";
+    if (!form.phone.trim() || !PHONE_REGEX.test(form.phone.trim())) return "Valid phone is required";
+    if (form.email.trim() && !EMAIL_REGEX.test(form.email.trim())) return "Valid email is required";
+    if (!form.city.trim()) return "City is required";
+    if (!form.district.trim()) return "District is required";
+    if (!form.province.trim()) return "Province is required";
+    return null;
+  };
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    saveAddress({
+    const error = validate();
+    if (error) {
+      toast.error(error);
+      return;
+    }
+
+    const payload = {
       ...(selectedAddress ? { id: selectedAddress.id } : {}),
-      ...form,
-    });
+      userId,
+      fullName: form.fullName,
+      phone: form.phone,
+      email: form.email,
+      region: form.province,
+      district: form.district,
+      city: form.city,
+      colony: form.ward,
+      area: form.locality,
+      zipCode: form.zipCode,
+      addType: form.addType,
+      label: form.addType,
+    };
+
+    const response = selectedAddress
+      ? await apiPutRequest("/account/addresses", payload, false)
+      : await apiPostRequest("/account/addresses", payload, false);
+
+    if (!response.success) {
+      toast.error(response.message || "Failed to save address");
+      return;
+    }
+
+    toast.success(response.message || "Address saved successfully");
+    await fetchAddresses();
+
     if (nextPath) {
       router.push(nextPath);
       return;
     }
     openAdd();
+  };
+
+  const handleDelete = async (id) => {
+    const response = await apiDeleteRequest("/account/addresses", { id }, false);
+    if (!response.success) {
+      toast.error(response.message || "Failed to delete address");
+      return;
+    }
+    toast.success(response.message || "Address deleted");
+    await fetchAddresses();
   };
 
   return (
@@ -82,53 +158,57 @@ export default function AddressBook() {
       </div>
 
       <div className="rounded-lg border border-gray-100">
-        {addresses.map((address) => (
-          <div
-            key={address.id}
-            className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-4 py-4 last:border-b-0"
-          >
-            <div className="space-y-1">
-              <p className="text-sm font-semibold text-gray-800">{address.fullName}</p>
-              <p className="text-sm text-gray-600">{address.phone}</p>
-              <p className="text-sm text-gray-600">{address.address}</p>
-              <p className="text-xs text-gray-500">
-                {[address.area, address.city, address.region].filter(Boolean).join(", ")}
-              </p>
+        {loading ? (
+          <div className="px-4 py-4 text-sm text-gray-500">Loading addresses...</div>
+        ) : addresses.length === 0 ? (
+          <div className="px-4 py-4 text-sm text-gray-500">No addresses found.</div>
+        ) : (
+          addresses.map((address) => (
+            <div
+              key={address.id}
+              className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-4 py-4 last:border-b-0"
+            >
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-gray-800">{address.fullName}</p>
+                <p className="text-sm text-gray-600">{address.phone}</p>
+                <p className="text-sm text-gray-600">{address.address}</p>
+                <p className="text-xs text-gray-500">
+                  {[address.colony, address.city, address.region].filter(Boolean).join(", ")}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setSelectedAddress(address.id);
+                    if (nextPath) router.push(nextPath);
+                  }}
+                  className={`rounded border px-3 py-1 text-xs font-semibold ${
+                    selectedAddressId === address.id
+                      ? "border-[#2e5e2e] bg-[#2e5e2e] text-white"
+                      : "border-gray-300 text-gray-700"
+                  }`}
+                >
+                  {selectedAddressId === address.id ? "Selected" : "Use This"}
+                </button>
+                <button
+                  onClick={() => openEdit(address)}
+                  className="rounded border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-700"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(address.id)}
+                  className="rounded border border-red-300 px-3 py-1 text-xs font-semibold text-red-600"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  setSelectedAddress(address.id);
-                  if (nextPath) {
-                    router.push(nextPath);
-                  }
-                }}
-                className={`rounded border px-3 py-1 text-xs font-semibold ${
-                  selectedAddressId === address.id
-                    ? "border-[#2e5e2e] bg-[#2e5e2e] text-white"
-                    : "border-gray-300 text-gray-700"
-                }`}
-              >
-                {selectedAddressId === address.id ? "Selected" : "Use This"}
-              </button>
-              <button
-                onClick={() => openEdit(address)}
-                className="rounded border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-700"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => removeAddress(address.id)}
-                className="rounded border border-red-300 px-3 py-1 text-xs font-semibold text-red-600"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-gray-100 p-4">
+      <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-gray-100 p-4 text-gray-700">
         <h3 className="text-base font-semibold text-gray-800">
           {editingId ? "Edit Address" : "Add Address"}
         </h3>
@@ -137,12 +217,12 @@ export default function AddressBook() {
             ["fullName", "Full Name"],
             ["phone", "Phone"],
             ["email", "Email"],
-            ["address", "Address"],
+            ["province", "Province"],
+            ["district", "District"],
             ["city", "City"],
-            ["region", "Region"],
-            ["area", "Area"],
-            ["building", "Building"],
-            ["colony", "Landmark"],
+            ["ward", "Ward"],
+            ["locality", "Locality"],
+            ["zipCode", "Zip Code"],
           ].map(([key, label]) => (
             <input
               key={key}
@@ -153,8 +233,8 @@ export default function AddressBook() {
             />
           ))}
           <select
-            value={form.label}
-            onChange={(e) => setForm((prev) => ({ ...prev, label: e.target.value }))}
+            value={form.addType}
+            onChange={(e) => setForm((prev) => ({ ...prev, addType: e.target.value }))}
             className="rounded border border-gray-300 px-3 py-2 text-sm"
           >
             <option value="Home">Home</option>
