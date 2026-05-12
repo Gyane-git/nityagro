@@ -117,13 +117,17 @@ async function saveProductImage(file: File, type: "main" | "gallery") {
 
 export async function GET() {
   try {
-    const productGroupWise = await prisma.products.findMany();
-    // 🔥 Fix BigInt serialization
+    const productGroupWise = await prisma.products.findMany({
+      distinct: ["subGroupName"],
+    });
+
+    // Fix BigInt serialization
     const safeData = JSON.parse(
       JSON.stringify(productGroupWise, (_, value) =>
         typeof value === "bigint" ? value.toString() : value,
       ),
     );
+
     return Response.json(
       {
         success: true,
