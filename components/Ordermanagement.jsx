@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
 const ALLOWED_TRANSITIONS = {
@@ -22,24 +21,6 @@ const STATUS_TABS = [
   { key: "cancelled", label: "cancelled" },
   { key: "returns", label: "return" },
 ];
-
-function getAdminToken() {
-  if (typeof window === "undefined") return null;
-
-  const raw =
-    localStorage.getItem("admin_auth") ||
-    localStorage.getItem("admin_token") ||
-    sessionStorage.getItem("admin_token");
-
-  if (!raw) return null;
-
-  try {
-    const parsed = JSON.parse(raw);
-    return parsed?.token || parsed?.accessToken || parsed?.jwt || null;
-  } catch {
-    return raw;
-  }
-}
 
 function formatMoney(value) {
   return `Rs. ${Number(value || 0).toLocaleString()}`;
@@ -106,8 +87,6 @@ function StatusBadge({ value }) {
 }
 
 export default function Ordermanagement() {
-  const router = useRouter();
-
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -154,13 +133,6 @@ export default function Ordermanagement() {
   }, [searchInput]);
 
   const fetchOrders = useCallback(async () => {
-    const token = getAdminToken();
-    if (!token) {
-      toast.error("Admin login required");
-      // router.replace("/login-admin");
-      return;
-    }
-
     try {
       setLoading(true);
 
@@ -174,19 +146,9 @@ export default function Ordermanagement() {
       if (dateFrom) query.set("dateFrom", dateFrom);
       if (dateTo) query.set("dateTo", dateTo);
 
-      const response = await fetch(`/api/admin/orders?${query.toString()}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(`/api/admin/orders?${query.toString()}`);
 
       const payload = await response.json();
-
-      if (response.status === 401 || response.status === 403) {
-        toast.error("Admin session expired. Please login again.");
-        router.replace("/login-admin");
-        return;
-      }
 
       if (!response.ok) {
         throw new Error(payload?.message || "Failed to fetch orders");
@@ -200,21 +162,15 @@ export default function Ordermanagement() {
     } finally {
       setLoading(false);
     }
-  }, [dateFrom, dateTo, page, router, search, statusFilter]);
+  }, [dateFrom, dateTo, page, search, statusFilter]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchOrders();
   }, [fetchOrders]);
 
   const updateOrder = useCallback(
     async (orderId, patch) => {
-      const token = getAdminToken();
-      if (!token) {
-        toast.error("Admin login required");
-        router.replace("/login-admin");
-        return;
-      }
-
       try {
         setUpdatingId(orderId);
 
@@ -222,7 +178,6 @@ export default function Ordermanagement() {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(patch),
         });
@@ -255,11 +210,10 @@ export default function Ordermanagement() {
         setUpdatingId(null);
       }
     },
-    [router],
+    [],
   );
 
   const openStatusModal = async (order, nextStatus) => {
-    const token = getAdminToken();
     const orderId = String(order?.id || "");
     setStatusModal({
       open: true,
@@ -277,12 +231,10 @@ export default function Ordermanagement() {
       remark: "",
     });
 
-    if (nextStatus !== "shipped" || !orderId || !token) return;
+    if (nextStatus !== "shipped" || !orderId) return;
 
     try {
-      const response = await fetch(`/api/admin/orders/${orderId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await fetch(`/api/admin/orders/${orderId}`);
       const payload = await response.json();
       if (!response.ok) {
         throw new Error(payload?.message || "Failed to load serial numbers");
@@ -424,17 +376,9 @@ export default function Ordermanagement() {
   };
 
   const openOrderDetails = async (order) => {
-    const token = getAdminToken();
-    if (!token) {
-      toast.error("Admin login required");
-      router.replace("/login-admin");
-      return;
-    }
     try {
       setDetailLoading(true);
-      const res = await fetch(`/api/admin/orders/${order.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(`/api/admin/orders/${order.id}`);
       const payload = await res.json();
       if (!res.ok)
         throw new Error(payload?.message || "Failed to load order details");
@@ -484,7 +428,7 @@ export default function Ordermanagement() {
           <h1 className="text-2xl font-bold text-gray-900">Order Management</h1>
           <p className="text-sm text-gray-500">Secure admin order operations</p>
         </div>
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-gray-800">
           Total Orders: {meta.total || 0}
         </div>
       </div>
@@ -576,7 +520,7 @@ export default function Ordermanagement() {
         ) : orders.length === 0 ? (
           <div className="p-6 text-sm text-gray-500">No orders found.</div>
         ) : (
-          <div className="overflow-auto">
+          <div className="overflow-auto text-gray-500">
             <table className="w-full min-w-250 text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr className="text-left">
@@ -732,7 +676,7 @@ export default function Ordermanagement() {
       {selectedOrder && (
         <div
           onClick={() => setSelectedOrder(null)}
-          className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 text-gray-700"
         >
           <div
             onClick={(e) => e.stopPropagation()}
@@ -750,7 +694,7 @@ export default function Ordermanagement() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm ">
               <div>
                 <div className="text-gray-500">Customer</div>
                 <div className="font-medium">
@@ -813,14 +757,12 @@ export default function Ordermanagement() {
                   >
                     <div>
                       <div className="font-medium">
-                        {item.product?.name || item.productCode}
+                        {item.product?.name || item.productCode || "N/A"}
                       </div>
                       <div className="text-xs text-gray-500">
                         Qty: {Number(item.quantity || 0)}
                       </div>
-                      <div className="text-xs text-gray-500 font-mono">
-                        Serial: {item.serialNumber || "-"}
-                      </div>
+                      
                     </div>
                     <div className="font-semibold">
                       {formatMoney(item.subtotal)}
@@ -1010,7 +952,7 @@ export default function Ordermanagement() {
 
       {statusModal.open && (
         <div className="fixed inset-0 bg-black/40 z-60 flex items-center justify-center p-4">
-          <div className="w-full max-w-lg rounded-xl bg-white border p-5 space-y-4">
+          <div className="w-full max-w-lg rounded-xl bg-white border p-5 space-y-4 text-sm">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-gray-900 capitalize">
                 {statusModal.nextStatus} Order
@@ -1026,57 +968,11 @@ export default function Ordermanagement() {
             {statusModal.nextStatus === "shipped" && (
               <div className="space-y-3">
                 <div className="space-y-1">
-                  <label className="text-sm text-gray-700">
-                    Choose warranty serial number
-                  </label>
-                  <select
-                    value={statusModal.serialNumber}
-                    onChange={(e) =>
-                      setStatusModal((prev) => ({
-                        ...prev,
-                        serialNumber: e.target.value,
-                      }))
-                    }
-                    className="w-full rounded-md border px-3 py-2 text-sm"
-                    disabled={
-                      statusModal.serialLoading ||
-                      !statusModal.serialSelectionRequired
-                    }
-                  >
-                    {!statusModal.serialSelectionRequired ? (
-                      <option value="">No serial number required</option>
-                    ) : (
-                      <option value="">Select Serial Number</option>
-                    )}
-                    {(statusModal.serialNumbers || []).map((serialItem) => (
-                      <option
-                        key={`${serialItem.productCode}-${serialItem.serialNumber}`}
-                        value={serialItem.serialNumber}
-                      >
-                        {`${
-                          serialItem.productName ||
-                          serialItem.productCode ||
-                          "Product"
-                        } - ${serialItem.serialNumber}`}
-                      </option>
-                    ))}
-                  </select>
-                  {statusModal.serialLoading && (
-                    <p className="text-xs text-gray-500">
-                      Loading serial numbers...
-                    </p>
-                  )}
-                  {statusModal.serialSelectionRequired &&
-                    !statusModal.serialLoading &&
-                    (!statusModal.serialNumbers ||
-                      statusModal.serialNumbers.length === 0) && (
-                      <p className="text-xs text-red-600">
-                        No in-stock serial numbers available for this order.
-                      </p>
-                    )}
+                  
 
                   <label className="text-sm text-gray-700">Courier Name</label>
                   <input
+                  
                     value={statusModal.courierName}
                     onChange={(e) =>
                       setStatusModal((prev) => ({
@@ -1084,7 +980,7 @@ export default function Ordermanagement() {
                         courierName: e.target.value,
                       }))
                     }
-                    className="w-full rounded-md border px-3 py-2 text-sm"
+                    className="w-full rounded-md border px-3 py-2 text-sm text-gray-700"
                     placeholder="Enter Courier Name."
                   />
                 </div>
@@ -1101,7 +997,7 @@ export default function Ordermanagement() {
                           cnNumber: e.target.value,
                         }))
                       }
-                      className="w-full rounded-md border px-3 py-2 text-sm"
+                      className="w-full rounded-md border px-3 py-2 text-sm text-gray-700"
                       placeholder="Consignment number"
                     />
                   </div>
@@ -1118,7 +1014,7 @@ export default function Ordermanagement() {
                           cnDate: e.target.value,
                         }))
                       }
-                      className="w-full rounded-md border px-3 py-2 text-sm"
+                      className="w-full rounded-md border px-3 py-2 text-sm text-gray-700"
                     />
                   </div>
                 </div>
@@ -1139,7 +1035,7 @@ export default function Ordermanagement() {
                     }))
                   }
                   rows={3}
-                  className="w-full rounded-md border px-3 py-2 text-sm"
+                  className="w-full rounded-md border px-3 py-2 text-sm text-gray-700"
                   placeholder="Enter cancellation reason"
                 />
               </div>
@@ -1156,7 +1052,7 @@ export default function Ordermanagement() {
                   }))
                 }
                 rows={2}
-                className="w-full rounded-md border px-3 py-2 text-sm"
+                className="w-full rounded-md border px-3 py-2 text-sm text-gray-700"
                 placeholder="Any internal note"
               />
             </div>
@@ -1181,7 +1077,7 @@ export default function Ordermanagement() {
 
       {paymentModal.open && (
         <div className="fixed inset-0 bg-black/40 z-60 flex items-center justify-center p-4">
-          <div className="w-full max-w-lg rounded-xl bg-white border p-5 space-y-4">
+          <div className="w-full max-w-lg rounded-xl bg-white border p-5 space-y-4 text-sm text-gray-700" >
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-gray-900 capitalize">
                 Mark Payment as {paymentModal.nextStatus}
@@ -1255,7 +1151,7 @@ export default function Ordermanagement() {
                   }))
                 }
                 rows={2}
-                className="w-full rounded-md border px-3 py-2 text-sm"
+                className="w-full rounded-md border px-3 py-2 text-sm text-gray-700"
                 placeholder="Payment note"
               />
             </div>

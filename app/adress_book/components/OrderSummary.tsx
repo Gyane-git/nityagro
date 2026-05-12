@@ -5,10 +5,11 @@ import useCheckoutStore from "@/store/checkoutStore";
 // components/OrderSummary.tsx
 
 type OrderSummaryProps = {
-  onProceed?: () => void;
+  onProceed?: () => void | Promise<void>;
+  processing?: boolean;
 };
 
-export default function OrderSummary({ onProceed }: OrderSummaryProps) {
+export default function OrderSummary({ onProceed, processing = false }: OrderSummaryProps) {
   const router = useRouter();
   const checkoutItems = useCheckoutStore((state) => state.checkoutItems);
   const checkoutItem = useCheckoutStore((state) => state.checkoutItem);
@@ -82,10 +83,13 @@ export default function OrderSummary({ onProceed }: OrderSummaryProps) {
           background: "#00462C",
           height: "48px",
           boxShadow: "0 4px 16px rgba(0,70,44,0.20)",
+          opacity: processing || sourceItems.length === 0 ? 0.65 : 1,
+          cursor: processing || sourceItems.length === 0 ? "not-allowed" : "pointer",
         }}
+        disabled={processing || sourceItems.length === 0}
         onClick={onProceed ?? (() => router.push("/Checkout/payment"))}
       >
-        Proceed to Pay
+        {processing ? "Placing Order..." : "Proceed to Pay"}
       </button>
     </div>
   );

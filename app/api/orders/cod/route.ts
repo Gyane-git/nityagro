@@ -57,12 +57,12 @@ export async function POST(req: Request) {
       );
     }
 
-    const productIds = normalizedItems.map((item) => BigInt(item.productId));
-
-    const products = await prisma.products.findMany({
-      where: { productId: { in: productIds } },
+    const requestedProductIds = normalizedItems.map((item) => BigInt(item.productId));
+    const directProducts = await prisma.products.findMany({
+      where: { productId: { in: requestedProductIds } },
       select: {
         productId: true,
+        productCode: true,
         productName: true,
         sellingPrice: true,
         actualPrice: true,
@@ -70,20 +70,117 @@ export async function POST(req: Request) {
       },
     });
 
-    const productMap = new Map(products.map((p) => [p.productId.toString(), p]));
-
-    const missing = normalizedItems.filter(
-      (item) => !productMap.has(String(item.productId)),
+    const directProductMap = new Map(
+      directProducts.map((p) => [p.productId.toString(), p]),
     );
-    if (missing.length > 0) {
+
+    const unresolved = normalizedItems.filter(
+      (item) => !directProductMap.has(String(item.productId)),
+    );
+
+    const variantRows =
+      unresolved.length > 0
+        ? await prisma.productVariant.findMany({
+            where: {
+              variantId: {
+                in: unresolved.map((item) => BigInt(item.productId)),
+              },
+            },
+            select: {
+              variantId: true,
+              pCode: true,
+            },
+          })
+        : [];
+
+    const variantCodeByVariantId = new Map(
+      variantRows.map((row) => [row.variantId.toString(), row.pCode]),
+    );
+
+    const fallbackProductCodes = Array.from(
+      new Set(
+        unresolved
+          .map((item) => variantCodeByVariantId.get(String(item.productId)))
+          .filter(Boolean),
+      ),
+    );
+
+    const fallbackProducts =
+      fallbackProductCodes.length > 0
+        ? await prisma.products.findMany({
+            where: {
+              productCode: { in: fallbackProductCodes },
+            },
+            select: {
+              productId: true,
+              productCode: true,
+              productName: true,
+              sellingPrice: true,
+              actualPrice: true,
+              productStatus: true,
+            },
+          })
+        : [];
+
+    const fallbackProductByCode = new Map(
+      fallbackProducts.map((product) => [product.productCode, product]),
+    );
+
+    const resolvedItems = normalizedItems
+      .map((item) => {
+        const direct = directProductMap.get(String(item.productId));
+        if (direct) {
+          return {
+            ...item,
+            productId: Number(direct.productId),
+            source: "product",
+          };
+        }
+
+        const productCode = variantCodeByVariantId.get(String(item.productId));
+        const fallbackProduct = productCode
+          ? fallbackProductByCode.get(productCode)
+          : null;
+
+        if (!fallbackProduct) {
+          return null;
+        }
+
+        return {
+          ...item,
+          productId: Number(fallbackProduct.productId),
+          source: "variant",
+        };
+      })
+      .filter(Boolean) as Array<{
+      productId: number;
+      qty: number;
+      unitPrice: number;
+      source: "product" | "variant";
+    }>;
+
+    if (resolvedItems.length !== normalizedItems.length) {
       return NextResponse.json(
-        { success: false, message: "Some products no longer exist" },
+        { success: false, message: "Some products/variants no longer exist" },
         { status: 400, headers: corsHeaders },
       );
     }
 
-    const inactive = normalizedItems.filter((item) => {
-      const p = productMap.get(String(item.productId));
+    const resolvedProductIds = resolvedItems.map((item) => BigInt(item.productId));
+    const resolvedProducts = await prisma.products.findMany({
+      where: { productId: { in: resolvedProductIds } },
+      select: {
+        productId: true,
+        sellingPrice: true,
+        productStatus: true,
+      },
+    });
+    const resolvedProductMap = new Map(
+      resolvedProducts.map((product) => [product.productId.toString(), product]),
+    );
+
+    const inactive = resolvedItems.filter((item) => {
+      const p = resolvedProductMap.get(String(item.productId));
       return !p?.productStatus;
     });
     if (inactive.length > 0) {
@@ -103,8 +200,8 @@ export async function POST(req: Request) {
         totalAmount: number;
       }[] = [];
 
-      for (const row of normalizedItems) {
-        const product = productMap.get(String(row.productId));
+      for (const row of resolvedItems) {
+        const product = resolvedProductMap.get(String(row.productId));
         const unitPrice = row.unitPrice > 0 ? row.unitPrice : Number(product?.sellingPrice ?? 0);
         const lineTotal = Number((unitPrice * row.qty).toFixed(2));
 
@@ -130,7 +227,7 @@ export async function POST(req: Request) {
           },
         });
 
-        await tx.shippingDetails.create({
+        const shippingDetails = await tx.shippingDetails.create({
           data: {
             orderId: order.orderId,
             productId: BigInt(row.productId),
@@ -147,6 +244,16 @@ export async function POST(req: Request) {
                   .filter(Boolean)
                   .join(" | ")
               : "",
+          },
+        });
+        await tx.deliveryDetails.create({
+          data: {
+            orderId: order.orderId,
+            shippingDetailsId: shippingDetails.shippingDetailsId,
+            paymentMode: "COD",
+            transactionId: txCode,
+            deliveryStatus: "PENDING",
+            deliveryRemark: "Order placed. Awaiting dispatch.",
           },
         });
 

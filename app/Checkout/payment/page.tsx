@@ -15,6 +15,7 @@ export default function CheckoutPaymentPage() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirmedOrderId, setConfirmedOrderId] = useState("");
   const [placedAt, setPlacedAt] = useState("");
+  const [processing, setProcessing] = useState(false);
   const checkoutItems = useCheckoutStore((state) => state.checkoutItems);
   const checkoutItem = useCheckoutStore((state) => state.checkoutItem);
   const clearCheckoutItem = useCheckoutStore((state) => state.clearCheckoutItem);
@@ -30,8 +31,24 @@ export default function CheckoutPaymentPage() {
       return;
     }
 
+    if (processing) return;
+
     try {
       const selectedAddress = getSelectedAddress?.();
+      if (!selectedAddress) {
+        toast.error("Please select delivery address first");
+        router.push("/profile?tab=address&next=/Checkout/payment");
+        return;
+      }
+
+      setProcessing(true);
+
+      const localUserId =
+        typeof window !== "undefined"
+          ? window.localStorage.getItem("userId")
+          : null;
+      const parsedUserId = Number(localUserId || 1);
+
       const payload = {
         paymentMethod: "COD",
         items: sourceItems.map((item) => ({
@@ -42,7 +59,7 @@ export default function CheckoutPaymentPage() {
           name: item.name,
         })),
         address: selectedAddress ?? null,
-        userId: 1,
+        userId: Number.isFinite(parsedUserId) && parsedUserId > 0 ? parsedUserId : 1,
       };
 
       const res = await fetch("/api/orders/cod", {
@@ -69,6 +86,8 @@ export default function CheckoutPaymentPage() {
     } catch (err) {
       console.error("COD error:", err);
       toast.error("Order placement failed");
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -116,7 +135,7 @@ export default function CheckoutPaymentPage() {
           />
 
           <div style={{ width: "300px", flexShrink: 0 }}>
-            <OrderSummary onProceed={handleProceed} />
+            <OrderSummary onProceed={handleProceed} processing={processing} />
           </div>
         </div>
       </div>
