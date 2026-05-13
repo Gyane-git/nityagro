@@ -33,7 +33,11 @@ export default function MyAccountPage() {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const response = await apiGetRequest(`/account/profile?userId=${USER.userId}`, false);
+      const localUserId =
+        typeof window !== "undefined"
+          ? window.localStorage.getItem("userId") || USER.userId
+          : USER.userId;
+      const response = await apiGetRequest(`/account/profile?userId=${localUserId}`, false);
       if (!response.success) {
         toast.error(response.message || "Failed to load profile");
         return;
@@ -54,8 +58,8 @@ export default function MyAccountPage() {
       />
     ),
     address: <AddressBook userId={user.userId || USER.userId} />,
-    history: <OrderHistory />,
-    tracking: <OrderTracking />,
+    history: <OrderHistory userId={user.userId || USER.userId} />,
+    tracking: <OrderTracking userId={user.userId || USER.userId} userName={user.name || "User"} />,
   };
 
   return (
