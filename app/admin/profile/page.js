@@ -483,4 +483,4 @@ const OrderTrackingPage = () => {
   return <OrderTracking />;
 };
 
-export default page;
+export default OrderTrackingPage;

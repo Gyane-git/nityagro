@@ -58,6 +58,34 @@ type OmsCategory = {
   GroupName: string;
 };
 
+type ProductSyncPayload = {
+  productCode: string;
+  categoryId: string;
+  userId: string;
+  productName: string;
+  subGroupName: string | null;
+  slug: null;
+  productVariation: null;
+  productDescription: null;
+  nutritionInfo: null;
+  cookingInstruction: null;
+  storageInstruction: null;
+  pImage: null;
+  productStatus: boolean;
+  actualPrice: number;
+  sellingPrice: number;
+  deliveryTargetDays: null;
+  stockQuantity: number;
+  availableQuantity: number;
+};
+
+type SubGroupSyncPayload = {
+  pCode: string;
+  subGroupName: string;
+  variationName: string;
+  salesRate: number;
+};
+
 type EditForm = {
   categoryId: string;
   categoryName: string;
@@ -182,13 +210,13 @@ export default function CategoriesListPage() {
               actualPrice: item.MRP,
               sellingPrice: item.SalesRate,
               deliveryTargetDays: null,
-              stockQuantity: item.StockQty,
-              availableQuantity: item.StockQty,
+              stockQuantity: Number(item.StockQty || 0),
+              availableQuantity: Number(item.StockQty || 0),
             };
           }
 
           return acc;
-        }, {} as Record<string, OmsProduct>),
+        }, {} as Record<string, ProductSyncPayload>),
       );
 
       const productsubGroup = Object.values(
@@ -203,7 +231,7 @@ export default function CategoriesListPage() {
           }
 
           return acc;
-        }, {} as Record<string, OmsSubGroupName>),
+        }, {} as Record<string, SubGroupSyncPayload>),
       );
 
       if (uniqueCategoryNames.length === 0) {

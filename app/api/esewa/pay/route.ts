@@ -44,8 +44,7 @@
 //   });
 // }
 
-import { v4 as uuidv4 } from "uuid";
-import CryptoJS from "crypto-js";
+import { createHmac, randomUUID } from "node:crypto";
 // import { prisma } from "@/lib/prisma"; // enable when DB ready
 
 export async function POST(req: Request) {
@@ -64,13 +63,13 @@ export async function POST(req: Request) {
   const product_code = process.env.ESEWA_MERCHANT_CODE!;
   const secret = process.env.ESEWA_SECRET_KEY!;
 
-  const transaction_uuid = `${order.id}-${uuidv4()}`;
+  const transaction_uuid = `${order.id}-${randomUUID()}`;
   const total_amount = order.total.toString();
 
   const message = `total_amount=${total_amount},transaction_uuid=${transaction_uuid},product_code=${product_code}`;
-
-  const hash = CryptoJS.HmacSHA256(message, secret);
-  const signature = CryptoJS.enc.Base64.stringify(hash);
+  const signature = createHmac("sha256", secret)
+    .update(message)
+    .digest("base64");
 
   return Response.json({
     amount: total_amount,

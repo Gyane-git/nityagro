@@ -62,7 +62,7 @@ export default function ProductListPage() {
   // const [deleteId, setDeleteId] = useState(null);
   const openConfirm = useConfirmModalStore((state) => state.open);
 
-  const resolveImageUrl = (imageUrl) => {
+  const resolveImageUrl = (imageUrl: string | null | undefined) => {
     if (!imageUrl) return "/no-image.png";
     if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
     return imageUrl.startsWith("/") ? imageUrl : `/${imageUrl}`;

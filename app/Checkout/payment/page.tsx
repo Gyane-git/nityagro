@@ -9,6 +9,14 @@ import useCheckoutStore from "@/store/checkoutStore";
 import useCartStore from "@/store/cartStore";
 import toast from "react-hot-toast";
 
+type CheckoutSourceItem = {
+  id: number;
+  qty?: number;
+  unitPrice?: number;
+  total?: number;
+  name?: string;
+};
+
 export default function CheckoutPaymentPage() {
   const router = useRouter();
   const [paymentMethod, setPaymentMethod] = useState("cod");
@@ -23,7 +31,7 @@ export default function CheckoutPaymentPage() {
   const removeItems = useCartStore((state) => state.removeItems);
 
   const placeCodOrder = async () => {
-    const sourceItems =
+    const sourceItems: CheckoutSourceItem[] =
       checkoutItems.length > 0 ? checkoutItems : checkoutItem ? [checkoutItem] : [];
 
     if (sourceItems.length === 0) {
@@ -51,7 +59,7 @@ export default function CheckoutPaymentPage() {
 
       const payload = {
         paymentMethod: "COD",
-        items: sourceItems.map((item) => ({
+        items: sourceItems.map((item: CheckoutSourceItem) => ({
           id: item.id,
           qty: item.qty,
           unitPrice: item.unitPrice,

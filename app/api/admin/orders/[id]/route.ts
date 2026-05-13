@@ -319,6 +319,13 @@ export async function PATCH(
       },
     });
 
+    if (!updated) {
+      return NextResponse.json(
+        { success: false, message: "Order not found after update" },
+        { status: 404, headers: corsHeaders },
+      );
+    }
+
     return NextResponse.json(
       { success: true, data: mapOrder(updated) },
       { status: 200, headers: corsHeaders },

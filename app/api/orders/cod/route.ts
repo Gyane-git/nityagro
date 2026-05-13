@@ -101,7 +101,7 @@ export async function POST(req: Request) {
       new Set(
         unresolved
           .map((item) => variantCodeByVariantId.get(String(item.productId)))
-          .filter(Boolean),
+          .filter((code): code is string => Boolean(code)),
       ),
     );
 
