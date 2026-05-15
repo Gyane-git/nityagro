@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 
-const CATEGORIES = ["Oils", "Flours", "Spices", "Jaggery", "Daliya", "Sattu"];
-
 const StarIcon = ({ filled }) => (
   <svg
     width="16"
@@ -36,13 +34,15 @@ function StarRow({ count, checked, onChange }) {
 }
 
 export default function Sidebar({
+  categories = [],
+  selectedCategories = [],
   onCategoryChange,
   onRatingChange,
   onPriceChange,
 }) {
   const [minPrice, setMinPrice] = useState(500);
   const [maxPrice, setMaxPrice] = useState(2500);
-  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [localCategories, setLocalCategories] = useState([]);
   const [selectedRatings, setSelectedRatings] = useState([]);
 
   const MIN = 0;
@@ -61,10 +61,11 @@ export default function Sidebar({
   };
 
   const toggleCategory = (cat) => {
-    const updated = selectedCategories.includes(cat)
-      ? selectedCategories.filter((c) => c !== cat)
-      : [...selectedCategories, cat];
-    setSelectedCategories(updated);
+    const source = selectedCategories.length ? selectedCategories : localCategories;
+    const updated = source.includes(cat)
+      ? source.filter((c) => c !== cat)
+      : [...source, cat];
+    setLocalCategories(updated);
     onCategoryChange?.(updated);
   };
 
@@ -158,17 +159,21 @@ export default function Sidebar({
           Categories
         </h3>
         <div className="flex flex-col gap-2.5">
-          {CATEGORIES.map((cat) => (
-            <label key={cat} className="flex items-center gap-2 cursor-pointer">
+          {categories.map((cat) => {
+            const key = cat.categoryId || cat.categoryName;
+            const value = cat.categoryName;
+            return (
+            <label key={key} className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
-                checked={selectedCategories.includes(cat)}
-                onChange={() => toggleCategory(cat)}
+                checked={(selectedCategories.length ? selectedCategories : localCategories).includes(value)}
+                onChange={() => toggleCategory(value)}
                 className="w-4 h-4 rounded border-gray-300 accent-[#00462C] cursor-pointer"
               />
-              <span className="text-sm text-gray-700">{cat}</span>
+              <span className="text-sm text-gray-700">{value}</span>
             </label>
-          ))}
+            );
+          })}
         </div>
       </div>
 

@@ -23,15 +23,7 @@ const StarIcon = ({ filled }) => (
 );
 
 // ─── Data ──────────────────────────────────────────────────────────────────
-const CATEGORIES = [
-  { id: "all", label: "All", image: "/categories/all.png" },
-  { id: "oils", label: "Oils", image: "/categories/oils.png" },
-  { id: "flours", label: "Flours", image: "/categories/flours.png" },
-  { id: "spices", label: "Spices", image: "/categories/spieces.png" },
-  { id: "jaggery", label: "Jaggery", image: "/categories/jaggery.png" },
-  { id: "dailya", label: "Dailya", image: "/categories/dailya.png" },
-  { id: "sattu", label: "Sattu", image: "/categories/satu.png" },
-];
+
 
 const PRODUCTS = [
   { id: 1, name: "Yellow Mustard Oil", price: 250, rating: 4, reviews: 711, category: "oils", badge: "Best Seller", discount: "BES\n30%\nOFF", image: "/products/mustard-oil.png" },
@@ -141,32 +133,14 @@ export default function ComboPackSection() {
         </div>
 
         {/* ── Category Tabs ── */}
-        <div className="flex items-end overflow-x-auto scrollbar-hide gap-1 sm:gap-3 sm:justify-center pb-3 mt-2 -mx-4 px-4 sm:mx-0 sm:px-0">
-          {CATEGORIES.map(({ id, label, image }) => {
-            const isActive = activeCategory === id;
-            return (
-              <button key={id} onClick={() => setActiveCategory(id)} className="flex flex-col items-center relative transition-all shrink-0" style={{ minWidth: "52px" }}>
-                <div className="flex flex-col items-center justify-end cursor-pointer pb-2">
-                  <Image src={image} alt={label} width={36} height={36} className="sm:w-12 sm:h-12" />
-                  <span className="text-xs font-medium mt-1" style={{ color: isActive ? "#00462C" : "#6B7280", lineHeight: "16px", letterSpacing: "0.2px", transition: "color 0.2s" }}>
-                    {label}
-                  </span>
-                </div>
-                {/* Active underline */}
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 transition-all duration-200" style={{ height: "2.5px", width: isActive ? "100%" : "0%", background: "#00462C", borderRadius: "2px" }} />
-              </button>
-            );
-          })}
-        </div>
+        
 
         {/* ── Divider ── */}
         <div className="border-t border-gray-200" />
 
         {/* ── Title Row ── */}
         <div className="flex items-center gap-3 mt-4 mb-4 sm:mt-6 sm:mb-5">
-          <h2 className="font-bold text-[#00462C] text-base sm:text-lg lg:text-[22px] whitespace-nowrap">
-            {activeCategory === "all" ? "Traditional Combo Packs" : CATEGORIES.find((c) => c.id === activeCategory)?.label}
-          </h2>
+          
           <div className="flex-1 border-t-2 border-gray-200" />
           <Link href="/products" className="font-semibold text-sm whitespace-nowrap hover:underline transition-colors" style={{ color: "#00462C" }}>
             View All

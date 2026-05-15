@@ -2,13 +2,15 @@
 
 import Image from "next/image";
 
-export default function Banner() {
+export default function Banner({
+  image = "/banner1.jpg",
+  title = "All Products",
+}) {
   return (
     <div className="relative w-full aspect-3/1 sm:aspect-4/1 overflow-hidden rounded-lg">
-      Background image
       <Image
-        src="/banner1.jpg"
-        alt="Nityagro Banner"
+        src={image || "/banner1.jpg"}
+        alt={title ? `${title} banner` : "Nityagro Banner"}
         fill
         className="object-cover object-center"
         priority

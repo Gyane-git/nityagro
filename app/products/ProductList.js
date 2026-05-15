@@ -223,7 +223,7 @@ function Pagination({ current, total, onChange }) {
 // ─── Main ProductList ───────────────────────────────────────────────────────
 export default function ProductList({ products = ALL_PRODUCTS }) {
   const [page, setPage] = useState(1);
-  const totalPages = Math.ceil(products.length / PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(products.length / PER_PAGE));
   const start = (page - 1) * PER_PAGE;
   const visible = products.slice(start, start + PER_PAGE);
 
@@ -235,14 +235,22 @@ export default function ProductList({ products = ALL_PRODUCTS }) {
         <span className="font-bold text-gray-800">{products.length}</span>
       </p>
 
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
-        {visible.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </div>
+      {products.length === 0 ? (
+        <div className="rounded-md border border-gray-200 p-6 text-sm text-gray-500">
+          No products found for selected filters.
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
+          {visible.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      )}
 
       {/* Pagination */}
-      <Pagination current={page} total={totalPages} onChange={setPage} />
+      {products.length > 0 ? (
+        <Pagination current={page} total={totalPages} onChange={setPage} />
+      ) : null}
     </div>
   );
 }

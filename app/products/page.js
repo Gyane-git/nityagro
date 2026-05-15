@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Banner from "./Banner";
 import Sidebar from "./Sidebar";
 import ProductList from "./ProductList";
@@ -14,8 +15,10 @@ const FilterIcon = () => (
 );
 
 export default function ProductsPage() {
+  const searchParams = useSearchParams();
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedRatings, setSelectedRatings] = useState([]);
   const [priceRange, setPriceRange] = useState({ min: 0, max: 5000 });
@@ -23,36 +26,61 @@ export default function ProductsPage() {
   const [filterOpen, setFilterOpen] = useState(false);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       setLoading(true);
-      const response = await apiGetRequest("/products");
-      const rows = Array.isArray(response?.data) ? response.data : [];
+      try {
+        const [productResponse, categoryResponse] = await Promise.all([
+          apiGetRequest("/products"),
+          apiGetRequest("/categories"),
+        ]);
 
-      const mapped = rows.map((item) => ({
-        id: Number(item.productId),
-        name: item.subGroupName || item.productName || "Unnamed Product",
-        category: item.categoryId || "",
-        price: Number(item.sellingPrice ?? item.actualPrice ?? 0),
-        image: item.pImage || "/products/mustard-oil.png",
-        rating: 4,
-        reviews: 0,
-        badge: item.specialOffer ? "Special Offer" : null,
-        discount:
-          item.actualPrice > item.sellingPrice
-            ? `SAVE\n${Math.round(
-                ((item.actualPrice - item.sellingPrice) / item.actualPrice) *
-                  100
-              )}%`
-            : null,
-      }));
+        const productRows = Array.isArray(productResponse?.data)
+          ? productResponse.data
+          : [];
+        const categoryRows = Array.isArray(categoryResponse?.data)
+          ? categoryResponse.data
+          : [];
 
-      setProducts(mapped);
-      setFilteredProducts(mapped);
-      setLoading(false);
+        const activeCategories = categoryRows.filter(
+          (category) => category.categoryStatus !== false,
+        );
+
+        const mapped = productRows.map((item) => ({
+          id: Number(item.productId),
+          name: item.subGroupName || item.productName || "Unnamed Product",
+          category: item.categoryId || "",
+          price: Number(item.sellingPrice ?? item.actualPrice ?? 0),
+          image: item.pImage || "/products/mustard-oil.png",
+          rating: 4,
+          reviews: 0,
+          badge: item.specialOffer ? "Special Offer" : null,
+          discount:
+            item.actualPrice > item.sellingPrice
+              ? `SAVE\n${Math.round(
+                  ((item.actualPrice - item.sellingPrice) / item.actualPrice) *
+                    100,
+                )}%`
+              : null,
+        }));
+
+        setProducts(mapped);
+        setCategories(activeCategories);
+        const categoryFromQuery = searchParams.get("category");
+        if (categoryFromQuery) {
+          const selected = [categoryFromQuery];
+          setSelectedCategories(selected);
+          const preFiltered = mapped.filter((p) => selected.includes(p.category));
+          setFilteredProducts(preFiltered);
+        } else {
+          setFilteredProducts(mapped);
+        }
+      } finally {
+        setLoading(false);
+      }
     };
 
-    fetchProducts();
-  }, []);
+    fetchData();
+  }, [searchParams]);
 
   const totalItems = useMemo(() => filteredProducts.length, [filteredProducts]);
 
@@ -76,11 +104,25 @@ export default function ProductsPage() {
     setFilteredProducts(result);
   };
 
+  const selectedCategoryDetail = useMemo(() => {
+    if (selectedCategories.length !== 1) {
+      return null;
+    }
+    return (
+      categories.find(
+        (category) => category.categoryName === selectedCategories[0],
+      ) || null
+    );
+  }, [categories, selectedCategories]);
+
   return (
     <main className="min-h-screen bg-white">
       <div className="max-w-360 mx-auto px-4 sm:px-6 py-4">
         {/* Banner */}
-        <Banner />
+        <Banner
+          image={selectedCategoryDetail?.categoryBanner || "/banner1.jpg"}
+          title={selectedCategoryDetail?.categoryName || "All Products"}
+        />
 
         {/* Title row (mobile like screenshot) */}
         <div className="mt-5 flex items-center justify-between">
@@ -109,6 +151,8 @@ export default function ProductsPage() {
           {/* DESKTOP SIDEBAR */}
           <div className="hidden lg:block w-55">
             <Sidebar
+              categories={categories}
+              selectedCategories={selectedCategories}
               onCategoryChange={(c) => {
                 setSelectedCategories(c);
                 applyFilters({ categories: c });
@@ -168,6 +212,8 @@ export default function ProductsPage() {
           {/* content */}
           <div className="flex-1 overflow-y-auto p-4 space-y-6">
             <Sidebar
+              categories={categories}
+              selectedCategories={selectedCategories}
               onCategoryChange={(c) => {
                 setSelectedCategories(c);
                 applyFilters({ categories: c });

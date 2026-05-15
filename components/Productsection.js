@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ALL_PRODUCTS } from "@/app/products/productsData";
 import useCartStore from "@/store/cartStore";
 import useToastStore from "@/store/toastStore";
 import { apiGetRequest } from "@/apihelper/apiHelper";
@@ -57,14 +56,12 @@ function StarRating({ rating, reviews }) {
 // ─── Product Card ──────────────────────────────────────────────────────────
 function ProductCard({ product }) {
   const [added, setAdded] = useState(false);
-  const detailProduct =
-    ALL_PRODUCTS.find((item) => item.name === product.name) || ALL_PRODUCTS[0];
   const addToCart = useCartStore((state) => state.addToCart);
   const showToast = useToastStore((state) => state.showToast);
 
   const handleAdd = () => {
     addToCart({
-      id: detailProduct.id,
+      id: product.id,
       name: product.name,
       price: product.price,
       image: product.image,
@@ -112,7 +109,7 @@ function ProductCard({ product }) {
       )}
 
       {/* Wrap image + info in Link — NO flex-1 so height is driven by fixed children */}
-      <Link href={`/products/${detailProduct.id}`} className="flex flex-col">
+      <Link href={`/products/${product.id}`} className="flex flex-col">
         {/* Image — fixed height */}
         <div className="relative w-full bg-gray-50" style={{ height: "160px" }}>
           <Image
@@ -182,7 +179,7 @@ export default function ProductSection() {
       const mappedProducts = productRows
         .filter((item) => item.productStatus)
         .map((item) => ({
-          id: Number(item.productId),
+          id: Number(item.productId || item.productCode),
           name: item.subGroupName || item.productName || "Unnamed Product",
           price: Number(item.sellingPrice ?? item.actualPrice ?? 0),
           rating: 4,

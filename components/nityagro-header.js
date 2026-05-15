@@ -7,6 +7,7 @@ import useCartStore from "@/store/cartStore";
 import useWishlistStore from "@/store/wishlistStore";
 import { useAuthModal } from "@/app/account/useAuthModal";
 import AuthModals from "@/app/account/AuthModals";
+import { apiGetRequest } from "@/apihelper/apiHelper";
 
 /* ── Icons ── */
 const SearchIcon = () => (
@@ -142,8 +143,6 @@ const NAV_LINKS = [
   },
 ];
 
-const CATEGORIES = ["Oils", "Flours", "Spices", "Jaggery", "Dairy", "Sattu"];
-
 /* ── Badge ── */
 const Badge = ({ count }) => (
   <span
@@ -161,6 +160,7 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileMethodsOpen, setMobileMethodsOpen] = useState(false);
   const [mobileCategoryOpen, setMobileCategoryOpen] = useState(false);
+  const [categories, setCategories] = useState([]);
 
   const auth = useAuthModal();
   const cartItems = useCartStore((state) => state.items);
@@ -195,6 +195,16 @@ export default function Header() {
       document.body.style.overflow = "";
     };
   }, [mobileMenuOpen]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const response = await apiGetRequest("/categories");
+      const rows = Array.isArray(response?.data) ? response.data : [];
+      const active = rows.filter((item) => item.categoryStatus !== false);
+      setCategories(active);
+    };
+    fetchCategories();
+  }, []);
 
   return (
     <header
@@ -266,15 +276,15 @@ export default function Header() {
 
               {categoryOpen && (
                 <div className="absolute top-full left-0 mt-1 w-52 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
-                  {CATEGORIES.map((item) => (
-                    <a
-                      key={item}
-                      href={`/category/${item.toLowerCase()}`}
+                  {categories.map((item) => (
+                    <Link
+                      key={item.categoryId || item.categoryName}
+                      href={`/products?category=${encodeURIComponent(item.categoryName)}`}
                       onClick={() => setCategoryOpen(false)}
                       className="block px-5 py-3 text-[13px] text-[#00462C] hover:bg-[#F5F8F6] transition"
                     >
-                      {item}
-                    </a>
+                      {item.categoryName}
+                    </Link>
                   ))}
                 </div>
               )}
@@ -425,15 +435,15 @@ export default function Header() {
             </button>
             {mobileCategoryOpen && (
               <div className="pl-7 pb-2 flex flex-col gap-0.5">
-                {CATEGORIES.map((item) => (
-                  <a
-                    key={item}
-                    href={`/category/${item.toLowerCase()}`}
+                {categories.map((item) => (
+                  <Link
+                    key={item.categoryId || item.categoryName}
+                    href={`/products?category=${encodeURIComponent(item.categoryName)}`}
                     onClick={() => setMobileMenuOpen(false)}
                     className="py-2.5 text-[14px] text-[#00462C] hover:font-medium transition"
                   >
-                    {item}
-                  </a>
+                    {item.categoryName}
+                  </Link>
                 ))}
               </div>
             )}
