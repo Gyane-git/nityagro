@@ -1,4 +1,10 @@
-const baseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").trim().replace(/\/$/, "");
+const baseUrl = (
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  ""
+)
+  .trim()
+  .replace(/\/$/, "");
 
 const resolveUrl = (url: string) => {
   const cleanUrl = url.trim();
@@ -17,6 +23,7 @@ export interface ApiResponse<T = unknown> {
 
 interface ApiRequestOptions extends RequestInit {
   headers?: HeadersInit;
+  withCredentials?: boolean;
 }
 
 // Main request function
@@ -49,6 +56,7 @@ export const apiRequest = async <T = unknown>(
     const response = await fetch(fullUrl, {
       ...options,
       headers,
+      credentials: options.withCredentials ? "include" : "same-origin",
     });
 
     const text = await response.text();
@@ -129,7 +137,8 @@ export const apiGetRequest = async <T = unknown>(
 export const apiUploadRequest = async <T = unknown>(
   url: string,
   formData: FormData,
-  tokenReq: boolean = false
+  tokenReq: boolean = false,
+  withCredentials: boolean = false
 ): Promise<ApiResponse<T>> => {
   const fullUrl = resolveUrl(url);
   const token =
@@ -147,6 +156,7 @@ export const apiUploadRequest = async <T = unknown>(
       method: "POST",
       body: formData,
       headers,
+      credentials: withCredentials ? "include" : "same-origin",
     });
 
     const text = await response.text();

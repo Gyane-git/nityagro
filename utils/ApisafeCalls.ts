@@ -1,4 +1,10 @@
-const API_BASE = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").trim().replace(/\/$/, "");
+const API_BASE = (
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  ""
+)
+  .trim()
+  .replace(/\/$/, "");
 
 function resolveUrl(path: string) {
   if (/^https?:\/\//i.test(path)) return path;
@@ -6,7 +12,11 @@ function resolveUrl(path: string) {
   return `${API_BASE}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
-export async function apiRequest(path: string, tokenReq = false, options: RequestInit = {}) {
+export async function apiRequest(
+  path: string,
+  tokenReq = false,
+  options: RequestInit & { withCredentials?: boolean } = {},
+) {
   const url = resolveUrl(path);
   const token =
     typeof window !== "undefined" ? window.localStorage.getItem("token") : null;
@@ -18,7 +28,11 @@ export async function apiRequest(path: string, tokenReq = false, options: Reques
     ...options.headers,
   };
 
-  const response = await fetch(url, { ...options, headers });
+  const response = await fetch(url, {
+    ...options,
+    headers,
+    credentials: options.withCredentials ? "include" : "same-origin",
+  });
   const text = await response.text();
   const data = text ? JSON.parse(text) : null;
 
@@ -28,4 +42,3 @@ export async function apiRequest(path: string, tokenReq = false, options: Reques
 
   return data;
 }
-
