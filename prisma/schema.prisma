@@ -8,34 +8,33 @@ datasource db {
 }
 
 model Users {
-  userId         BigInt   @id @default(autoincrement())
-  name           String
-  email          String   @unique
-  role           String
-  rolePermission String?
-  status         Boolean  @default(false)
-  password       String
-  phone          String?
-  city           String?
-  state          String?
-  zipCode        String?
-  country        String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  orders             Orders[]
-  cartListers        CartList[]
-  wishlist           Wishlist[]
-  productReview      ProductReview[]
-  categories         Categories[]
-  products           Products[]
-  orderReturns       OrderReturn[]
-  orderCancellations OrderCancellation[]
-  paymentDetails     PaymentDetails[]
-  testimonials       Testimonials[]
-  setShippingCost    SetShippingCost[]
+  userId             BigInt              @id @default(autoincrement())
+  name               String
+  email              String              @unique
+  role               String
+  rolePermission     String?
+  status             Boolean             @default(false)
+  password           String
+  phone              String?
+  city               String?
+  state              String?
+  zipCode            String?
+  country            String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
   address            Address[]
   auditLog           AuditLog[]
+  cartListers        CartList[]
+  categories         Categories[]
+  orderCancellations OrderCancellation[]
+  orderReturns       OrderReturn[]
+  orders             Orders[]
+  paymentDetails     PaymentDetails[]
+  productReview      ProductReview[]
+  products           Products[]
+  setShippingCost    SetShippingCost[]
+  testimonials       Testimonials[]
+  wishlist           Wishlist[]
 
   @@map("users")
 }
@@ -52,17 +51,16 @@ model Categories {
   categoryStatus      Boolean  @default(true)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
+  user                Users    @relation(fields: [userId], references: [userId])
 
-  user     Users      @relation(fields: [userId], references: [userId])
-  
-
+  @@index([userId], map: "categories_userId_fkey")
   @@map("categories")
 }
 
 model Products {
-  productId          BigInt   @id @default(autoincrement())
-  productCode        String   @unique
-  categoryId         String   
+  productId          BigInt              @id @default(autoincrement())
+  productCode        String              @unique
+  categoryId         String
   userId             BigInt
   productName        String
   subGroupName       String?
@@ -73,29 +71,27 @@ model Products {
   cookingInstruction String?
   storageInstruction String?
   pImage             String?
-  productStatus      Boolean  @default(true)
+  productStatus      Boolean             @default(true)
   actualPrice        Float
   sellingPrice       Float
   deliveryTargetDays BigInt?
   stockQuantity      BigInt?
   availableQuantity  BigInt?
-  flashSale          Boolean  @default(false)
-  specialOffer       Boolean  @default(false)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  flashSale          Boolean             @default(false)
+  specialOffer       Boolean             @default(false)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  cartLists          CartList[]
+  cancellations      OrderCancellation[]
+  returns            OrderReturn[]
+  orders             Orders[]
+  images             ProductImage[]
+  reviews            ProductReview[]
+  user               Users               @relation(fields: [userId], references: [userId])
+  shippingDetails    ShippingDetails[]
+  wishlists          Wishlist[]
 
- 
-  user     Users      @relation(fields: [userId], references: [userId])
-
-  orders          Orders[]
-  cartLists       CartList[]
-  wishlists       Wishlist[]
-  reviews         ProductReview[]
-  cancellations   OrderCancellation[]
-  returns         OrderReturn[]
-  images          ProductImage[]
-  shippingDetails ShippingDetails[]
-
+  @@index([userId], map: "products_userId_fkey")
   @@map("products")
 }
 
@@ -106,10 +102,11 @@ model CartList {
   quantity  BigInt
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  product   Products @relation(fields: [productId], references: [productId])
+  users     Users    @relation(fields: [userId], references: [userId])
 
-  product Products @relation(fields: [productId], references: [productId])
-  users   Users    @relation(fields: [userId], references: [userId])
-
+  @@index([productId], map: "cartList_productId_fkey")
+  @@index([userId], map: "cartList_userId_fkey")
   @@map("cartList")
 }
 
@@ -119,32 +116,33 @@ model Wishlist {
   productId BigInt
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  products  Products @relation(fields: [productId], references: [productId])
+  users     Users    @relation(fields: [userId], references: [userId])
 
-  products Products @relation(fields: [productId], references: [productId])
-  users    Users    @relation(fields: [userId], references: [userId])
-
+  @@index([productId], map: "wishlist_productId_fkey")
+  @@index([userId], map: "wishlist_userId_fkey")
   @@map("wishlist")
 }
 
 model Orders {
-  orderId       BigInt   @id @default(autoincrement())
-  userId        BigInt
-  productId     BigInt
-  totalAmount   Float
-  orderStatus   String?
-  paymentStatus String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
+  orderId           BigInt              @id @default(autoincrement())
+  userId            BigInt
+  productId         BigInt
+  totalAmount       Float
+  orderStatus       String?
+  paymentStatus     String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
   deliveryDetails   DeliveryDetails[]
-  shippingDetails   ShippingDetails[]
   orderCancellation OrderCancellation[]
   orderReturn       OrderReturn[]
+  product           Products            @relation(fields: [productId], references: [productId])
+  users             Users               @relation(fields: [userId], references: [userId])
   paymentDetails    PaymentDetails[]
+  shippingDetails   ShippingDetails[]
 
-  product Products @relation(fields: [productId], references: [productId])
-  users   Users    @relation(fields: [userId], references: [userId])
-
+  @@index([productId], map: "orders_productId_fkey")
+  @@index([userId], map: "orders_userId_fkey")
   @@map("orders")
 }
 
@@ -207,9 +205,9 @@ model Testimonials {
   testimonialStatus Boolean  @default(true)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+  users             Users    @relation(fields: [userId], references: [userId])
 
-  users Users @relation(fields: [userId], references: [userId])
-
+  @@index([userId], map: "testimonials_userId_fkey")
   @@map("testimonials")
 }
 
@@ -251,10 +249,11 @@ model ProductReview {
   reviewStatus       Boolean  @default(true)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+  product            Products @relation(fields: [productId], references: [productId])
+  users              Users    @relation(fields: [userId], references: [userId])
 
-  product Products @relation(fields: [productId], references: [productId])
-  users   Users    @relation(fields: [userId], references: [userId])
-
+  @@index([productId], map: "productReview_productId_fkey")
+  @@index([userId], map: "productReview_userId_fkey")
   @@map("productReview")
 }
 
@@ -268,11 +267,13 @@ model OrderReturn {
   returnStatus  Boolean  @default(true)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  orders        Orders   @relation(fields: [orderId], references: [orderId])
+  product       Products @relation(fields: [productId], references: [productId])
+  users         Users    @relation(fields: [userId], references: [userId])
 
-  orders  Orders   @relation(fields: [orderId], references: [orderId])
-  product Products @relation(fields: [productId], references: [productId])
-  users   Users    @relation(fields: [userId], references: [userId])
-
+  @@index([orderId], map: "orderReturn_orderId_fkey")
+  @@index([productId], map: "orderReturn_productId_fkey")
+  @@index([userId], map: "orderReturn_userId_fkey")
   @@map("orderReturn")
 }
 
@@ -287,12 +288,13 @@ model OrderCancellation {
   cancellationStatus      Boolean  @default(true)
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
+  orders                  Orders   @relation(fields: [orderId], references: [orderId])
+  product                 Products @relation(fields: [productId], references: [productId])
+  users                   Users    @relation(fields: [userId], references: [userId])
 
-  orders Orders @relation(fields: [orderId], references: [orderId])
-
-  product Products @relation(fields: [productId], references: [productId])
-  users   Users    @relation(fields: [userId], references: [userId])
-
+  @@index([orderId], map: "orderCancellation_orderId_fkey")
+  @@index([productId], map: "orderCancellation_productId_fkey")
+  @@index([userId], map: "orderCancellation_userId_fkey")
   @@map("orderCancellation")
 }
 
@@ -320,7 +322,7 @@ model PromoCode {
 }
 
 model ShippingDetails {
-  shippingDetailsId BigInt    @id @default(autoincrement())
+  shippingDetailsId BigInt            @id @default(autoincrement())
   orderId           BigInt
   productId         BigInt
   shippingCourier   String?
@@ -328,34 +330,34 @@ model ShippingDetails {
   shippingDate      DateTime?
   shippingRemark    String?
   shippingStatus    String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  deliveryDetails   DeliveryDetails[]
+  orders            Orders            @relation(fields: [orderId], references: [orderId])
+  product           Products          @relation(fields: [productId], references: [productId])
 
-  deliveryDetails DeliveryDetails[]
-  orders          Orders            @relation(fields: [orderId], references: [orderId])
-
-  product Products @relation(fields: [productId], references: [productId])
-
+  @@index([orderId], map: "shippingDetails_orderId_fkey")
+  @@index([productId], map: "shippingDetails_productId_fkey")
   @@map("shippingDetails")
 }
 
 model DeliveryDetails {
-  deliveryDetailsId BigInt    @id @default(autoincrement())
+  deliveryDetailsId BigInt          @id @default(autoincrement())
   orderId           BigInt
   shippingDetailsId BigInt
   deliveryDate      DateTime?
   paymentMode       String?
   transactionId     String?
+  trackingNumber    String?
+  deliveryStatus    String?
+  deliveryRemark    String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  orders            Orders          @relation(fields: [orderId], references: [orderId])
+  shippingDetails   ShippingDetails @relation(fields: [shippingDetailsId], references: [shippingDetailsId])
 
-  trackingNumber String?
-  deliveryStatus String?
-  deliveryRemark String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  orders          Orders          @relation(fields: [orderId], references: [orderId])
-  shippingDetails ShippingDetails @relation(fields: [shippingDetailsId], references: [shippingDetailsId])
-
+  @@index([orderId], map: "deliveryDetails_orderId_fkey")
+  @@index([shippingDetailsId], map: "deliveryDetails_shippingDetailsId_fkey")
   @@map("deliveryDetails")
 }
 
@@ -370,10 +372,11 @@ model PaymentDetails {
   paymentStatus    String?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
+  orders           Orders    @relation(fields: [orderId], references: [orderId])
+  users            Users     @relation(fields: [userId], references: [userId])
 
-  orders Orders @relation(fields: [orderId], references: [orderId])
-  users  Users  @relation(fields: [userId], references: [userId])
-
+  @@index([orderId], map: "paymentDetails_orderId_fkey")
+  @@index([userId], map: "paymentDetails_userId_fkey")
   @@map("paymentDetails")
 }
 
@@ -397,20 +400,20 @@ model ProductImage {
   imageUrl       String
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  products       Products @relation(fields: [productId], references: [productId])
 
-  products Products @relation(fields: [productId], references: [productId])
-
+  @@index([productId], map: "productImage_productId_fkey")
   @@map("productImage")
 }
 
 model ProductVariant {
-  variantId BigInt   @id @default(autoincrement())
-  pCode      String
-  subGroupName       String
-  variationName       String
-   salesRate    Float?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  variantId     BigInt   @id @default(autoincrement())
+  pCode         String
+  subGroupName  String
+  variationName String
+  salesRate     Float?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@map("productVariant")
 }
@@ -425,31 +428,30 @@ model SetShippingCost {
   shippingCost      Float
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+  users             Users    @relation(fields: [userId], references: [userId])
 
-  users Users @relation(fields: [userId], references: [userId])
-
+  @@index([userId], map: "setShippingCost_userId_fkey")
   @@map("setShippingCost")
 }
 
 model Address {
-  addressId BigInt  @id @default(autoincrement())
+  addressId BigInt   @id @default(autoincrement())
   userId    BigInt
-  fullName  String
-  phone     String
-  email     String?
   province  String
   district  String
   city      String
   ward      String
-  addType   String
   locality  String?
   zipCode   String?
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  addType   String
+  email     String?
+  fullName  String
+  phone     String
+  users     Users    @relation(fields: [userId], references: [userId])
 
-  users Users @relation(fields: [userId], references: [userId])
-
+  @@index([userId], map: "address_userId_fkey")
   @@map("address")
 }
 
@@ -460,8 +462,8 @@ model AuditLog {
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  users       Users    @relation(fields: [userId], references: [userId])
 
-  users Users @relation(fields: [userId], references: [userId])
-
+  @@index([userId], map: "auditLog_userId_fkey")
   @@map("auditLog")
 }
