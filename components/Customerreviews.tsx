@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
 // ── Types ─────────────────────────────────────────────────────────────
@@ -111,6 +111,7 @@ function ReviewCard({ review }: { review: Review }) {
 export default function CustomerReviews() {
   const CARDS_PER_PAGE = 2;
   const [page, setPage] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const totalPages = Math.ceil(reviews.length / CARDS_PER_PAGE);
 
@@ -118,6 +119,21 @@ export default function CustomerReviews() {
     page * CARDS_PER_PAGE,
     page * CARDS_PER_PAGE + CARDS_PER_PAGE,
   );
+
+  const resetAutoSlide = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (totalPages <= 1) return;
+    timerRef.current = setInterval(() => {
+      setPage((prev) => (prev + 1) % totalPages);
+    }, 4000);
+  }, [totalPages]);
+
+  useEffect(() => {
+    resetAutoSlide();
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [resetAutoSlide]);
 
   return (
     <section className="bg-white py-12 sm:py-16 px-4 sm:px-8 lg:px-16">
@@ -131,8 +147,10 @@ export default function CustomerReviews() {
         {/* Left Button (hidden on mobile) */}
         <button
           className="hidden sm:flex w-10 h-10 items-center justify-center border rounded-full"
-          onClick={() => setPage((p) => Math.max(0, p - 1))}
-          disabled={page === 0}
+          onClick={() => {
+            setPage((p) => (p - 1 + totalPages) % totalPages);
+            resetAutoSlide();
+          }}
         >
           ←
         </button>
@@ -147,8 +165,10 @@ export default function CustomerReviews() {
         {/* Right Button (hidden on mobile) */}
         <button
           className="hidden sm:flex w-10 h-10 items-center justify-center border rounded-full"
-          onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-          disabled={page === totalPages - 1}
+          onClick={() => {
+            setPage((p) => (p + 1) % totalPages);
+            resetAutoSlide();
+          }}
         >
           →
         </button>
@@ -159,7 +179,10 @@ export default function CustomerReviews() {
         {Array.from({ length: totalPages }).map((_, i) => (
           <button
             key={i}
-            onClick={() => setPage(i)}
+            onClick={() => {
+              setPage(i);
+              resetAutoSlide();
+            }}
             className={`h-2 rounded-full transition-all ${
               i === page ? "w-4 bg-[#2d7a4f]" : "w-2 bg-gray-300"
             }`}
