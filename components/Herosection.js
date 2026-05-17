@@ -1,12 +1,35 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
+import { apiGetRequest } from "@/apihelper/apiHelper";
 
 export default function HeroSection({
-  imageSrc = "/herosection.jpg",
+  imageSrc = "",
   imageAlt = "",
   objectPosition = "center",
 }) {
+  const [heroImage, setHeroImage] = useState("");
+
+  useEffect(() => {
+    const fetchHeroBanner = async () => {
+      const response = await apiGetRequest("/banners");
+      const rows = Array.isArray(response?.data?.banners)
+        ? response.data.banners
+        : [];
+      const active = rows.filter((item) => item.isActive !== false);
+      const selected = active[0] || rows[0] || null;
+      setHeroImage(selected?.bannerImageforWeb || selected?.imageUrl || "");
+    };
+    fetchHeroBanner();
+  }, []);
+
+  const resolvedImage = useMemo(() => {
+    const source = imageSrc || heroImage || "/herosection.jpg";
+    if (/^https?:\/\//i.test(source)) return source;
+    return source.startsWith("/") ? source : `/${source}`;
+  }, [heroImage, imageSrc]);
+
   return (
     <>
       <style>{`
@@ -26,7 +49,7 @@ export default function HeroSection({
 
       <section className="hero-section overflow-hidden" aria-label="Hero">
         <Image
-          src={imageSrc}
+          src={resolvedImage}
           alt={imageAlt}
           width={1920}
           height={1080}

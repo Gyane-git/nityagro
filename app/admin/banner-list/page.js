@@ -64,70 +64,121 @@ export default function BannerList() {
 
   return (
     <div className="p-6">
-      <div className="mb-6">
+      <div className="mb-6 ">
         <h1 className="text-3xl font-bold text-gray-800">Banner Management</h1>
         <p className="text-gray-600 mt-1">Manage your banner collection</p>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-lg shadow overflow-hidden text-stone-600">
         {banners.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
             No banners available
           </div>
         ) : (
-          <div className="divide-y divide-gray-200">
-            {banners.map((banner) => (
-              <div
-                key={banner.id}
-                className="flex items-center p-4 hover:bg-gray-50 transition-colors"
-              >
-                {/* Banner Image */}
-                <div className="shrink-0 w-32 h-20 mr-4">
-                  <Image
-                    src={resolveImageUrl(banner.imageUrl)}
-                    alt={banner.title || "Banner"}
-                    width={128}
-                    height={80}
-                    className="w-full h-full object-cover rounded-md border border-gray-200"
-                  />
-                </div>
-
-                {/* Banner Info */}
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-semibold text-gray-900 truncate">
-                    {banner.title || "Untitled banner"}
-                  </h3>
-                  <p className="text-sm text-gray-500 mt-1">
-                    ID: {banner.id}
-                  </p>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-center gap-2 ml-4">
-                  <button
-                    onClick={() => handleInfo(banner.id)}
-                    className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors"
-                    title="View Info"
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-280 text-sm">
+              <thead className="bg-gray-50 border-b">
+                <tr className="text-left">
+                  <th className="px-4 py-3">Banner</th>
+                  
+                  <th className="px-4 py-3">Description</th>
+                  <th className="px-4 py-3">Web Image</th>
+                  <th className="px-4 py-3">Mobile Image</th>
+                  <th className="px-4 py-3">Card Image</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Updated</th>
+                  <th className="px-4 py-3">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {banners.map((banner) => (
+                  <tr
+                    key={banner.id}
+                    className="border-b last:border-0 align-top hover:bg-gray-50 transition-colors"
                   >
-                    Info
-                  </button>
-                  <button
-                    onClick={() => handleEdit(banner.id)}
-                    className="px-4 py-2 text-sm font-medium text-green-600 bg-green-50 rounded-md hover:bg-green-100 transition-colors"
-                    title="Edit Banner"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => deleteBanner(banner.id)}
-                    className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-md hover:bg-red-100 transition-colors"
-                    title="Delete Banner"
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
-            ))}
+                    <td className="px-4 py-3">
+                      <div className="font-semibold text-gray-900">
+                        {banner.bannerName || banner.title || "Untitled banner"}
+                      </div>
+                      <div className="text-xs text-gray-500">ID: {banner.id}</div>
+                    </td>
+                    
+                    <td className="px-4 py-3 text-gray-700 max-w-70">
+                      <div className="line-clamp-2">
+                        {banner.bannerDescription || "-"}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="w-24 h-14">
+                        <Image
+                          src={resolveImageUrl(banner.bannerImageforWeb || banner.imageUrl)}
+                          alt={banner.bannerName || "Banner Web"}
+                          width={96}
+                          height={56}
+                          className="w-full h-full object-cover rounded border border-gray-200"
+                        />
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="w-24 h-14">
+                        <Image
+                          src={resolveImageUrl(banner.bannerImageforMobile || banner.imageUrl)}
+                          alt={banner.bannerName || "Banner Mobile"}
+                          width={96}
+                          height={56}
+                          className="w-full h-full object-cover rounded border border-gray-200"
+                        />
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="w-24 h-14">
+                        <Image
+                          src={resolveImageUrl(banner.cardImage || banner.imageUrl)}
+                          alt={banner.bannerName || "Banner Card"}
+                          width={96}
+                          height={56}
+                          className="w-full h-full object-cover rounded border border-gray-200"
+                        />
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                          banner.isActive || banner.bannerStatus
+                            ? "bg-green-100 text-green-700"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {banner.isActive || banner.bannerStatus ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {banner.updatedAt
+                        ? new Date(banner.updatedAt).toLocaleString()
+                        : "-"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleEdit(banner.id)}
+                          className="px-3 py-1 text-xs font-medium text-green-600 bg-green-50 rounded-md hover:bg-green-100 transition-colors"
+                          title="Edit Banner"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => deleteBanner(banner.id)}
+                          className="px-3 py-1 text-xs font-medium text-red-600 bg-red-50 rounded-md hover:bg-red-100 transition-colors"
+                          title="Delete Banner"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

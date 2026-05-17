@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, useEffect } from "react";
+
+import React, { useEffect, useState } from "react";
 import { Plus, Edit2, Trash2, ImageIcon } from "lucide-react";
 import toast from "react-hot-toast";
 import useConfirmModalStore from "@/store/confirmModalStore";
@@ -12,21 +13,20 @@ export default function PopupAdsAdmin() {
   const [showModal, setShowModal] = useState(false);
   const [editingAd, setEditingAd] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  const [formData, 
-    setFormData] = useState({
+  const [formData, setFormData] = useState({
     title: "",
-    colorCode: "#000000",
-    position: "0",
-    startAt: "",
-    endAt: "",
+    description: "",
     isActive: true,
   });
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/immutability
-    fetchAds();
-  }, []);
+  const resolveImageUrl = (imageUrl) => {
+    if (!imageUrl) return "";
+    if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
+    return imageUrl.startsWith("/") ? imageUrl : `/${imageUrl}`;
+  };
 
   const fetchAds = async () => {
     try {
@@ -35,18 +35,17 @@ export default function PopupAdsAdmin() {
 
       const parsedAds = (json.data?.popupAds || []).map((item) => ({
         id: item.id,
-        title: item.title || "Untitled Ad",
-        colorCode: item.colorCode || "#000000",
-        position: item.position ?? 0,
+        title: item.title || "Untitled popup",
+        description: item.popupDescription || "",
         imageUrl: item.imageUrl || "",
         isActive: Boolean(item.isActive),
-        startAt: item.startAt || "",
-        endAt: item.endAt || "",
+        updatedAt: item.updatedAt || "",
       }));
 
       setAds(parsedAds);
     } catch (err) {
-      console.error("Failed to fetch ads:", err);
+      console.error("Failed to fetch popup ads:", err);
+      toast.error("Failed to fetch popup ads");
     }
   };
 
@@ -65,37 +64,42 @@ export default function PopupAdsAdmin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.title) {
-      toast.error("Please enter the ad title");
+    if (!formData.title.trim()) {
+      toast.error("Please enter popup title");
       return;
     }
 
+    setSaving(true);
+    const loadingId = toast.loading(editingAd ? "Updating popup..." : "Creating popup...");
+
     try {
       const payload = new FormData();
-      payload.append("title", formData.title);
-      payload.append("colorCode", formData.colorCode);
-      payload.append("position", formData.position || "0");
+      payload.append("title", formData.title.trim());
+      payload.append("description", formData.description.trim());
       payload.append("isActive", formData.isActive ? "1" : "0");
-      if (formData.startAt) payload.append("startAt", formData.startAt);
-      if (formData.endAt) payload.append("endAt", formData.endAt);
       if (selectedImage) payload.append("image", selectedImage);
 
-      if (editingAd) {
-        await fetch(`${API_URL}/${editingAd.id}`, {
-          method: "PUT",
-          body: payload,
-        });
-      } else {
-        await fetch(API_URL, {
-          method: "POST",
-          body: payload,
-        });
+      const res = await fetch(editingAd ? `${API_URL}/${editingAd.id}` : API_URL, {
+        method: editingAd ? "PUT" : "POST",
+        body: payload,
+      });
+
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.message || "Failed to save popup ad");
       }
 
-      fetchAds();
+      toast.success(editingAd ? "Popup updated successfully" : "Popup created successfully", {
+        id: loadingId,
+      });
+
+      await fetchAds();
       resetForm();
     } catch (err) {
-      console.error("Failed to save ad:", err);
+      console.error("Failed to save popup ad:", err);
+      toast.error(err?.message || "Failed to save popup ad", { id: loadingId });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -103,26 +107,28 @@ export default function PopupAdsAdmin() {
     setEditingAd(ad);
     setFormData({
       title: ad.title,
-      colorCode: ad.colorCode || "#000000",
-      position: String(ad.position ?? 0),
-      startAt: ad.startAt ? ad.startAt.slice(0, 16) : "",
-      endAt: ad.endAt ? ad.endAt.slice(0, 16) : "",
+      description: ad.description || "",
       isActive: ad.isActive,
     });
     setSelectedImage(null);
+    setPreviewImage(ad.imageUrl ? resolveImageUrl(ad.imageUrl) : "");
     setShowModal(true);
   };
 
   const handleDelete = async (id) => {
     openConfirm({
       title: "Delete Popup Ad",
-      message: "Are you sure you want to delete this ad?",
+      message: "Are you sure you want to delete this popup ad?",
       onConfirm: async () => {
         try {
-          await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+          const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+          const data = await res.json();
+          if (!data.success) throw new Error(data.message || "Delete failed");
+          toast.success("Popup deleted successfully");
           fetchAds();
         } catch (err) {
-          console.error("Failed to delete ad:", err);
+          console.error("Failed to delete popup ad:", err);
+          toast.error(err?.message || "Failed to delete popup ad");
         }
       },
     });
@@ -131,13 +137,11 @@ export default function PopupAdsAdmin() {
   const resetForm = () => {
     setFormData({
       title: "",
-      colorCode: "#000000",
-      position: "0",
-      startAt: "",
-      endAt: "",
+      description: "",
       isActive: true,
     });
     setSelectedImage(null);
+    setPreviewImage("");
     setEditingAd(null);
     setShowModal(false);
   };
@@ -145,47 +149,30 @@ export default function PopupAdsAdmin() {
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 p-6">
       <div className="max-w-6xl mx-auto">
-        {/* TOP HEADER WITH ADD BUTTON */}
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-slate-800 ">
-            Popup Ads Manager
-          </h2>
+          <h2 className="text-2xl font-bold text-slate-800">Popup Ads Manager</h2>
 
           <button
             onClick={() => {
-              setEditingAd(null);
-              setFormData({
-                title: "",
-                colorCode: "#000000",
-                position: "0",
-                startAt: "",
-                endAt: "",
-                isActive: true,
-              });
-              setSelectedImage(null);
+              resetForm();
               setShowModal(true);
             }}
             className="px-5 py-3 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 flex items-center gap-2"
           >
-            <Plus size={18} /> Add New Ad
+            <Plus size={18} /> Add New Popup
           </button>
         </div>
 
-        {/* Ads List */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="bg-linear-to-r from-slate-700 to-slate-800 px-8 py-4">
-            <h2 className="text-xl font-semibold text-white">
-              Active Popup Ads
-            </h2>
+            <h2 className="text-xl font-semibold text-white">Popup Banner List</h2>
           </div>
 
           <div className="p-6">
             {ads.length === 0 ? (
               <div className="text-center py-12">
                 <ImageIcon size={48} className="mx-auto text-slate-300 mb-4" />
-                <p className="text-slate-500 text-lg">
-                  No popup ads yet. Create your first one!
-                </p>
+                <p className="text-slate-500 text-lg">No popup ads yet. Create your first one.</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -197,7 +184,7 @@ export default function PopupAdsAdmin() {
                     {ad.imageUrl ? (
                       <div className="w-24 h-16 rounded-lg overflow-hidden border border-slate-200 shrink-0">
                         <img
-                          src={ad.imageUrl}
+                          src={resolveImageUrl(ad.imageUrl)}
                           alt={ad.title}
                           className="w-full h-full object-cover"
                         />
@@ -207,17 +194,10 @@ export default function PopupAdsAdmin() {
                         No image
                       </div>
                     )}
+
                     <div className="grow min-w-0">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span
-                          className="w-4 h-4 rounded-full border"
-                          style={{ backgroundColor: ad.colorCode }}
-                        ></span>
-
-                        <h3 className="text-lg font-bold text-slate-800 truncate">
-                          {ad.title}
-                        </h3>
-
+                      <div className="flex items-center gap-3 mb-1">
+                        <h3 className="text-lg font-bold text-slate-800 truncate">{ad.title}</h3>
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-semibold ${
                             ad.isActive
@@ -228,6 +208,7 @@ export default function PopupAdsAdmin() {
                           {ad.isActive ? "Active" : "Inactive"}
                         </span>
                       </div>
+                      <p className="text-sm text-slate-600 line-clamp-2">{ad.description || "-"}</p>
                     </div>
 
                     <div className="flex gap-2 shrink-0">
@@ -253,16 +234,13 @@ export default function PopupAdsAdmin() {
         </div>
       </div>
 
-      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full">
             <form onSubmit={handleSubmit} className="p-8 space-y-6">
               <div>
-                <label className="block text-sm font-semibold mb-2 text-gray-900">
-                  Ad Title *
-                </label>
-                <textarea
+                <label className="block text-sm font-semibold mb-2 text-gray-900">Popup Title *</label>
+                <input
                   name="title"
                   value={formData.title}
                   onChange={handleInputChange}
@@ -272,102 +250,60 @@ export default function PopupAdsAdmin() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2 text-gray-900">
-                  Color *
-                </label>
-                <input
-                  type="color"
-                  name="colorCode"
-                  value={formData.colorCode}
+                <label className="block text-sm font-semibold mb-2 text-gray-900">Popup Description</label>
+                <textarea
+                  name="description"
+                  value={formData.description}
                   onChange={handleInputChange}
-                  className="w-16 h-10 border rounded cursor-pointer"
+                  className="w-full px-4 py-3 border rounded-lg text-black min-h-24"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2 text-gray-900">
-                  Position
-                </label>
-                <input
-                  type="number"
-                  name="position"
-                  value={formData.position}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border rounded-lg text-black"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-2 text-gray-900">
-                    Start At
-                  </label>
-                  <input
-                    type="datetime-local"
-                    name="startAt"
-                    value={formData.startAt}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border rounded-lg text-black"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2 text-gray-900">
-                    End At
-                  </label>
-                  <input
-                    type="datetime-local"
-                    name="endAt"
-                    value={formData.endAt}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border rounded-lg text-black"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold mb-2 text-gray-900">
-                  Popup Image
-                </label>
+                <label className="block text-sm font-semibold mb-2 text-gray-900">Popup Image</label>
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) =>
-                    setSelectedImage(e.target.files?.[0] || null)
-                  }
-                  className="w-full px-4 py-3 border rounded-lg text-black"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setSelectedImage(file);
+                    setPreviewImage(file ? URL.createObjectURL(file) : "");
+                  }}
+                  className="w-full px-4 py-2 border rounded-lg text-black"
                 />
-                {editingAd?.imageUrl && !selectedImage && (
-                  <p className="text-xs text-gray-500 mt-2">
-                    Current image will be kept unless you select a new one.
-                  </p>
-                )}
+                {previewImage ? (
+                  <img
+                    src={resolveImageUrl(previewImage)}
+                    alt="Preview"
+                    className="mt-3 h-36 w-full object-cover rounded-lg border"
+                  />
+                ) : null}
               </div>
 
-              <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg text-gray-900">
+              <label className="inline-flex items-center gap-2 text-sm text-gray-700">
                 <input
                   type="checkbox"
                   name="isActive"
                   checked={formData.isActive}
                   onChange={handleInputChange}
-                  className="w-5 h-5"
                 />
-                <span className="text-gray-900">Set as active</span>
-              </div>
+                Active
+              </label>
 
-              <div className="flex gap-4 mt-8">
+              <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="flex-1 px-6 py-3 border rounded-lg text-gray-900"
+                  className="px-5 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
                 >
                   Cancel
                 </button>
-
                 <button
                   type="submit"
-                  className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg"
+                  disabled={saving}
+                  className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60"
                 >
-                  {editingAd ? "Update Ad" : "Create Ad"}
+                  {saving ? "Saving..." : editingAd ? "Update Popup" : "Create Popup"}
                 </button>
               </div>
             </form>

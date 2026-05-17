@@ -161,6 +161,10 @@ export default function Header() {
   const [mobileMethodsOpen, setMobileMethodsOpen] = useState(false);
   const [mobileCategoryOpen, setMobileCategoryOpen] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [promoMessages, setPromoMessages] = useState([
+    "12% OFF above · Code: NEW12",
+  ]);
+  const [promoIndex, setPromoIndex] = useState(0);
 
   const auth = useAuthModal();
   const cartItems = useCartStore((state) => state.items);
@@ -206,6 +210,42 @@ export default function Header() {
     fetchCategories();
   }, []);
 
+  useEffect(() => {
+    const fetchPopupPromo = async () => {
+      try {
+        const response = await apiGetRequest("/popup-ads");
+        const rows = Array.isArray(response?.data?.popupAds)
+          ? response.data.popupAds
+          : [];
+        const activeRows = rows.filter((item) => item.isActive !== false);
+        const messages = (activeRows.length ? activeRows : rows)
+          .map((item) => item.popupDescription || item.title || "")
+          .map((item) => String(item).trim())
+          .filter(Boolean);
+
+        if (messages.length > 0) {
+          setPromoMessages(messages);
+          setPromoIndex(0);
+        }
+      } catch {
+        // keep fallback promo text
+      }
+    };
+    fetchPopupPromo();
+  }, []);
+
+  useEffect(() => {
+    if (promoMessages.length <= 1) return;
+
+    const timer = setInterval(() => {
+      setPromoIndex((prev) => (prev + 1) % promoMessages.length);
+    }, 3000);
+
+    return () => clearInterval(timer);
+  }, [promoMessages]);
+
+  const promoText = promoMessages[promoIndex] || "12% OFF above · Code: NEW12";
+
   return (
     <header
       className="sticky top-0 z-50 w-full left-0 right-0"
@@ -219,9 +259,7 @@ export default function Header() {
         {/* Mobile: single centered item */}
         <div className="flex md:hidden items-center justify-center h-full px-4 text-[12px] text-[#1a1a1a] font-medium gap-1.5">
           <span className="text-[14px]">🎁</span>
-          <span>
-            12% OFF above · Code: <span className="font-semibold">NEW12</span>
-          </span>
+          <span>{promoText}</span>
         </div>
         {/* Desktop: four items */}
         <div className="hidden md:flex items-center justify-between h-full px-8">
@@ -231,10 +269,7 @@ export default function Header() {
               className="flex items-center gap-2 text-[13px] text-[#1a1a1a] font-medium"
             >
               <span className="text-[15px]">🎁</span>
-              <span>
-                12% OFF above · Code:{" "}
-                <span className="font-semibold">NEW12</span>
-              </span>
+              <span>{promoText}</span>
             </div>
           ))}
         </div>

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState, useEffect, useRef, useCallback } from "react";
+import { apiGetRequest } from "@/apihelper/apiHelper";
 
 /**
  * ImageSlider — Responsive
@@ -47,17 +48,51 @@ export default function ImageSlider({
   showArrows = true,
 }) {
   const visibleCount = useVisibleCount();
+  const [dynamicSlides, setDynamicSlides] = useState(slides);
   const [current, setCurrent] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(true);
   const timerRef = useRef(null);
-  const total = slides.length;
+  const total = dynamicSlides.length;
 
   // Cloned list for infinite loop
   const cloned = [
-    ...slides.slice(-visibleCount),
-    ...slides,
-    ...slides.slice(0, visibleCount),
+    ...dynamicSlides.slice(-visibleCount),
+    ...dynamicSlides,
+    ...dynamicSlides.slice(0, visibleCount),
   ];
+
+  useEffect(() => {
+    const fetchCardBanners = async () => {
+      const response = await apiGetRequest("/banners");
+      const rows = Array.isArray(response?.data?.banners)
+        ? response.data.banners
+        : [];
+      const activeRows = rows.filter((item) => item.isActive !== false);
+      const picked = activeRows.length ? activeRows : rows;
+      const mapped = picked
+        .map((item, index) => ({
+          src: item.cardImage,
+          alt: item.bannerName || `Slide ${index + 1}`,
+        }))
+        .filter((item) => Boolean(item.src))
+        .map((item) => ({
+          ...item,
+          src: /^https?:\/\//i.test(item.src)
+            ? item.src
+            : item.src.startsWith("/")
+              ? item.src
+              : `/${item.src}`,
+        }));
+
+      if (mapped.length > 0) {
+        setDynamicSlides(mapped);
+      } else {
+        setDynamicSlides(slides);
+      }
+    };
+
+    fetchCardBanners();
+  }, [slides]);
 
   // Card width as percentage of track, accounting for gaps
   // e.g. 3 visible: each card = (100% - 2*gap) / 3
@@ -197,7 +232,7 @@ export default function ImageSlider({
       {/* Dot indicators */}
       {showDots && total > visibleCount && (
         <div className="flex items-center gap-2">
-          {slides.map((_, i) => (
+          {dynamicSlides.map((_, i) => (
             <button
               key={i}
               onClick={() => goTo(i)}
