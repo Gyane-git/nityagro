@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
-import pem from "pem";
+import { execFileSync } from "child_process";
 
 const resolvePfxPath = (): string => {
   const customPath = String(process.env.CONNECTIPS_PFX_PATH || "").trim();
@@ -27,26 +27,45 @@ const resolvePfxPath = (): string => {
   return path.join(process.cwd(), "signatures", "CREDITOR.pfx");
 };
 
-const readPkcs12WithPass = (pfx: Buffer, password: string): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    pem.readPkcs12(pfx, { p12Password: password }, (err, cert: any) => {
-      if (err || !cert) {
-        reject(err || new Error("Failed to read PKCS12 certificate"));
-        return;
-      }
-      const key = cert.key || cert.privateKey || cert.clientKey || cert.serviceKey;
-      if (!key) {
-        reject(new Error("Private key not found in PKCS12 certificate"));
-        return;
-      }
-      resolve(String(key));
-    });
-  });
+const readPkcs12WithPass = (pfxPath: string, password: string): string => {
+  let stdout = "";
+  try {
+    stdout = execFileSync(
+      "openssl",
+      [
+        "pkcs12",
+        "-legacy",
+        "-in",
+        pfxPath,
+        "-nocerts",
+        "-nodes",
+        "-passin",
+        `pass:${password}`,
+      ],
+      { encoding: "utf8" },
+    );
+  } catch {
+    // Fallback for environments where -legacy flag is unavailable.
+    stdout = execFileSync(
+      "openssl",
+      ["pkcs12", "-in", pfxPath, "-nocerts", "-nodes", "-passin", `pass:${password}`],
+      { encoding: "utf8" },
+    );
+  }
+  const match = stdout.match(
+    /-----BEGIN(?: RSA)? PRIVATE KEY-----[\s\S]*?-----END(?: RSA)? PRIVATE KEY-----/,
+  );
+  if (!match?.[0]) {
+    throw new Error("Private key not found in PKCS12 certificate");
+  }
+  return match[0];
 };
 
 export async function getConnectIPSPrivateKey(): Promise<string> {
   const pfxPath = resolvePfxPath();
-  const pfx = fs.readFileSync(pfxPath);
+  if (!fs.existsSync(pfxPath)) {
+    throw new Error(`PKCS12 file not found at ${pfxPath}`);
+  }
   const candidates = [
     process.env.CONNECTIPS_PFX_PASSWORD,
     process.env.CONNECTIPS_CREDITOR_PASSWORD,
@@ -59,7 +78,7 @@ export async function getConnectIPSPrivateKey(): Promise<string> {
   let lastError: unknown;
   for (const candidate of candidates) {
     try {
-      return await readPkcs12WithPass(pfx, String(candidate).trim());
+      return readPkcs12WithPass(pfxPath, String(candidate).trim());
     } catch (error) {
       lastError = error;
     }

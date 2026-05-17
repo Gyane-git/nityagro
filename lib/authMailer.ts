@@ -13,7 +13,7 @@ export async function sendAuthCodeMail(input: AuthMailInput) {
   const webhookUrl = process.env.AUTH_EMAIL_WEBHOOK_URL;
   const resendApiKey = process.env.RESEND_API_KEY;
   const fromEmail = process.env.AUTH_FROM_EMAIL;
-  const fromName = process.env.AUTH_FROM_NAME || "NityAgro";
+  const fromName = process.env.AUTH_FROM_NAME || "Nityagro";
 
   if (webhookUrl) {
     const response = await fetch(webhookUrl, {

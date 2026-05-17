@@ -20,7 +20,7 @@ const mailSecure =
   process.env.MAIL_ENCRYPTION === "ssl" || mailPort === 465;
 
 const fromAddress = process.env.MAIL_FROM_ADDRESS || "no-reply@example.com";
-const fromName = process.env.MAIL_FROM_NAME || "NityAgro";
+const fromName = process.env.MAIL_FROM_NAME || "Nityagro";
 
 let transporter: any = null;
 

@@ -30,6 +30,15 @@ export default function CheckoutPaymentPage() {
   const getSelectedAddress = useCheckoutStore((state) => state.getSelectedAddress);
   const removeItems = useCartStore((state) => state.removeItems);
 
+  const getTotalAmount = (sourceItems: CheckoutSourceItem[]) => {
+    const itemTotal = sourceItems.reduce(
+      (sum, item) => sum + Number(item.total ?? item.unitPrice ?? 0),
+      0,
+    );
+    const deliveryCharge = itemTotal > 0 ? 200 : 0;
+    return Number((itemTotal + deliveryCharge).toFixed(2));
+  };
+
   const placeCodOrder = async () => {
     const sourceItems: CheckoutSourceItem[] =
       checkoutItems.length > 0 ? checkoutItems : checkoutItem ? [checkoutItem] : [];
@@ -99,12 +108,107 @@ export default function CheckoutPaymentPage() {
     }
   };
 
-  const handleProceed = () => {
-    if (paymentMethod !== "cod") {
-      toast.error("Only Cash on Delivery is enabled right now");
+  const startConnectIpsPayment = async () => {
+    const sourceItems: CheckoutSourceItem[] =
+      checkoutItems.length > 0 ? checkoutItems : checkoutItem ? [checkoutItem] : [];
+
+    if (sourceItems.length === 0) {
+      toast.error("No checkout items selected");
       return;
     }
-    placeCodOrder();
+
+    if (processing) return;
+
+    try {
+      const selectedAddress = getSelectedAddress?.();
+      if (!selectedAddress) {
+        toast.error("Please select delivery address first");
+        router.push("/profile?tab=address&next=/Checkout/payment");
+        return;
+      }
+
+      setProcessing(true);
+
+      const localUserId =
+        typeof window !== "undefined" ? window.localStorage.getItem("userId") : null;
+      const parsedUserId = Number(localUserId || 1);
+
+      const normalizedItems = sourceItems.map((item) => ({
+        id: Number(item.id),
+        qty: Math.max(1, Number(item.qty ?? 1)),
+        unitPrice: Number(item.unitPrice ?? item.total ?? 0),
+        total: Number(item.total ?? item.unitPrice ?? 0),
+        name: item.name || "",
+      }));
+
+      const amount = getTotalAmount(sourceItems);
+      const initRes = await fetch("/connectips/initiate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount,
+          userId: Number.isFinite(parsedUserId) && parsedUserId > 0 ? parsedUserId : 1,
+          items: normalizedItems,
+          address: selectedAddress,
+          addressId: Number(selectedAddress.id),
+        }),
+      });
+
+      const initData = await initRes.json();
+      if (!initRes.ok || !initData?.success) {
+        toast.error(initData?.message || "Unable to initialize ConnectIPS");
+        return;
+      }
+
+      const referenceId = String(initData.referenceId || "");
+      if (referenceId) {
+        window.sessionStorage.setItem(
+          `connectips_intent_${referenceId}`,
+          JSON.stringify({
+            referenceId,
+            amount,
+            addressId: Number(selectedAddress.id),
+            address: selectedAddress,
+            userId: Number.isFinite(parsedUserId) && parsedUserId > 0 ? parsedUserId : 1,
+            items: normalizedItems,
+          }),
+        );
+        window.sessionStorage.setItem("connectips_last_reference", referenceId);
+      }
+
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = initData.gatewayUrl;
+      form.style.display = "none";
+
+      Object.entries(initData.payload || {}).forEach(([key, value]) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = String(value ?? "");
+        form.appendChild(input);
+      });
+
+      document.body.appendChild(form);
+      form.submit();
+    } catch (err) {
+      console.error("ConnectIPS init error:", err);
+      toast.error("Unable to start ConnectIPS payment");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleProceed = () => {
+    if (paymentMethod === "cod") {
+      placeCodOrder();
+      return;
+    }
+    if (paymentMethod === "connectips") {
+      startConnectIpsPayment();
+      return;
+    }
+    toast.error("Unsupported payment method");
   };
 
   const handleContinue = () => {

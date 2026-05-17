@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { sendMail } from "@/lib/mailer";
+import { buildOrderPlacedEmail } from "@/lib/orderEmail";
+import { generateInvoicePdf } from "@/lib/invoicePdf";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -268,6 +271,94 @@ export async function POST(req: Request) {
     });
 
     const grandTotal = created.reduce((sum, o) => sum + Number(o.totalAmount), 0);
+
+    // Send invoice email without breaking order placement on mail failure.
+    try {
+      const user = await prisma.users.findUnique({
+        where: { userId: BigInt(userId) },
+        select: { name: true, email: true },
+      });
+
+      if (user?.email) {
+        const orderRows = await prisma.orders.findMany({
+          where: { orderId: { in: created.map((o) => o.orderId) } },
+          include: {
+            product: { select: { productName: true, subGroupName: true } },
+          },
+        });
+
+        const lines = orderRows.map((row) => ({
+          orderId: row.orderId.toString(),
+          productName:
+            row.product?.subGroupName || row.product?.productName || "Product",
+          qty: 1,
+          amount: Number(row.totalAmount || 0),
+        }));
+
+        const emailContent = buildOrderPlacedEmail({
+          customerName: user.name || "Customer",
+          transactionId: txCode,
+          items: lines.map((line) => ({
+            name: line.productName,
+            qty: line.qty,
+            amount: line.amount,
+          })),
+          totalAmount: grandTotal,
+          addressText: address
+            ? [
+                address.fullName,
+                address.phone,
+                address.address,
+                address.city,
+                address.region,
+                address.area,
+              ]
+                .filter(Boolean)
+                .join(", ")
+            : "",
+        });
+
+        const invoicePdf = generateInvoicePdf({
+          customerName: user.name || "Customer",
+          transactionId: txCode,
+          lines: lines.map((line) => ({
+            orderId: line.orderId,
+            productName: line.productName,
+            qty: line.qty,
+            amount: line.amount,
+          })),
+          totalAmount: grandTotal,
+          addressText: address
+            ? [
+                address.fullName,
+                address.phone,
+                address.address,
+                address.city,
+                address.region,
+                address.area,
+              ]
+                .filter(Boolean)
+                .join(", ")
+            : "",
+        });
+
+        await sendMail({
+          to: user.email,
+          subject: emailContent.subject,
+          html: emailContent.html,
+          text: emailContent.text,
+          attachments: [
+            {
+              filename: `invoice-${txCode}.pdf`,
+              content: invoicePdf,
+              contentType: "application/pdf",
+            },
+          ],
+        });
+      }
+    } catch (mailError) {
+      console.error("Order email send failed:", mailError);
+    }
 
     return NextResponse.json(
       {

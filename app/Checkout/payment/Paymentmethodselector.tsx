@@ -18,8 +18,26 @@ const CashIcon = () => (
   </svg>
 );
 
+const ConnectIpsIcon = () => (
+  <svg
+    width="22"
+    height="22"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M3 7h18" />
+    <rect x="2" y="5" width="20" height="14" rx="2" />
+    <path d="M7 12h10M7 15h5" />
+  </svg>
+);
+
 const METHODS = [
   { id: "cod", label: "Cash on Delivery", Icon: CashIcon, isESewa: false },
+  { id: "connectips", label: "ConnectIPS", Icon: ConnectIpsIcon, isESewa: false },
 ];
 
 export default function PaymentMethodSelector({

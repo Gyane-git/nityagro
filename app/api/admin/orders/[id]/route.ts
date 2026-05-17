@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { sendMail } from "@/lib/mailer";
+import { buildOrderStatusEmail } from "@/lib/orderEmail";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -326,8 +328,32 @@ export async function PATCH(
       );
     }
 
+    const mapped = mapOrder(updated);
+
+    // Email notification on status/payment update (safe fail).
+    try {
+      if (mapped.user?.email && (orderStatus || paymentStatus)) {
+        const emailContent = buildOrderStatusEmail({
+          customerName: mapped.user.fullName || "Customer",
+          orderId: mapped.id,
+          productName: mapped.items?.[0]?.product?.name || "Product",
+          orderStatus: mapped.orderStatus || "processing",
+          paymentStatus: mapped.paymentStatus || "unpaid",
+          amount: Number(mapped.totalAmount || 0),
+        });
+        await sendMail({
+          to: mapped.user.email,
+          subject: emailContent.subject,
+          html: emailContent.html,
+          text: emailContent.text,
+        });
+      }
+    } catch (mailError) {
+      console.error("Order status email send failed:", mailError);
+    }
+
     return NextResponse.json(
-      { success: true, data: mapOrder(updated) },
+      { success: true, data: mapped },
       { status: 200, headers: corsHeaders },
     );
   } catch (error) {

@@ -20,7 +20,7 @@ export default function OrderSummary({ onProceed, processing = false }: OrderSum
     0,
   );
   const discount = 0;
-  const deliveryCharge = itemTotal > 0 ? 200 : 0;
+  const deliveryCharge = itemTotal > 0 ? 1 : 0;
   const totalAmount = itemTotal - discount + deliveryCharge;
 
   const items = [
