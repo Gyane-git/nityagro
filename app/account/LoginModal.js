@@ -144,7 +144,7 @@ export default function LoginModal({ isOpen, onClose, onSignup, onForgot }) {
                 />
                 <button
                   type="button"
-                  className="flex-shrink-0 text-sm font-semibold px-4 rounded-lg border-2 transition-colors hover:bg-gray-50 whitespace-nowrap"
+                  className="shrink-0 text-sm font-semibold px-4 rounded-lg border-2 transition-colors hover:bg-gray-50 whitespace-nowrap"
                   style={{ borderColor: "#266A3F", color: "#266A3F", height: "48px" }}
                 >
                   Send OTP
