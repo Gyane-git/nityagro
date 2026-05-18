@@ -146,7 +146,7 @@ const NAV_LINKS = [
 /* ── Badge ── */
 const Badge = ({ count }) => (
   <span
-    className="absolute -top-1.5 -right-1.5 min-w-[17px] h-[17px] px-0.5
+    className="absolute -top-1.5 -right-1.5 min-w-4.25 h-4.25 px-0.5
                bg-[#00462C] text-white text-[10px] font-bold rounded-full
                flex items-center justify-center leading-none"
   >
@@ -280,7 +280,7 @@ export default function Header() {
         className="w-full bg-white border-b border-[#E6ECF0]"
         style={{ width: "100%", boxSizing: "border-box" }}
       >
-        <div className="w-full max-w-[1440px] mx-auto h-[71px] px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+        <div className="w-full max-w-360 mx-auto h-17.75 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
           {/* ── Left: Logo + Browse ── */}
           <div className="flex items-center gap-3 lg:gap-6 shrink-0">
             <Link href="/" className="flex items-center">
@@ -289,7 +289,7 @@ export default function Header() {
                 alt="Nityagro"
                 width={110}
                 height={40}
-                className="object-contain w-[90px] sm:w-[110px]"
+                className="object-contain w-22.5 sm:w-27.5"
               />
             </Link>
 
@@ -314,7 +314,9 @@ export default function Header() {
                   {categories.map((item) => (
                     <Link
                       key={item.categoryId || item.categoryName}
-                      href={`/products?category=${encodeURIComponent(item.categoryName)}`}
+                      href={`/products?category=${encodeURIComponent(
+                        item.categoryName,
+                      )}`}
                       onClick={() => setCategoryOpen(false)}
                       className="block px-5 py-3 text-[13px] text-[#00462C] hover:bg-[#F5F8F6] transition"
                     >
@@ -423,19 +425,19 @@ export default function Header() {
       {/* ── Mobile drawer ── */}
       <div
         className={`
-          fixed top-0 left-0 h-full w-[300px] max-w-[85vw] bg-white z-50
+          fixed top-0 left-0 h-full w-75 max-w-[85vw] bg-white z-50
           shadow-2xl flex flex-col transition-transform duration-300 ease-in-out lg:hidden
           ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}
         `}
       >
         {/* Drawer header */}
-        <div className="flex items-center justify-between px-5 h-[71px] border-b border-[#E6ECF0]">
+        <div className="flex items-center justify-between px-5 h-17.75 border-b border-[#E6ECF0]">
           <Link href="/" onClick={() => setMobileMenuOpen(false)}>
             <Image
               src="/logo.png"
               alt="Nityagro"
               width={90}
-              height={33}
+              height={33} 
               className="object-contain"
             />
           </Link>
@@ -473,7 +475,9 @@ export default function Header() {
                 {categories.map((item) => (
                   <Link
                     key={item.categoryId || item.categoryName}
-                    href={`/products?category=${encodeURIComponent(item.categoryName)}`}
+                    href={`/products?category=${encodeURIComponent(
+                      item.categoryName,
+                    )}`}
                     onClick={() => setMobileMenuOpen(false)}
                     className="py-2.5 text-[14px] text-[#00462C] hover:font-medium transition"
                   >
