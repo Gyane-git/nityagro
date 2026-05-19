@@ -246,7 +246,7 @@ export default function ProductSection() {
               className="font-bold text-xl sm:text-2xl lg:text-[32px] leading-9.5 tracking-[0.6px] text-[#235A49]"
               style={{ fontFamily: "Roboto Slab" }}
             >
-              Welcome To Nityagro!
+              Welcome To Nityagros
             </h1>
             <p
               className="font-normal text-sm sm:text-lg lg:text-[32px] leading-tight tracking-[0.6px] text-[#235A49]"
