@@ -48,7 +48,7 @@ export default function WhyChooseNityagro() {
   return (
     <section className="bg-white py-1 px-4 sm:px-8 lg:px-16">
       {/* Heading */}
-      <div className="w-full max-w-[1380px] min-h-auto">
+      <div className="w-full max-w-1380 min-h-auto">
         <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }

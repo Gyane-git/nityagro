@@ -232,7 +232,7 @@ export default function ProductSection() {
   const visibleProducts = filtered.slice(0, 5);
 
   return (
-    <section className="w-full bg-white justify-center">
+    <section className="w-full bg-white flex justify-center">
       <div className="w-full max-w-[1380px] min-h-[507px]">
         <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
@@ -246,7 +246,7 @@ export default function ProductSection() {
               className="font-bold text-xl sm:text-2xl lg:text-[32px] leading-9.5 tracking-[0.6px] text-[#235A49]"
               style={{ fontFamily: "Roboto Slab" }}
             >
-              Welcome To Nityagros
+              Welcome To Nityagro!
             </h1>
             <p
               className="font-normal text-sm sm:text-lg lg:text-[32px] leading-tight tracking-[0.6px] text-[#235A49]"

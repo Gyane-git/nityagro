@@ -224,7 +224,7 @@ export default function ComboPackSection() {
 
   return (
     <section className="w-full bg-white">
-      <div className="w-full max-w-[1380px] min-h-[507px]">
+      <div className="w-full ">
         <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
