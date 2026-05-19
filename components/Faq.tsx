@@ -103,7 +103,7 @@ export default function FAQ() {
   const toggle = (id: number) => setOpenId((prev) => (prev === id ? null : id));
 
   return (
-    <section className="bg-white py-16 px-4 sm:px-8 lg:px-16">
+    <section className="bg-white py-6 px-4 sm:px-8 lg:px-16">
       {/* Heading */}
       <h1
         className="text-center font-bold text-[32px] leading-[38.4px] tracking-[0.6px] text-[#235A49] mb-10"

@@ -248,7 +248,7 @@ export default function Header() {
 
   return (
     <header
-      className="sticky top-0 z-50 w-full left-0 right-0"
+      className="sticky top-0 z-50 w-full h-28 left-0 right-0"
       style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
     >
       {/* ── Promo bar ── */}
@@ -277,7 +277,7 @@ export default function Header() {
 
       {/* ── Main navbar ── */}
       <nav
-        className="w-full bg-white border-b border-[#E6ECF0]"
+        className="w-full bg-white"
         style={{ width: "100%", boxSizing: "border-box" }}
       >
         <div className="w-full max-w-360 mx-auto h-17.75 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
@@ -437,7 +437,7 @@ export default function Header() {
               src="/logo.png"
               alt="Nityagro"
               width={90}
-              height={33} 
+              height={33}
               className="object-contain"
             />
           </Link>

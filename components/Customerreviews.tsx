@@ -41,7 +41,7 @@ const reviews: Review[] = [
     body: "Amazing products sourced directly from the farms. You can taste the difference compared to store-bought items.",
     name: "Priya M.",
     timeAgo: "5 days ago",
-    image: "/c3.jpg",
+    image: "/c1.jpg",
   },
   {
     id: 4,
@@ -50,7 +50,7 @@ const reviews: Review[] = [
     body: "The spices are so fresh and fragrant. I've been using Nityagro for months now.",
     name: "Ramesh K.",
     timeAgo: "1 week ago",
-    image: "/c4.jpg",
+    image: "/c2.jpg",
   },
 ];
 
@@ -77,9 +77,9 @@ function StarRating({ rating }: { rating: number }) {
 // ── Review Card ───────────────────────────────────────────────────────
 function ReviewCard({ review }: { review: Review }) {
   return (
-    <div className="flex flex-col sm:flex-row bg-white rounded-2xl border shadow-sm overflow-hidden w-full">
+    <div className="flex flex-col w-[528px] h-[306px] sm:flex-row bg-white rounded-lg border shadow-sm overflow-hidden w-full">
       {/* Image */}
-      <div className="relative w-full sm:w-44 h-40 sm:h-auto">
+      <div className="relative w-[180px] h-[256px] sm:w-44 sm:h-auto overflow-hidden rounded-md m-2">
         <Image
           src={review.image}
           alt={review.name}
@@ -89,7 +89,7 @@ function ReviewCard({ review }: { review: Review }) {
       </div>
 
       {/* Content */}
-      <div className="flex flex-col justify-between p-4 sm:p-6 gap-3 flex-1">
+      <div className="flex flex-col justify-between w-[274px] h-[256px] p-4 sm:p-6 gap-3 flex-1">
         <div className="space-y-2">
           <h3 className="text-base font-bold text-gray-900">{review.title}</h3>
 
@@ -136,9 +136,9 @@ export default function CustomerReviews() {
   }, [resetAutoSlide]);
 
   return (
-    <section className="bg-white py-12 sm:py-16 px-4 sm:px-8 lg:px-16">
+    <section className="bg-white py-2 sm:py-8 px-4 sm:px-8 lg:px-16">
       {/* Heading */}
-      <h1 className="text-center text-2xl sm:text-3xl font-bold text-[#235A49] mb-10">
+      <h1 className="text-center text-lg sm:text-xl lg:text-2xl font-bold text-[#235A49] mb-10 font-roboto-slab">
         What Our Customers Say
       </h1>
 

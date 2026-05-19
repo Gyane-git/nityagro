@@ -39,7 +39,9 @@ const StarIcon = ({ filled }) => (
 );
 
 // ─── Data ──────────────────────────────────────────────────────────────────
-const DEFAULT_CATEGORIES = [{ id: "all", label: "All", image: "/categories/all.png" }];
+const DEFAULT_CATEGORIES = [
+  { id: "all", label: "All", image: "/categories/all.png" },
+];
 
 // ─── Star Rating ───────────────────────────────────────────────────────────
 function StarRating({ rating, reviews }) {
@@ -225,127 +227,130 @@ export default function ProductSection() {
     [categories, activeCategory],
   );
 
-  const newLocal = "mx-auto w-full max-w-319.5";
+  // const newLocal = "mx-auto w-full max-w-319.5";
+  const newLocalOld = "mx-auto w-full max-w-340 px-4 sm:px-6 lg:px-8";
+  const visibleProducts = filtered.slice(0, 5);
+
   return (
-    <section className="w-full bg-white">
-      <style>{`
+    <section className="w-full bg-white justify-center">
+      <div className="w-full max-w-[1380px] min-h-[507px]">
+        <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
-      <div className={newLocal}>
-        {/* ── Welcome Header ── */}
-        <div className="flex flex-col items-center text-center pt-8 sm:pt-10 lg:pt-11.25 pb-2 gap-1 px-4">
-          <h1
-            className="font-bold text-xl sm:text-2xl lg:text-[32px] leading-tight tracking-[0.6px] text-[#235A49]"
-            style={{ fontFamily: "Roboto Slab" }}
-          >
-            Welcome To Nityagro!
-          </h1>
-          <p
-            className="font-normal text-sm sm:text-lg lg:text-[32px] leading-tight tracking-[0.6px] text-[#235A49]"
-            style={{ fontFamily: "Roboto Slab" }}
-          >
-            Pure Goodness, Delivered Closer to You
-          </p>
-        </div>
+        <div className={newLocalOld}>
+          {/* ── Welcome Header ── */}
+          <div className="flex flex-col items-center text-center pt-8 sm:pt-10 lg:pt-11.25 pb-2 gap-1 px-4">
+            <h1
+              className="font-bold text-xl sm:text-2xl lg:text-[32px] leading-9.5 tracking-[0.6px] text-[#235A49]"
+              style={{ fontFamily: "Roboto Slab" }}
+            >
+              Welcome To Nityagro!
+            </h1>
+            <p
+              className="font-normal text-sm sm:text-lg lg:text-[32px] leading-tight tracking-[0.6px] text-[#235A49]"
+              style={{ fontFamily: "Roboto Slab" }}
+            >
+              Pure Goodness, Delivered Closer to You
+            </p>
+          </div>
 
-        {/* ── Category Tabs ── */}
-        <div className="flex items-end overflow-x-auto scrollbar-hide gap-1 sm:gap-3 sm:justify-center pb-3 mt-4 px-4">
-          {categories.map(({ id, label, image }) => {
-            const isActive = activeCategory === id;
-            return (
-              <button
-                key={id}
-                onClick={() => setActiveCategory(id)}
-                className="flex flex-col items-center relative transition-all shrink-0"
-                style={{ minWidth: "52px" }}
-              >
-                <div className="flex flex-col items-center justify-end cursor-pointer pb-2">
-                  <Image
-                    src={image}
-                    alt={label}
-                    width={36}
-                    height={36}
-                    className="sm:w-12 sm:h-12"
-                  />
-                  <span
-                    className="text-xs font-medium mt-1"
-                    style={{
-                      color: isActive ? "#00462C" : "#6B7280",
-                      lineHeight: "16px",
-                      letterSpacing: "0.2px",
-                      transition: "color 0.2s",
-                    }}
-                  >
-                    {label}
-                  </span>
-                </div>
-                {/* Active underline indicator */}
-                <div
-                  className="absolute bottom-0 left-1/2 -translate-x-1/2 transition-all duration-200"
-                  style={{
-                    height: "2.5px",
-                    width: isActive ? "100%" : "0%",
-                    background: "#00462C",
-                    borderRadius: "2px",
-                  }}
-                />
-              </button>
-            );
-          })}
-        </div>
-
-        {/* ── Divider ── */}
-        <div className="border-t border-gray-200 mx-4" />
-
-        {/* ── Title Row ── */}
-        <div className="flex items-center justify-between mt-4 mb-3 px-4">
-          <h2 className="font-bold text-lg sm:text-xl lg:text-[22px] text-[#00462C]">
-            {activeCategory === "all"
-              ? "All Products"
-              : activeCategoryLabel}
-          </h2>
-          <Link
-            href="/products"
-            className="font-semibold text-sm hover:underline"
-            style={{ color: "#00462C" }}
-          >
-            View All
-          </Link>
-        </div>
-
-        {filtered.length > 0 ? (
-          <>
-            {/* Mobile & Tablet → horizontal scroll slider */}
-            <div className="lg:hidden overflow-x-auto scrollbar pb-6 px-4">
-              <div className="flex gap-3" style={{ width: "max-content" }}>
-                {filtered.map((product) => (
-                  <div
-                    key={product.id}
-                    className="shrink-0"
-                    style={{ width: "160px" }}
-                  >
-                    <ProductCard product={product} />
+          {/* ── Category Tabs ── */}
+          <div className="w-full max-w-345 h-21.5 flex items-center overflow-x-auto scrollbar-hide gap-1 sm:gap-3 justify-start sm:justify-center pb-3 mt-4 px-4">
+            {categories.map(({ id, label, image }) => {
+              const isActive = activeCategory === id;
+              return (
+                <button
+                  key={id}
+                  onClick={() => setActiveCategory(id)}
+                  className="flex flex-col items-center relative transition-all shrink-0"
+                  style={{ minWidth: "52px" }}
+                >
+                  <div className="flex flex-col items-center justify-center cursor-pointer pb-2">
+                    <Image
+                      src={image}
+                      alt={label}
+                      width={50}
+                      height={51}
+                      className="sm:w-8 sm:h-10 w-6 h-8 "
+                    />
+                    <span
+                      className="text-xs font-medium mt-1 font-figtree"
+                      style={{
+                        color: isActive ? "#495057" : "#6B7280",
+                        lineHeight: "16px",
+                        letterSpacing: "0.2px",
+                        transition: "color 0.2s",
+                      }}
+                    >
+                      {label}
+                    </span>
                   </div>
-                ))}
-              </div>
-            </div>
+                  {/* Active underline indicator */}
+                  <div
+                    className="absolute bottom-0 left-1/2 -translate-x-1/2 transition-all duration-200"
+                    style={{
+                      height: "2.5px",
+                      width: isActive ? "100%" : "0%",
+                      background: "#00462C",
+                      borderRadius: "2px",
+                    }}
+                  />
+                </button>
+              );
+            })}
+          </div>
 
-            {/* Large screen -> single row */}
-            <div className="hidden lg:flex gap-4 px-4 pb-8 overflow-x-auto scrollbar-hide">
-              {filtered.map((product) => (
-                <div key={product.id} className="shrink-0" style={{ width: "220px" }}>
-                  <ProductCard product={product} />
-                </div>
-              ))}
+          {/* ── Title Row ── */}
+          <div className="w-full max-w-340 h-102 flex flex-col">
+            <div className="flex items-center justify-between mt-4 mb-3 px-4 ">
+              <h2 className="font-bold text-lg sm:text-xl lg:text-[22px] text-[#00462C]">
+                {activeCategory === "all"
+                  ? "All Products"
+                  : activeCategoryLabel}
+              </h2>
+              <Link
+                href="/products"
+                className="font-semibold text-sm hover:underline"
+                style={{ color: "#00462C" }}
+              >
+                View All
+              </Link>
             </div>
-          </>
-        ) : (
-          <p className="text-gray-400 text-sm py-10 w-full text-center px-4">
-            No products in this category yet.
-          </p>
-        )}
+            {filtered.length > 0 ? (
+              <>
+                {/* Mobile & Tablet → horizontal scroll slider */}
+                <div className="lg:hidden overflow-x-auto scrollbar pb-6 px-4">
+                  <div className="flex gap-3" style={{ width: "max-content" }}>
+                    {visibleProducts.map((product) => (
+                      <div
+                        key={product.id}
+                        className="shrink-0"
+                        style={{ width: "160px" }}
+                      >
+                        <ProductCard product={product} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Large screen -> single row */}
+                <div className="hidden lg:grid lg:grid-cols-5 gap-4 px-4 pb-8">
+                  {visibleProducts.map((product) => (
+                    <div key={product.id} className="w-full h-90">
+                      <ProductCard product={product} />
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="text-gray-400 text-sm py-10 w-full text-center px-4">
+                No products in this category yet.
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     </section>
   );

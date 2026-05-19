@@ -51,8 +51,8 @@ export default function HeroSection({
         <Image
           src={resolvedImage}
           alt={imageAlt}
-          width={1920}
-          height={1080}
+          width={1440}
+          height={731}
           sizes="100vw"
           className="w-full h-auto"
           style={{ objectPosition }}

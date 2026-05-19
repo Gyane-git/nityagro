@@ -38,8 +38,8 @@ export default function ImageSlider({ slides = DEFAULT_SLIDES, gap = 16 }) {
             src: /^https?:\/\//i.test(item.src)
               ? item.src
               : item.src.startsWith("/")
-                ? item.src
-                : `/${item.src}`,
+              ? item.src
+              : `/${item.src}`,
           }));
 
         if (mapped.length > 0) {
@@ -55,35 +55,28 @@ export default function ImageSlider({ slides = DEFAULT_SLIDES, gap = 16 }) {
     fetchCardBanners();
   }, [slides]);
 
-  const fixedSlides = (dynamicSlides.length ? dynamicSlides : slides).slice(0, 3);
+  const fixedSlides = (dynamicSlides.length ? dynamicSlides : slides).slice(
+    0,
+    3,
+  );
 
   return (
-    <div className="flex flex-col items-center gap-5 w-full px-2 sm:px-4">
-      <div
-        className="relative w-full overflow-hidden mt-10"
-        style={{ height: CARD_HEIGHT }}
-      >
-        <div className="flex h-full" style={{ gap: `${gap}px` }}>
+    <div className="flex flex-col items-center gap-5 w-full px-2 sm:px-4 mt-6 sm:mt-8 md:mt-10 lg:mt-12">
+      <div className="relative w-full overflow-hidden mt-10">
+        <div className="flex h-full gap-4">
           {fixedSlides.map((slide, i) => (
             <div
               key={`${slide.src}-${i}`}
-              className="flex-1 overflow-hidden"
-              style={{
-                height: CARD_HEIGHT,
-                borderRadius: CARD_RADIUS,
-                minWidth: 0,
-              }}
+              className="flex-1 relative overflow-hidden rounded-md lg:rounded-md aspect-[442/213]"
             >
-              <div className="relative w-full h-full">
-                <Image
-                  src={slide.src}
-                  alt={slide.alt || ""}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, 33vw"
-                  priority={i < 3}
-                />
-              </div>
+              <Image
+                src={slide.src}
+                alt={slide.alt || ""}
+                fill
+                className="object-contain"
+                sizes="(max-width: 768px) 100vw, 33vw"
+                priority={i < 3}
+              />
             </div>
           ))}
         </div>

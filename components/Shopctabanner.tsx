@@ -4,7 +4,7 @@ import Image from "next/image";
 
 export default function ShopCTABanner() {
   return (
-    <section className="w-full max-w-335 mx-auto px-4 sm:px-6 pt-12 sm:pt-16 lg:pt-20">
+    <section className="w-full max-w-[1360] mx-auto px-4 sm:px-6 pt-10 sm:pt-12 lg:pt-10">
       <div
         className="relative grid grid-cols-1 lg:grid-cols-2 items-center"
         style={{
