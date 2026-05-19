@@ -309,22 +309,28 @@ export default function Header() {
                   <ChevronDownIcon />
                 </button>
 
-                {categoryOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-52 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
-                    {categories.map((item) => (
-                      <Link
-                        key={item.categoryId || item.categoryName}
-                        href={`/products?category=${encodeURIComponent(
-                          item.categoryName,
-                        )}`}
-                        onClick={() => setCategoryOpen(false)}
-                        className="block px-5 py-3 text-[13px] text-[#00462C] hover:bg-[#F5F8F6] transition"
-                      >
-                        {item.categoryName}
-                      </Link>
-                    ))}
-                  </div>
-                )}
+                <div
+                  className={`absolute top-full left-0 mt-1 w-45 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50
+                   transform origin-top transition-all duration-200 ease-out
+                   ${
+                     categoryOpen
+                       ? "opacity-100 scale-100 pointer-events-auto"
+                       : "opacity-0 scale-95 pointer-events-none"
+                   }`}
+                >
+                  {categories.map((item) => (
+                    <Link
+                      key={item.categoryId || item.categoryName}
+                      href={`/products?category=${encodeURIComponent(
+                        item.categoryName,
+                      )}`}
+                      onClick={() => setCategoryOpen(false)}
+                      className="block px-5 py-3 text-[13px] text-[#00462C] hover:bg-[#F5F8F6] transition "
+                    >
+                      {item.categoryName}
+                    </Link>
+                  ))}
+                </div>
               </div>
             </div>
 
