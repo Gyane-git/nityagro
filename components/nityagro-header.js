@@ -13,8 +13,8 @@ import { apiGetRequest } from "@/apihelper/apiHelper";
 const SearchIcon = () => (
   <Link href="/search">
     <svg
-      width="20"
-      height="20"
+      width="14"
+      height="14"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -28,8 +28,8 @@ const SearchIcon = () => (
 
 const WishlistIcon = () => (
   <svg
-    width="20"
-    height="20"
+    width="14"
+    height="14"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
@@ -41,8 +41,8 @@ const WishlistIcon = () => (
 
 const CartIcon = () => (
   <svg
-    width="20"
-    height="20"
+    width="14"
+    height="14"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
@@ -56,12 +56,12 @@ const CartIcon = () => (
 
 const UserIcon = () => (
   <svg
-    width="20"
-    height="20"
+    width="14"
+    height="14"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="2.5"
   >
     <path d="M20 21v-2a4 4 0 0 0-3-3.87" />
     <path d="M4 21v-2a4 4 0 0 1 3-3.87" />
@@ -69,19 +69,18 @@ const UserIcon = () => (
   </svg>
 );
 
-const GridIcon = () => (
+const GridIcon = ({ className = "" }) => (
   <svg
-    width="18"
-    height="18"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
     strokeWidth="2"
+    className={className}
   >
-    <rect x="3" y="3" width="7" height="7" />
-    <rect x="14" y="3" width="7" height="7" />
-    <rect x="14" y="14" width="7" height="7" />
-    <rect x="3" y="14" width="7" height="7" />
+    <rect x="3" y="3" width="7" height="7" rx="3" />
+    <rect x="13" y="3" width="7" height="7" rx="3" />
+    <rect x="13" y="13" width="7" height="7" rx="3" />
+    <rect x="3" y="13" width="7" height="7" rx="3" />
   </svg>
 );
 
@@ -146,8 +145,8 @@ const NAV_LINKS = [
 /* ── Badge ── */
 const Badge = ({ count }) => (
   <span
-    className="absolute -top-1.5 -right-1.5 min-w-4.25 h-4.25 px-0.5
-               bg-[#00462C] text-white text-[10px] font-bold rounded-full
+    className="absolute -top-2 -right-2 min-w-3.5 h-3.5 px-0.5
+               bg-[#00462C] text-white text-[8px] font-bold rounded-full
                flex items-center justify-center leading-none"
   >
     {count}
@@ -248,7 +247,7 @@ export default function Header() {
 
   return (
     <header
-      className="sticky top-0 z-50 w-full h-28 left-0 right-0"
+      className="sticky top-0 z-50 w-full h-24 left-0 right-0"
       style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
     >
       {/* ── Promo bar ── */}
@@ -280,136 +279,147 @@ export default function Header() {
         className="w-full bg-white"
         style={{ width: "100%", boxSizing: "border-box" }}
       >
-        <div className="w-full max-w-360 mx-auto h-17.75 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+        <div className="w-full max-w-360 mx-auto h-14 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
           {/* ── Left: Logo + Browse ── */}
-          <div className="flex items-center gap-3 lg:gap-6 shrink-0">
-            <Link href="/" className="flex items-center">
-              <Image
-                src="/logo.png"
-                alt="Nityagro"
-                width={110}
-                height={40}
-                className="object-contain w-22.5 sm:w-27.5"
-              />
-            </Link>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-3 lg:gap-6 shrink-0 ">
+              <Link href="/" className="flex items-center">
+                <Image
+                  src="/logo.png"
+                  alt="Nityagro"
+                  width={110}
+                  height={40}
+                  className="object-contain w-22.5 sm:w-27.5"
+                />
+              </Link>
 
-            {/* Browse All Categories — hidden on mobile */}
-            <div className="relative hidden sm:block" ref={categoryRef}>
-              <button
-                onClick={() => setCategoryOpen(!categoryOpen)}
-                className="h-10 px-2.5 lg:px-3 flex items-center gap-1.5 lg:gap-2 rounded-md hover:bg-[#F5F8F6] transition text-[#1a1a1a]"
-              >
-                <GridIcon />
-                <span className="hidden lg:inline text-[14px] font-medium whitespace-nowrap">
-                  Browse All Categories
-                </span>
-                <span className="hidden md:inline lg:hidden text-[13px] font-medium whitespace-nowrap">
-                  Categories
-                </span>
-                <ChevronDownIcon />
-              </button>
+              {/* Browse All Categories — hidden on mobile */}
+              <div className="relative hidden sm:block" ref={categoryRef}>
+                <button
+                  onClick={() => setCategoryOpen(!categoryOpen)}
+                  className="h-10 px-2.5 lg:px-3 flex items-center gap-1.5 lg:gap-2 rounded-md hover:bg-[#F5F8F6] transition text-[#1a1a1a]"
+                >
+                  <GridIcon className="w-4 h-4 text-[#266A3F] font-semibold " />
+                  <span className="hidden lg:inline text-[10px] text-[#266A3F] font-semibold whitespace-nowrap">
+                    Browse All Categories
+                  </span>
+                  <span className="hidden md:inline lg:hidden text-[12px] font-semibold whitespace-nowrap">
+                    Categories
+                  </span>
+                  <ChevronDownIcon />
+                </button>
 
-              {categoryOpen && (
-                <div className="absolute top-full left-0 mt-1 w-52 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
-                  {categories.map((item) => (
-                    <Link
-                      key={item.categoryId || item.categoryName}
-                      href={`/products?category=${encodeURIComponent(
-                        item.categoryName,
-                      )}`}
-                      onClick={() => setCategoryOpen(false)}
-                      className="block px-5 py-3 text-[13px] text-[#00462C] hover:bg-[#F5F8F6] transition"
-                    >
-                      {item.categoryName}
-                    </Link>
-                  ))}
-                </div>
-              )}
+                {categoryOpen && (
+                  <div className="absolute top-full left-0 mt-1 w-52 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
+                    {categories.map((item) => (
+                      <Link
+                        key={item.categoryId || item.categoryName}
+                        href={`/products?category=${encodeURIComponent(
+                          item.categoryName,
+                        )}`}
+                        onClick={() => setCategoryOpen(false)}
+                        className="block px-5 py-3 text-[13px] text-[#00462C] hover:bg-[#F5F8F6] transition"
+                      >
+                        {item.categoryName}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* ── Center: Nav links (desktop only) ── */}
-          <div className="hidden lg:flex items-center gap-7 xl:gap-9">
-            {NAV_LINKS.map((link) => (
-              <div
-                key={link.label}
-                className="relative"
-                ref={link.hasDropdown ? methodsRef : undefined}
-              >
-                {link.hasDropdown ? (
-                  <>
-                    <button
-                      onClick={() => setMethodsOpen(!methodsOpen)}
-                      className="flex items-center gap-1 text-[15px] font-medium text-[#1a1a1a] hover:text-[#00462C] transition-colors"
-                    >
-                      {link.label}
-                      <ChevronDownIcon />
-                    </button>
-                    {methodsOpen && (
-                      <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
+            {/* ── Center: Nav links (desktop only) ── */}
+            <div className="hidden lg:flex items-center gap-7 xl:gap-9">
+              {NAV_LINKS.map((link) => (
+                <div
+                  key={link.label}
+                  className="relative flex items-center"
+                  ref={link.hasDropdown ? methodsRef : undefined}
+                >
+                  {link.hasDropdown ? (
+                    <>
+                      <button
+                        onClick={() => setMethodsOpen(!methodsOpen)}
+                        className="flex items-center gap-1 text-[12px] font-semibold text-[#2D333A] hover:text-[#00462C] transition-colors"
+                      >
+                        {link.label}
+                        <ChevronDownIcon />
+                      </button>
+
+                      <div
+                        className={`absolute top-full left-0 mt-2 w-30 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50
+                         origin-top transform-gpu transition-all duration-200 ease-out
+                         ${
+                           methodsOpen
+                             ? "opacity-100 scale-y-100 translate-y-0 pointer-events-auto"
+                             : "opacity-0 scale-y-95 -translate-y-2 pointer-events-none"
+                         }`}
+                      >
                         {link.childLinks.map((child) => (
                           <Link
                             key={child.label}
                             href={`/methods/${child.slug}`}
                             onClick={() => setMethodsOpen(false)}
-                            className="block px-5 py-3 text-[13px] text-[#00462C] hover:bg-[#F5F8F6] transition"
+                            className="block px-5 py-3 text-[11px] text-[#00462C] hover:bg-[#F5F8F6] transition border-b border-gray-300 last:border-b-0"
                           >
                             {child.label}
                           </Link>
                         ))}
                       </div>
-                    )}
-                  </>
-                ) : (
-                  <a
-                    href={link.href}
-                    className="text-[15px] font-medium text-[#1a1a1a] hover:text-[#00462C] transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                )}
-              </div>
-            ))}
+                    </>
+                  ) : (
+                    <a
+                      href={link.href}
+                      className="text-[12px] font-semibold text-[#2D333A] hover:text-[#00462C] transition-colors"
+                    >
+                      {link.label}
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* ── Right: Icons ── */}
-          <div className="flex items-center gap-4 sm:gap-5 text-[#1a1a1a] shrink-0">
-            <button className="hover:text-[#00462C] transition-colors">
-              <SearchIcon />
-            </button>
+          <div>
+            <div className="flex items-center gap-4 sm:gap-5 text-[#1a1a1a] shrink-0">
+              <button className="hover:text-[#00462C] transition-colors">
+                <SearchIcon className="text-[#266A3F]" />
+              </button>
 
-            <Link
-              href="/wishlist"
-              className="relative hover:text-[#00462C] transition-colors"
-            >
-              <WishlistIcon />
-              <Badge count={wishlistCount} />
-            </Link>
+              <Link
+                href="/wishlist"
+                className="relative hover:text-[#00462C] transition-colors"
+              >
+                <WishlistIcon />
+                <Badge count={wishlistCount} />
+              </Link>
 
-            <Link
-              href="/cart"
-              className="relative hover:text-[#00462C] transition-colors"
-            >
-              <CartIcon />
-              <Badge count={cartCount} />
-            </Link>
+              <Link
+                href="/cart"
+                className="relative hover:text-[#00462C] transition-colors"
+              >
+                <CartIcon className="text-[#266A3F]" />
+                <Badge count={cartCount} />
+              </Link>
 
-            <button
-              className="flex items-center gap-1.5 text-[15px] font-medium hover:text-[#00462C] transition-colors"
-              onClick={auth.openLogin}
-            >
-              <UserIcon />
-              <span className="hidden sm:inline">Log in</span>
-            </button>
+              <button
+                className="flex items-center gap-1.5 text-[15px] font-medium hover:text-[#00462C] transition-colors"
+                onClick={auth.openLogin}
+              >
+                <UserIcon />
+                <span className="hidden sm:inline text-sm">Log in</span>
+              </button>
 
-            {/* Hamburger — mobile/tablet only */}
-            <button
-              className="lg:hidden hover:text-[#00462C] transition-colors"
-              onClick={() => setMobileMenuOpen(true)}
-              aria-label="Open menu"
-            >
-              <MenuIcon />
-            </button>
+              {/* Hamburger — mobile/tablet only */}
+              <button
+                className="lg:hidden hover:text-[#00462C] transition-colors"
+                onClick={() => setMobileMenuOpen(true)}
+                aria-label="Open menu"
+              >
+                <MenuIcon />
+              </button>
+            </div>
           </div>
         </div>
       </nav>
@@ -433,13 +443,7 @@ export default function Header() {
         {/* Drawer header */}
         <div className="flex items-center justify-between px-5 h-17.75 border-b border-[#E6ECF0]">
           <Link href="/" onClick={() => setMobileMenuOpen(false)}>
-            <Image
-              src="/logo.png"
-              alt="Nityagro"
-              width={90}
-              height={33}
-              className="object-contain"
-            />
+            <Image src="/logo.png" alt="Nityagro" width={124} height={63} />
           </Link>
           <button
             onClick={() => setMobileMenuOpen(false)}
@@ -458,8 +462,8 @@ export default function Header() {
               onClick={() => setMobileCategoryOpen(!mobileCategoryOpen)}
               className="w-full flex items-center justify-between py-3 text-[15px] font-semibold text-[#1a1a1a]"
             >
-              <span className="flex items-center gap-2.5">
-                <GridIcon />
+              <span className="flex items-center gap-2">
+                <GridIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#266A3F]" />
                 Browse Categories
               </span>
               <span
@@ -492,7 +496,7 @@ export default function Header() {
 
           {/* Nav links (mobile) */}
           {NAV_LINKS.map((link) => (
-            <div key={link.label} className="px-5">
+            <div key={link.label} className="px-5 ">
               {link.hasDropdown ? (
                 <>
                   <button
@@ -508,26 +512,32 @@ export default function Header() {
                       <ChevronDownIcon />
                     </span>
                   </button>
-                  {mobileMethodsOpen && (
-                    <div className="pl-4 pb-2 flex flex-col gap-0.5">
-                      {link.childLinks.map((child) => (
-                        <Link
-                          key={child.label}
-                          href={`/methods/${child.slug}`}
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="py-2.5 text-[14px] text-[#00462C] hover:font-medium transition"
-                        >
-                          {child.label}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
+                  <div
+                    className={`pl-4 flex flex-col gap-0.5 overflow-hidden
+                    transition-[max-height,opacity] duration-300 ease-in-out
+                    ${
+                      mobileMethodsOpen
+                        ? "max-h-60 opacity-100 pb-2"
+                        : "max-h-0 opacity-0 pb-0 pointer-events-none"
+                    }`}
+                  >
+                    {link.childLinks.map((child) => (
+                      <Link
+                        key={child.label}
+                        href={`/methods/${child.slug}`}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="py-2.5 text-[14px] text-[#00462C] hover:font-medium transition"
+                      >
+                        {child.label}
+                      </Link>
+                    ))}
+                  </div>
                 </>
               ) : (
                 <a
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block py-3 text-[15px] font-medium text-[#1a1a1a] hover:text-[#00462C] transition-colors"
+                  className="block py-3 text-[15px] font-medium text-[#1a1a1a] hover:text-[#462000] transition-colors"
                 >
                   {link.label}
                 </a>
@@ -544,9 +554,9 @@ export default function Header() {
                 auth.openLogin();
                 setMobileMenuOpen(false);
               }}
-              className="w-full flex items-center gap-3 py-3 text-[15px] font-medium text-[#1a1a1a] hover:text-[#00462C] transition-colors"
+              className="w-full flex items-center gap-3 py-3 text-[15px] font-medium text-[#266A3F] hover:text-[#00462C] transition-colors"
             >
-              <UserIcon />
+              <UserIcon className="text-[#266A3F]" />
               Log in
             </button>
           </div>
