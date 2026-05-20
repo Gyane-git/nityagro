@@ -192,44 +192,42 @@ export default function CategoriesListPage() {
 
       const product = Object.values(
         products.reduce((acc, item) => {
-          if (!acc[item.PDesc]) {
-            acc[item.PDesc] = {
-              productCode: item.PCode,
-              categoryId: item.GroupName,
-              userId: "1",
-              productName: item.PDesc,
-              subGroupName:item.SubGroupName || null,
-              slug: null,
-              productVariation: null,
-              productDescription: null,
-              nutritionInfo: null,
-              cookingInstruction: null,
-              storageInstruction: null,
-              pImage: null,
-              productStatus: true,
-              actualPrice: item.MRP,
-              sellingPrice: item.SalesRate,
-              deliveryTargetDays: null,
-              stockQuantity: Number(item.StockQty || 0),
-              availableQuantity: Number(item.StockQty || 0),
-            };
-          }
-
+          const key = String(item.PCode || "").trim();
+          if (!key) return acc;
+          acc[key] = {
+            productCode: key,
+            categoryId: String(item.GroupName || "").trim(),
+            userId: "1",
+            productName: String(item.PDesc || "").trim(),
+            subGroupName: String(item.SubGroupName || "").trim() || null,
+            slug: null,
+            productVariation: null,
+            productDescription: null,
+            nutritionInfo: null,
+            cookingInstruction: null,
+            storageInstruction: null,
+            pImage: null,
+            productStatus: true,
+            actualPrice: item.MRP,
+            sellingPrice: item.SalesRate,
+            deliveryTargetDays: null,
+            stockQuantity: Number(item.StockQty || 0),
+            availableQuantity: Number(item.StockQty || 0),
+          };
           return acc;
         }, {} as Record<string, ProductSyncPayload>),
       );
 
       const productsubGroup = Object.values(
         subGroup.reduce((acc, item) => {
-          if (!acc[item.PDesc]) {
-            acc[item.PDesc] = {
-              pCode: item.PCode,
-              subGroupName: item.SubGroupName,
-              variationName: item.PDesc,
-              salesRate: item.SalesRate,
-            };
-          }
-
+          const key = String(item.PCode || "").trim();
+          if (!key) return acc;
+          acc[key] = {
+            pCode: key,
+            subGroupName: String(item.SubGroupName || "").trim(),
+            variationName: String(item.PDesc || "").trim(),
+            salesRate: item.SalesRate,
+          };
           return acc;
         }, {} as Record<string, SubGroupSyncPayload>),
       );

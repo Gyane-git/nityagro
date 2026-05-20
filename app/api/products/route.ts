@@ -40,6 +40,12 @@ type ProductDTO = {
   specialOffer?: boolean;
 };
 
+function toOptionalTrimmedStringOrUndefined(value: unknown) {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
 const ALLOWED_IMAGE_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -249,7 +255,7 @@ export async function POST(req: Request) {
         select: { productCode: true },
       });
 
-      const payload = {
+      const createPayload = {
         categoryId: item.categoryId,
         userId: BigInt(item.userId),
         productName: item.productName,
@@ -281,17 +287,50 @@ export async function POST(req: Request) {
         specialOffer: Boolean(item.specialOffer),
       };
 
+      const updatePayload = {
+        categoryId: item.categoryId,
+        userId: BigInt(item.userId),
+        productName: item.productName,
+        productStatus:
+          typeof item.productStatus === "boolean" ? item.productStatus : true,
+        actualPrice: Number(item.actualPrice ?? 0),
+        sellingPrice: Number(item.sellingPrice ?? 0),
+        deliveryTargetDays:
+          item.deliveryTargetDays !== undefined && item.deliveryTargetDays !== null
+            ? BigInt(item.deliveryTargetDays)
+            : undefined,
+        stockQuantity:
+          item.stockQuantity !== undefined && item.stockQuantity !== null
+            ? BigInt(item.stockQuantity)
+            : undefined,
+        availableQuantity:
+          item.availableQuantity !== undefined && item.availableQuantity !== null
+            ? BigInt(item.availableQuantity)
+            : undefined,
+        flashSale: Boolean(item.flashSale),
+        specialOffer: Boolean(item.specialOffer),
+        subGroupName:
+          toOptionalTrimmedStringOrUndefined(item.subGroupName) ?? undefined,
+        slug: toOptionalTrimmedStringOrUndefined(item.slug),
+        productVariation: toOptionalTrimmedStringOrUndefined(item.productVariation),
+        productDescription: toOptionalTrimmedStringOrUndefined(item.productDescription),
+        nutritionInfo: toOptionalTrimmedStringOrUndefined(item.nutritionInfo),
+        cookingInstruction: toOptionalTrimmedStringOrUndefined(item.cookingInstruction),
+        storageInstruction: toOptionalTrimmedStringOrUndefined(item.storageInstruction),
+        pImage: toOptionalTrimmedStringOrUndefined(item.pImage),
+      };
+
       if (existing) {
         await prisma.products.update({
           where: { productCode: item.productCode },
-          data: payload,
+          data: updatePayload,
         });
         updatedCount += 1;
       } else {
         await prisma.products.create({
           data: {
             productCode: item.productCode,
-            ...payload,
+            ...createPayload,
           },
         });
         insertedCount += 1;

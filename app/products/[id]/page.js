@@ -7,6 +7,10 @@ import FrequentlyBoughtTogether from "./Frequentlyboughttogether";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { unstable_noStore as noStore } from "next/cache";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 // ─── Breadcrumb ─────────────────────────────────────────────────────────────
 function Breadcrumb({ productName }) {
@@ -27,54 +31,74 @@ function Breadcrumb({ productName }) {
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 export default async function ProductDetailPage({ params }) {
+  noStore();
   const { id } = await params;
-  const products = await prisma.products.findMany({
-    where: { productStatus: true },
-    include: { images: true },
-    orderBy: { productId: "asc" },
-  });
+  const isNumericId = /^\d+$/.test(String(id));
+  let product = null;
 
-  const safeProducts = JSON.parse(
-    JSON.stringify(products, (_, value) =>
-      typeof value === "bigint" ? value.toString() : value
-    )
-  );
+  if (isNumericId) {
+    product = await prisma.products.findUnique({
+      where: {
+        productId: BigInt(id),
+      },
+      include: { images: true },
+    });
 
-  const product =
-    safeProducts.find((item) => String(item.productId) === String(id)) ||
-    safeProducts.find((item) => String(item.productCode) === String(id));
+    // Backward compatibility for routes that use productCode in URL.
+    if (!product) {
+      product = await prisma.products.findFirst({
+        where: {
+          productCode: String(id),
+        },
+        include: { images: true },
+      });
+    }
+  } else {
+    product = await prisma.products.findFirst({
+      where: {
+        productCode: String(id),
+      },
+      include: { images: true },
+    });
+  }
 
   if (!product) {
     notFound();
   }
 
+  const safeProduct = JSON.parse(
+    JSON.stringify(product, (_, value) =>
+      typeof value === "bigint" ? value.toString() : value,
+    ),
+  );
+
   const galleryImages = [
-    ...(Array.isArray(product.images)
-      ? product.images.map((item) => item.imageUrl).filter(Boolean)
+    ...(Array.isArray(safeProduct.images)
+      ? safeProduct.images.map((item) => item.imageUrl).filter(Boolean)
       : []),
-    ...(product.pImage ? [product.pImage] : []),
+    ...(safeProduct.pImage ? [safeProduct.pImage] : []),
   ].filter((value, index, arr) => arr.indexOf(value) === index);
 
   const normalizedProduct = {
-    id: Number(product.productId),
-    productCode: product.productCode || "",
-    name: product.subGroupName || product.productName || "Unnamed Product",
-    label: product.productName || "",
-    image: product.pImage || "/products/mustard-oil.png",
+    id: Number(safeProduct.productId),
+    productCode: safeProduct.productCode || "",
+    name: safeProduct.subGroupName || safeProduct.productName || "Unnamed Product",
+    label: safeProduct.productName || "",
+    image: safeProduct.pImage || "/products/mustard-oil.png",
     images:
       galleryImages.length > 0
         ? galleryImages
         : ["/products/mustard-oil.png"],
     rating: 4,
     reviews: 0,
-    price: Number(product.sellingPrice ?? product.actualPrice ?? 0),
-    actualPrice: Number(product.actualPrice ?? 0),
-    productDescription: product.productDescription || "",
-    nutritionInfo: product.nutritionInfo || "",
-    cookingInstruction: product.cookingInstruction || "",
-    storageInstruction: product.storageInstruction || "",
-    deliveryTargetDays: product.deliveryTargetDays || "",
-    subGroupName: product.subGroupName || "",
+    price: Number(safeProduct.sellingPrice ?? safeProduct.actualPrice ?? 0),
+    actualPrice: Number(safeProduct.actualPrice ?? 0),
+    productDescription: safeProduct.productDescription || "",
+    nutritionInfo: safeProduct.nutritionInfo || "",
+    cookingInstruction: safeProduct.cookingInstruction || "",
+    storageInstruction: safeProduct.storageInstruction || "",
+    deliveryTargetDays: safeProduct.deliveryTargetDays || "",
+    subGroupName: safeProduct.subGroupName || "",
   };
 
   return (

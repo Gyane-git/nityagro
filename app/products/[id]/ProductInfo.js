@@ -69,8 +69,14 @@ export default function ProductInfo({ product }) {
           id: Number(item.variantId),
           productCode: item.pCode || "",
           label: item.variationName || item.pCode || "Variant",
-          price: Number(item.salesRate ?? p.price ?? 0),
-          actualPrice: Number(item.salesRate ?? p.price ?? 0),
+          price:
+            String(item.pCode || "") === String(p.productCode || "")
+              ? Number(p.price ?? item.salesRate ?? 0)
+              : Number(item.salesRate ?? p.price ?? 0),
+          actualPrice:
+            String(item.pCode || "") === String(p.productCode || "")
+              ? Number(p.actualPrice ?? p.price ?? item.salesRate ?? 0)
+              : Number(item.salesRate ?? p.price ?? 0),
           image: p.image || p.images?.[0] || "/products/mustard-oil.png",
         }));
 

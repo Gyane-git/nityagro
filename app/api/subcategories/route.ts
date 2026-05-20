@@ -64,11 +64,31 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ Find existing category names in DB
+    // Normalize + dedupe by pCode (latest row wins).
+    const incomingByCode = new Map<string, SubCategoryDTO>();
+    for (const row of productsubGroup) {
+      const key = String(row?.pCode || "").trim();
+      if (!key) continue;
+      incomingByCode.set(key, {
+        pCode: key,
+        subGroupName: String(row?.subGroupName || "").trim(),
+        variationName: String(row?.variationName || "").trim(),
+        salesRate: Number(row?.salesRate ?? 0),
+      });
+    }
+
+    const payloadRows = Array.from(incomingByCode.values());
+    if (payloadRows.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "No valid sub category rows found" },
+        { status: 400, headers: corsHeaders },
+      );
+    }
+
     const existingSubCategories = await prisma.productVariant.findMany({
       where: {
         pCode: {
-          in: productsubGroup.map((c) => c.pCode),
+          in: payloadRows.map((c) => c.pCode),
         },
       },
       select: {
@@ -76,53 +96,44 @@ export async function POST(req: Request) {
       },
     });
 
-    const existingNames = new Set(
-      existingSubCategories.map((e) => e.pCode),
-    );
+    const existingCodes = new Set(existingSubCategories.map((e) => e.pCode));
+    const rowsToCreate = payloadRows.filter((row) => !existingCodes.has(row.pCode));
+    const rowsToUpdate = payloadRows.filter((row) => existingCodes.has(row.pCode));
 
-    // ✅ Remove duplicates from incoming request also
-    const addedNames = new Set<string>();
-
-    const newSubCategories = productsubGroup.filter((c) => {
-      // already exists in DB
-      if (existingNames.has(c.pCode)) {
-        return false;
-      }
-
-      // duplicate inside request array
-      if (addedNames.has(c.pCode)) {
-        return false;
-      }
-
-      addedNames.add(c.pCode);
-
-      return true;
-    });
-
-    // ✅ Insert only unique categories
     let insertedCount = 0;
+    let updatedCount = 0;
 
-    if (newSubCategories.length > 0) {
+    if (rowsToCreate.length > 0) {
       const details = await prisma.productVariant.createMany({
-        data: newSubCategories.map((p) => ({
+        data: rowsToCreate.map((p) => ({
           pCode: p.pCode,
           subGroupName: p.subGroupName,
           variationName: p.variationName,
           salesRate: p.salesRate,
         })),
-//zxcvlxcvjkl
-        // ✅ Prisma duplicate protection
         skipDuplicates: true,
       });
-
       insertedCount = details.count;
+    }
+
+    for (const row of rowsToUpdate) {
+      const updated = await prisma.productVariant.updateMany({
+        where: { pCode: row.pCode },
+        data: {
+          subGroupName: row.subGroupName,
+          variationName: row.variationName,
+          salesRate: row.salesRate,
+        },
+      });
+      updatedCount += updated.count;
     }
 
     return NextResponse.json(
       {
         success: true,
-        count: insertedCount,
-        message: "Category saved successfully",
+        insertedCount,
+        updatedCount,
+        message: "Sub categories synced successfully",
       },
       {
         status: 200,
