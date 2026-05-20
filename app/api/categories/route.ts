@@ -23,6 +23,8 @@ type CategoryDTO = {
   userId: string;
   categoryStatus?: boolean;
 };
+
+const normalizeName = (value: string) => value.trim().toLowerCase();
 // ✅ Preflight handler
 export async function OPTIONS() {
   return new NextResponse(null, {
@@ -103,79 +105,188 @@ export async function POST(req: Request) {
       return `/categories/${cleanName}`;
     };
 
-    // ✅ Find existing category names in DB
-    const existingCategories = await prisma.categories.findMany({
-      where: {
-        categoryName: {
-          in: categories.map((c) => c.categoryName),
-        },
-      },
+    const incomingUnique = new Map<string, CategoryDTO>();
+    for (const row of categories) {
+      const name = String(row?.categoryName || "").trim();
+      if (!name) continue;
+      incomingUnique.set(normalizeName(name), {
+        ...row,
+        categoryName: name,
+      });
+    }
+
+    const incomingRows = Array.from(incomingUnique.values());
+    if (incomingRows.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "No valid category names in sync payload" },
+        { status: 400, headers: corsHeaders },
+      );
+    }
+
+    const existingAll = await prisma.categories.findMany({
       select: {
+        categoryId: true,
         categoryName: true,
+        categoryStatus: true,
+        slug: true,
+        categoryDescription: true,
+        categoryImage: true,
+        categoryLogo: true,
+        categoryBanner: true,
       },
+      orderBy: { categoryId: "asc" },
     });
 
-    const existingNames = new Set(
-      existingCategories.map((e) => e.categoryName),
+    const isOmsSyncPayload = incomingRows.every((row) => {
+      const slug = String(row.slug || "").trim();
+      const description = String(row.categoryDescription || "").trim();
+      const image = String(row.categoryImage || "").trim();
+      const logo = String(row.categoryLogo || "").trim();
+      const banner = String(row.categoryBanner || "").trim();
+      return (
+        !slug &&
+        !description &&
+        !image &&
+        !logo &&
+        !banner &&
+        row.categoryStatus === false
+      );
+    });
+
+    const existingByNormalizedName = new Map(
+      existingAll.map((row) => [normalizeName(row.categoryName), row]),
     );
 
-    // ✅ Remove duplicates from incoming request also
-    const addedNames = new Set<string>();
-
-    const newCategories = categories.filter((c) => {
-      // already exists in DB
-      if (existingNames.has(c.categoryName)) {
-        return false;
-      }
-
-      // duplicate inside request array
-      if (addedNames.has(c.categoryName)) {
-        return false;
-      }
-
-      addedNames.add(c.categoryName);
-
-      return true;
+    // Candidate rows that look OMS-synced and can be safely renamed:
+    // inactive and without custom metadata/assets.
+    const renamePool = existingAll.filter((row) => {
+      const hasCustomMeta = Boolean(
+        String(row.slug || "").trim() ||
+          String(row.categoryDescription || "").trim() ||
+          row.categoryImage ||
+          row.categoryLogo ||
+          row.categoryBanner,
+      );
+      return row.categoryStatus === false && !hasCustomMeta;
     });
 
-    // ✅ Insert only unique categories
     let insertedCount = 0;
+    let renamedCount = 0;
+    let matchedCount = 0;
 
-    if (newCategories.length > 0) {
-      const details = await prisma.categories.createMany({
-        data: newCategories.map((p) => ({
-          categoryName: p.categoryName,
+    // OMS strict mode: mirror incoming names for OMS-managed rows.
+    if (isOmsSyncPayload) {
+      const incomingNameSet = new Set(incomingRows.map((row) => normalizeName(row.categoryName)));
+      const managedRows = renamePool;
 
-          slug: typeof p.slug === "string" ? p.slug || null : null,
+      const toDeleteIds = managedRows
+        .filter((row) => !incomingNameSet.has(normalizeName(row.categoryName)))
+        .map((row) => row.categoryId);
 
+      if (toDeleteIds.length > 0) {
+        await prisma.categories.deleteMany({
+          where: {
+            categoryId: { in: toDeleteIds },
+          },
+        });
+      }
+
+      const remainingManaged = managedRows.filter(
+        (row) => !toDeleteIds.some((id) => id === row.categoryId),
+      );
+      const remainingByName = new Set(remainingManaged.map((row) => normalizeName(row.categoryName)));
+
+      const toCreate = incomingRows.filter(
+        (row) => !remainingByName.has(normalizeName(row.categoryName)),
+      );
+
+      if (toCreate.length > 0) {
+        const details = await prisma.categories.createMany({
+          data: toCreate.map((row) => ({
+            categoryName: row.categoryName,
+            slug: null,
+            categoryDescription: null,
+            categoryImage: null,
+            categoryLogo: null,
+            categoryBanner: null,
+            userId: BigInt(row.userId),
+            categoryStatus: false,
+          })),
+          skipDuplicates: true,
+        });
+        insertedCount += details.count;
+      }
+
+      matchedCount = incomingRows.length - insertedCount;
+      return NextResponse.json(
+        {
+          success: true,
+          insertedCount,
+          renamedCount: 0,
+          matchedCount,
+          deletedCount: toDeleteIds.length,
+          message: "Category sync completed successfully",
+        },
+        {
+          status: 200,
+          headers: corsHeaders,
+        },
+      );
+    }
+
+    for (const row of incomingRows) {
+      const normalized = normalizeName(row.categoryName);
+      const matched = existingByNormalizedName.get(normalized);
+      if (matched) {
+        matchedCount += 1;
+        continue;
+      }
+
+      // No exact-name match -> try rename of an unused OMS row first.
+      const renameTarget = renamePool.find(
+        (candidate) =>
+          !incomingUnique.has(normalizeName(candidate.categoryName)),
+      );
+
+      if (renameTarget) {
+        await prisma.categories.update({
+          where: { categoryId: renameTarget.categoryId },
+          data: {
+            categoryName: row.categoryName,
+          },
+        });
+        renamedCount += 1;
+        incomingUnique.set(normalized, row);
+        continue;
+      }
+
+      // Fallback create if no rename candidate exists.
+      await prisma.categories.create({
+        data: {
+          categoryName: row.categoryName,
+          slug: typeof row.slug === "string" ? row.slug || null : null,
           categoryDescription:
-            typeof p.categoryDescription === "string"
-              ? p.categoryDescription || null
+            typeof row.categoryDescription === "string"
+              ? row.categoryDescription || null
               : null,
-
-          categoryImage: normalizeCategoryAssetUrl(p.categoryImage),
-
-          categoryLogo: normalizeCategoryAssetUrl(p.categoryLogo),
-
-          categoryBanner: normalizeCategoryAssetUrl(p.categoryBanner),
-
-          userId: BigInt(p.userId),
+          categoryImage: normalizeCategoryAssetUrl(row.categoryImage),
+          categoryLogo: normalizeCategoryAssetUrl(row.categoryLogo),
+          categoryBanner: normalizeCategoryAssetUrl(row.categoryBanner),
+          userId: BigInt(row.userId),
           categoryStatus:
-            typeof p.categoryStatus === "boolean" ? p.categoryStatus : false,
-        })),
-
-        // ✅ Prisma duplicate protection
-        skipDuplicates: true,
+            typeof row.categoryStatus === "boolean" ? row.categoryStatus : false,
+        },
       });
-
-      insertedCount = details.count;
+      insertedCount += 1;
     }
 
     return NextResponse.json(
       {
         success: true,
-        count: insertedCount,
-        message: "Category saved successfully",
+        insertedCount,
+        renamedCount,
+        matchedCount,
+        message: "Category sync completed successfully",
       },
       {
         status: 200,
