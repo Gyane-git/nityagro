@@ -42,9 +42,19 @@ interface ProductVariant {
   pCode: string;
   subGroupName: string;
   variationName: string;
+  stockQuantity:number,
   salesRate: number;
   createdAt: string;
   updatedAt: string;
+}
+interface ProductVariantDetails {
+  
+  pCode: string;
+  subGroupName: string;
+  variationName: string;
+  salesRate: number;
+  stockQuantity:number
+  
 }
 
 export default function ProductListPage() {
@@ -55,7 +65,15 @@ export default function ProductListPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [modelVaraiation, setModelVaraiation] = useState(false);
+  const [productVariantDetails, setProductVariantDetails] = useState<ProductVariantDetails>({
+
+  pCode: "",
+  subGroupName: "",
+  variationName: "",
+  salesRate: 0,
+  stockQuantity:0
+  
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
   // const [showConfirm, setShowConfirm] = useState(false);
@@ -303,17 +321,28 @@ export default function ProductListPage() {
       {open && (
         <div className="fixed inset-0 bg-black/50 text-slate-600 flex items-center justify-center">
           <div className="bg-white p-4 rounded w-[500px]">
-          <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold mb-4">{subGroupName}</h2>
               <X
-              onClick={() => setOpen(false)}
-               className="bg-slate-400 cursor-pointer text-black hover:bg-green-700 hover:text-white"></X>
-          </div>
+                onClick={() => setOpen(false)}
+                className="bg-slate-400 cursor-pointer text-black hover:bg-green-700 hover:text-white"
+              ></X>
+            </div>
 
             {productsVariant.length > 0 ? (
               <div className="space-y-3">
                 {productsVariant.map((item) => (
                   <button
+                    onClick={() => {
+                      setProductVariantDetails((prev) => ({
+                        ...prev,
+                        pCode: item.pCode,
+                        subGroupName: item.subGroupName,
+                        variationName: item.variationName,
+                        salesRate: item.salesRate,
+                        stockQuantity: item.stockQuantity,
+                      }));
+                    }}
                     key={item.variantId}
                     //  onClick={() => setSelectedWeight(w)}
                     className="px-4 py-2 cursor-pointer text-sm bg-green-700 hover:bg-green-900 text-white font-medium border rounded-md transition-all duration-150"
@@ -325,8 +354,31 @@ export default function ProductListPage() {
             ) : (
               <p>No variants found</p>
             )}
+          </div>
+        </div>
+      )}
 
-            
+      {productVariantDetails.subGroupName && (
+        <div className="fixed inset-0 bg-black/50 text-slate-600 flex items-center justify-center">
+          <div className="bg-white p-4 rounded w-[500px]">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold mb-4">{subGroupName}</h2>
+              <X
+                onClick={() => setProductVariantDetails((prev) => ({
+                        ...prev,
+                        
+                        subGroupName: "",
+
+                        
+                      }))
+                    }
+                className="bg-slate-400 cursor-pointer text-black hover:bg-green-700 hover:text-white"
+              ></X>
+            </div>
+
+            <p>Name{productVariantDetails.subGroupName}</p>
+            <p>Sale RATE{productVariantDetails.salesRate}</p>
+            <p>STOCK{productVariantDetails.stockQuantity}</p>
           </div>
         </div>
       )}

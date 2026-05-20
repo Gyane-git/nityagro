@@ -11,6 +11,7 @@ type SubCategoryDTO = {
   subGroupName: string;
   variationName: string;
   salesRate: number;
+  stockQuantity:number
 };
 // ✅ Preflight handler
 export async function OPTIONS() {
@@ -74,6 +75,7 @@ export async function POST(req: Request) {
         subGroupName: String(row?.subGroupName || "").trim(),
         variationName: String(row?.variationName || "").trim(),
         salesRate: Number(row?.salesRate ?? 0),
+        stockQuantity:Number(row?.stockQuantity ?? 0),
       });
     }
 
@@ -110,6 +112,7 @@ export async function POST(req: Request) {
           subGroupName: p.subGroupName,
           variationName: p.variationName,
           salesRate: p.salesRate,
+          stockQuantity:p.stockQuantity
         })),
         skipDuplicates: true,
       });

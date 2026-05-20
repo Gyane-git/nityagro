@@ -51,6 +51,7 @@ type OmsSubGroupName = {
   SubGroupName: string;
   SalesRate: number;
   Qty:number;
+  StockQty:number
 
 };
 
@@ -84,6 +85,7 @@ type SubGroupSyncPayload = {
   subGroupName: string;
   variationName: string;
   salesRate: number;
+  stockQuantity: number;
 };
 
 type EditForm = {
@@ -227,6 +229,7 @@ export default function CategoriesListPage() {
             subGroupName: String(item.SubGroupName || "").trim(),
             variationName: String(item.PDesc || "").trim(),
             salesRate: item.SalesRate,
+            stockQuantity:item.StockQty
           };
           return acc;
         }, {} as Record<string, SubGroupSyncPayload>),
