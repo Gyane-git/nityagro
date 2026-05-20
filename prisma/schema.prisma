@@ -413,6 +413,7 @@ model ProductVariant {
   subGroupName  String
   variationName String
   salesRate     Float?
+  stockQuantity BigInt?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
