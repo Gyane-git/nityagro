@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useCartStore from "@/store/cartStore";
 import useToastStore from "@/store/toastStore";
+import { apiGetRequest } from "@/apihelper/apiHelper";
 
 const CartIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -19,14 +20,6 @@ const StarIcon = ({ filled }) => (
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
   </svg>
 );
-
-const PRODUCTS = [
-  { id: 1, name: "Yellow Mustard Oil",    price: 250, rating: 4, reviews: 711, badge: "Best Seller", discount: "BES\n30%\nOFF", image: "/products/mustard-oil.png" },
-  { id: 2, name: "Red Chilli Powder",     price: 250, rating: 4, reviews: 711, badge: null,          discount: null,            image: "/products/red-chilli.png" },
-  { id: 3, name: "Gran (Chickpea) Flour", price: 250, rating: 3, reviews: 711, badge: null,          discount: "BES\n30%\nOFF", image: "/products/chickpea-flour.png" },
-  { id: 4, name: "Jaggery Powder",        price: 250, rating: 3, reviews: 711, badge: "Best Seller", discount: null,            image: "/products/jaggery.png" },
-  { id: 5, name: "Red Chilli Powder",     price: 250, rating: 3, reviews: 711, badge: null,          discount: null,            image: "/products/red-chilli-2.png" },
-];
 
 function ProductCard({ product }) {
   const [added, setAdded] = useState(false);
@@ -143,6 +136,71 @@ function ProductCard({ product }) {
 }
 
 export default function FrequentlyBoughtTogether() {
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await apiGetRequest("/products");
+        const rows = Array.isArray(response)
+          ? response
+          : Array.isArray(response?.data)
+            ? response.data
+            : [];
+        const mapped = rows
+          .filter((item) => item.productStatus !== false && item.productStatus !== 0)
+          .map((item) => {
+            const actualPrice = Number(item.actualPrice ?? 0);
+            const sellingPrice = Number(item.sellingPrice ?? actualPrice ?? 0);
+            return {
+              id: Number(item.productId || item.productCode),
+              name: item.subGroupName || item.productName || "Unnamed Product",
+              price: sellingPrice,
+              rating: 4,
+              reviews: 0,
+              badge: item.specialOffer ? "Best Seller" : null,
+              discount:
+                actualPrice > sellingPrice && actualPrice > 0
+                  ? `SAVE\n${Math.round(((actualPrice - sellingPrice) / actualPrice) * 100)}%`
+                  : null,
+              image: item.pImage || "/products/mustard-oil.png",
+              specialOffer: Boolean(item.specialOffer),
+              stockQuantity: Number(item.stockQuantity ?? item.availableQuantity ?? 0),
+              createdAt: item.createdAt || null,
+            };
+          });
+
+        setProducts(mapped);
+      } catch (error) {
+        console.error("Failed to load frequently bought products:", error);
+        setProducts([]);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  const recommendedProducts = useMemo(() => {
+    const newestSpecialOffers = products
+      .filter((item) => item.specialOffer)
+      .slice()
+      .sort((a, b) => {
+        const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return bTime - aTime;
+      })
+      .slice(0, 4);
+
+    const selectedIds = new Set(newestSpecialOffers.map((item) => item.id));
+    const highestStock = products
+      .filter((item) => !selectedIds.has(item.id))
+      .slice()
+      .sort((a, b) => b.stockQuantity - a.stockQuantity)
+      .slice(0, 3);
+
+    return [...newestSpecialOffers, ...highestStock].slice(0, 7);
+  }, [products]);
+
   return (
     <div className="flex flex-col gap-5 w-full">
       {/* Header */}
@@ -157,7 +215,7 @@ export default function FrequentlyBoughtTogether() {
 
       {/* Cards — horizontal scroll */}
       <div className="flex gap-4 overflow-x-auto pb-2" style={{ scrollbarWidth: "none" }}>
-        {PRODUCTS.map((p) => (
+        {recommendedProducts.map((p) => (
           <ProductCard key={p.id} product={p} />
         ))}
       </div>
