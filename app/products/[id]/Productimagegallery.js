@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const PlayIcon = () => (
   <div
@@ -16,6 +16,8 @@ const PlayIcon = () => (
 
 export default function ProductImageGallery({ images = [] }) {
   const [selected, setSelected] = useState(0);
+  const [zoomActive, setZoomActive] = useState(false);
+  const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
 
   const fallback = [
     "/products/mustard-oil.png",
@@ -26,9 +28,25 @@ export default function ProductImageGallery({ images = [] }) {
   ];
 
   const imgs = images.length > 0 ? images : fallback;
+  const selectedImageUrl = imgs[selected] || imgs[0];
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (zoomActive) {
+      document.body.classList.add("product-zoom-active");
+    } else {
+      document.body.classList.remove("product-zoom-active");
+    }
+    return () => {
+      document.body.classList.remove("product-zoom-active");
+    };
+  }, [zoomActive]);
 
   return (
-    <div className="flex gap-3" style={{ width: "420px", flexShrink: 0 }}>
+    <div
+      className="relative flex gap-3"
+      style={{ width: "420px", flexShrink: 0, overflow: "visible" }}
+    >
       {/* ── Thumbnail strip (left column) ── */}
       <div className="flex flex-col gap-2" style={{ width: "90px" }}>
         {imgs.map((src, i) => (
@@ -65,15 +83,39 @@ export default function ProductImageGallery({ images = [] }) {
       <div
         className="relative flex-1 overflow-hidden border border-gray-200"
         style={{ height: "350px", borderRadius: "8px", background: "#F9FAFB" }}
+        onMouseEnter={() => setZoomActive(true)}
+        onMouseLeave={() => setZoomActive(false)}
+        onMouseMove={(e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          const x = ((e.clientX - rect.left) / rect.width) * 100;
+          const y = ((e.clientY - rect.top) / rect.height) * 100;
+          setZoomPosition({
+            x: Math.max(0, Math.min(100, x)),
+            y: Math.max(0, Math.min(100, y)),
+          });
+        }}
       >
         <Image
-          src={imgs[selected]}
+          src={selectedImageUrl}
           alt="Product main"
           fill
-          className="object-contain p-6"
+          className={`object-contain p-6 transition-transform duration-500 ${
+            zoomActive ? "scale-110" : "scale-100"
+          }`}
           sizes="310px"
           priority
         />
+
+        {zoomActive && (
+          <div
+            className="hidden lg:block absolute w-20 h-20 border-2 border-orange-500/70 bg-white/20 pointer-events-none"
+            style={{
+              left: `calc(${zoomPosition.x}% - 56px)`,
+              top: `calc(${zoomPosition.y}% - 56px)`,
+            }}
+          />
+        )}
+
         {/* Sparkle / badge icon bottom right (like screenshot) */}
         <div className="absolute bottom-3 right-3 opacity-30">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="#00462C">
@@ -81,6 +123,27 @@ export default function ProductImageGallery({ images = [] }) {
           </svg>
         </div>
       </div>
+
+      {zoomActive && (
+        <div
+          className="hidden lg:block absolute top-0 left-[calc(100%+24px)] w-[500px] h-[320px] border border-orange-300 rounded-lg bg-white shadow-lg pointer-events-none z-40"
+          style={{
+            backgroundImage: `url(${selectedImageUrl})`,
+            backgroundRepeat: "no-repeat",
+            backgroundSize: "140%",
+            backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
+          }}
+        />
+      )}
+      <style jsx global>{`
+        body.product-zoom-active .product-info-panel {
+          opacity: 0.1;
+          filter: blur(1px);
+          pointer-events: none;
+          user-select: none;
+          transition: opacity 0.2s ease, filter 0.2s ease;
+        }
+      `}</style>
     </div>
   );
 }

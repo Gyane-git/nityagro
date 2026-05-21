@@ -156,7 +156,7 @@ export default function ProductInfo({ product }) {
   };
 
   return (
-    <div className="flex flex-col gap-5 flex-1 min-w-0">
+    <div className="product-info-panel flex flex-col gap-5 flex-1 min-w-0">
 
       {/* ── Product Name ── */}
       <h1 className="font-bold text-gray-900" style={{ fontSize: "24px", lineHeight: 1.2 }}>
