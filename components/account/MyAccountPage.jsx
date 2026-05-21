@@ -21,15 +21,16 @@ const USER = {
 };
 
 export default function MyAccountPage() {
-  const [activeTab, setActiveTab] = useState(() => {
-    if (typeof window === "undefined") return "profile";
+  const [activeTab, setActiveTab] = useState("profile");
+  const [user, setUser] = useState(USER);
+
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
-    return tab && ["profile", "address", "history", "tracking"].includes(tab)
-      ? tab
-      : "profile";
-  });
-  const [user, setUser] = useState(USER);
+    if (tab && ["profile", "address", "history", "tracking"].includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchProfile = async () => {

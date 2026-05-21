@@ -119,7 +119,7 @@ export default async function ProductDetailPage({ params }) {
           <ProductInfo product={normalizedProduct} />
 
           {/* Right: delivery + return card */}
-          <DeliveryCard />
+          <DeliveryCard deliveryTargetDays={normalizedProduct.deliveryTargetDays} />
         </div>
 
         {/* ── Tabs ── */}
