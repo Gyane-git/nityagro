@@ -34,6 +34,25 @@ const PlusIcon = () => (
   </svg>
 );
 
+const ShareIcon = () => (
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <circle cx="18" cy="5" r="3" />
+    <circle cx="6" cy="12" r="3" />
+    <circle cx="18" cy="19" r="3" />
+    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+  </svg>
+);
+
 export default function ProductInfo({ product }) {
   const [qty, setQty] = useState(1);
   const [variantsFromApi, setVariantsFromApi] = useState([]);
@@ -155,13 +174,52 @@ export default function ProductInfo({ product }) {
     router.push("/Checkout");
   };
 
+  const handleShare = async () => {
+    if (typeof window === "undefined") return;
+    const shareUrl = window.location.href;
+    const shareTitle = p.name || "Product";
+    const shareText = `${shareTitle} - NPR ${currentPrice}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+        return;
+      }
+      await navigator.clipboard.writeText(shareUrl);
+      showToast("Product link copied");
+    } catch {
+      // user cancelled share popup or clipboard denied
+    }
+  };
+
   return (
     <div className="product-info-panel flex flex-col gap-5 flex-1 min-w-0">
-
       {/* ── Product Name ── */}
-      <h1 className="font-bold text-gray-900" style={{ fontSize: "24px", lineHeight: 1.2 }}>
-        {p.name}
-      </h1>
+      <div className="flex items-start justify-between gap-3">
+        <h1
+          className="font-bold text-gray-900"
+          style={{ fontSize: "24px", lineHeight: 1.2 }}
+        >
+          {p.name}
+        </h1>
+        <button
+          onClick={handleShare}
+          aria-label="Share product"
+          title="Share product"
+          className="flex items-center justify-center rounded-md border transition-all duration-200 hover:bg-gray-50 active:scale-95 flex-shrink-0"
+          style={{
+            borderColor: "#D1D5DB",
+            color: "#374151",
+            height: "36px",
+            width: "36px",
+          }}
+        >
+          <ShareIcon />
+        </button>
+      </div>
 
       {/* ── Stars + review count ── */}
       <div className="flex items-center gap-2">
@@ -242,7 +300,7 @@ export default function ProductInfo({ product }) {
         </div>
       </div>
 
-      {/* ── Add + Buy Now buttons — exactly like screenshot ── */}
+      {/* ── Add + Buy Now ── */}
       <div className="flex gap-3">
         {/* Add (filled green) */}
         <button
@@ -271,6 +329,7 @@ export default function ProductInfo({ product }) {
           onClick={handleBuyNow}   >
           Buy Now
         </button>
+
       </div>
     </div>
   );
