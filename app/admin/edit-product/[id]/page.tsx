@@ -197,15 +197,16 @@ export default function EditProductPage() {
             productCode: response.data?.productCode || "",
             productName: response.data?.subGroupName || "",
             categoryId: response.data?.categoryId || "",
-             productDescription: response.data?.productDescription || "",
-               nutritionalInformation: response.data?.nutritionInfo || "",
-                 cookingDescription: response.data?.cookingInstruction || "",
-                   storageInstruction: response.data?.storageInstruction || "",
+            productDescription: response.data?.productDescription || "",
+            nutritionalInformation: response.data?.nutritionInfo || "",
+            cookingDescription: response.data?.cookingInstruction || "",
+            storageInstruction: response.data?.storageInstruction || "",
             actualPrice: String(response.data?.actualPrice) || "0.0",
             SellingPrice: String(response.data?.sellingPrice) || "0.0",
             availableQuantity:
               String(response.data?.availableQuantity) ?? "0.0",
             productStatus: response.data?.productStatus || false,
+            specialOffer: Boolean(response.data?.specialOffer),
           }));
         }
       } catch (error) {
@@ -253,7 +254,9 @@ export default function EditProductPage() {
   data.append("nutritionalInformation", formData.nutritionalInformation);
   data.append("cookingDescription", formData.cookingDescription);
   data.append("storageInstruction", formData.storageInstruction);
-  data.append("productStatus", "true");
+  data.append("productStatus", String(formData.productStatus));
+  data.append("specialOffer", String(formData.specialOffer));
+  data.append("subGroupName", formData.productName);
   data.append("delivaryTargetDays", formData.delivaryTargetDays);
 
 
@@ -418,6 +421,25 @@ export default function EditProductPage() {
                           placeholder="e.g. 3"
                           min="0"
                           className={inputClass}
+                        />
+                      </div>
+
+
+                      <div>
+                        <label className={labelClass}>
+                          Best Seller
+                        </label>
+                        <input
+                          type="checkbox"
+                          name="bestSeller"
+                          checked={formData.specialOffer}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              specialOffer: e.target.checked,
+                            }))
+                          }
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
                       </div>
                     </div>

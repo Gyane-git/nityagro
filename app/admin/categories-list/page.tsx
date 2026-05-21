@@ -209,7 +209,7 @@ export default function CategoriesListPage() {
             cookingInstruction: null,
             storageInstruction: null,
             pImage: null,
-            productStatus: true,
+            productStatus: false,
             actualPrice: item.MRP,
             sellingPrice: item.SalesRate,
             deliveryTargetDays: null,

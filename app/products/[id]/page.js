@@ -62,7 +62,7 @@ export default async function ProductDetailPage({ params }) {
     });
   }
 
-  if (!product) {
+  if (!product || product.productStatus === false) {
     notFound();
   }
 

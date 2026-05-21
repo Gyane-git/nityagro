@@ -213,17 +213,19 @@ export default function ProductSection() {
       const categoryRows = Array.isArray(categoryResponse?.data)
         ? categoryResponse.data
         : [];
-      const mappedCategories = categoryRows.map((item) => ({
-        id: (item.categoryName || "").trim().toLowerCase(),
-        label: item.categoryName || "",
-        image: item.categoryLogo || "/categories/all.png",
-      }));
+      const mappedCategories = categoryRows
+        .filter((item) => item.categoryStatus !== false && item.categoryStatus !== 0)
+        .map((item) => ({
+          id: (item.categoryName || "").trim().toLowerCase(),
+          label: item.categoryName || "",
+          image: item.categoryLogo || "/categories/all.png",
+        }));
 
       const productRows = Array.isArray(productResponse?.data)
         ? productResponse.data
         : [];
       const mappedProducts = productRows
-        .filter((item) => item.productStatus)
+        .filter((item) => item.productStatus !== false && item.productStatus !== 0)
         .map((item) => ({
           id: Number(item.productId || item.productCode),
           name: item.subGroupName || item.productName || "Unnamed Product",

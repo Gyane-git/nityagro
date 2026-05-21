@@ -268,7 +268,7 @@ export async function POST(req: Request) {
         storageInstruction: item.storageInstruction ?? null,
         pImage: item.pImage ?? null,
         productStatus:
-          typeof item.productStatus === "boolean" ? item.productStatus : true,
+          typeof item.productStatus === "boolean" ? item.productStatus : false,
         actualPrice: Number(item.actualPrice ?? 0),
         sellingPrice: Number(item.sellingPrice ?? 0),
         deliveryTargetDays:
@@ -292,7 +292,7 @@ export async function POST(req: Request) {
         userId: BigInt(item.userId),
         productName: item.productName,
         productStatus:
-          typeof item.productStatus === "boolean" ? item.productStatus : true,
+          typeof item.productStatus === "boolean" ? item.productStatus : false,
         actualPrice: Number(item.actualPrice ?? 0),
         sellingPrice: Number(item.sellingPrice ?? 0),
         deliveryTargetDays:
@@ -368,6 +368,7 @@ export async function PUT(req: Request) {
     const formData = await req.formData();
 
     const productCode = formData.get("productCode") as string;
+    const subGroupName = formData.get("subGroupName") as string | null;
 
     const productDescription = formData.get("productDescription") as string;
 
@@ -387,8 +388,10 @@ export async function PUT(req: Request) {
       "delivaryTargetDays"
     ) as string;
 
-    const productStatus =
-      formData.get("productStatus") === "true";
+    const productStatusRaw = formData.get("productStatus");
+    const specialOfferRaw = formData.get("specialOffer");
+    const productStatus = productStatusRaw === "true";
+    const specialOffer = specialOfferRaw === "true";
 
     const productImage = formData.get("productImage") as File | null;
     const galleryImageFiles = formData
@@ -405,6 +408,24 @@ export async function PUT(req: Request) {
           status: 400,
           headers: corsHeaders,
         }
+      );
+    }
+
+    const existingProduct = await prisma.products.findUnique({
+      where: { productCode },
+      select: { subGroupName: true },
+    });
+
+    if (!existingProduct) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Product not found",
+        },
+        {
+          status: 404,
+          headers: corsHeaders,
+        },
       );
     }
 
@@ -443,13 +464,34 @@ export async function PUT(req: Request) {
           deliveryTargetDays: Number(delivaryTargetDays),
         }),
 
-        productStatus,
-
         ...(imagePath && {
           pImage: imagePath,
         }),
       },
     });
+
+    const statusGroupName =
+      typeof subGroupName === "string" && subGroupName.trim()
+        ? subGroupName.trim()
+        : existingProduct.subGroupName;
+
+    if (statusGroupName) {
+      await prisma.products.updateMany({
+        where: { subGroupName: statusGroupName },
+        data: {
+          ...(productStatusRaw !== null && { productStatus }),
+          ...(specialOfferRaw !== null && { specialOffer }),
+        },
+      });
+    } else {
+      await prisma.products.update({
+        where: { productCode },
+        data: {
+          ...(productStatusRaw !== null && { productStatus }),
+          ...(specialOfferRaw !== null && { specialOffer }),
+        },
+      });
+    }
 
     if (galleryImageFiles.length > 0) {
       const galleryUrls: string[] = [];

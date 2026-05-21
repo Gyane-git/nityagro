@@ -45,23 +45,25 @@ export default function ProductsPage() {
           (category) => category.categoryStatus !== false,
         );
 
-        const mapped = productRows.map((item) => ({
-          id: Number(item.productId),
-          name: item.subGroupName || item.productName || "Unnamed Product",
-          category: item.categoryId || "",
-          price: Number(item.sellingPrice ?? item.actualPrice ?? 0),
-          image: item.pImage || "/products/mustard-oil.png",
-          rating: 4,
-          reviews: 0,
-          badge: item.specialOffer ? "Special Offer" : null,
-          discount:
-            item.actualPrice > item.sellingPrice
-              ? `SAVE\n${Math.round(
-                  ((item.actualPrice - item.sellingPrice) / item.actualPrice) *
-                    100,
-                )}%`
-              : null,
-        }));
+        const mapped = productRows
+          .filter((item) => item.productStatus !== false)
+          .map((item) => ({
+            id: Number(item.productId),
+            name: item.subGroupName || item.productName || "Unnamed Product",
+            category: item.categoryId || "",
+            price: Number(item.sellingPrice ?? item.actualPrice ?? 0),
+            image: item.pImage || "/products/mustard-oil.png",
+            rating: 4,
+            reviews: 0,
+            badge: item.specialOffer ? "Special Offer" : null,
+            discount:
+              item.actualPrice > item.sellingPrice
+                ? `SAVE\n${Math.round(
+                    ((item.actualPrice - item.sellingPrice) / item.actualPrice) *
+                      100,
+                  )}%`
+                : null,
+          }));
 
         setProducts(mapped);
         setCategories(activeCategories);
