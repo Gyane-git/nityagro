@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import useCartStore from "@/store/cartStore";
 import useToastStore from "@/store/toastStore";
+import useWishlistStore from "@/store/wishlistStore";
 import { apiGetRequest } from "@/apihelper/apiHelper";
 
 // ─── Icons ─────────────────────────────────────────────────────────────────
@@ -38,6 +39,21 @@ const StarIcon = ({ filled }) => (
   </svg>
 );
 
+const HeartIcon = ({ filled }) => (
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill={filled ? "#DC2626" : "none"}
+    stroke={filled ? "#DC2626" : "currentColor"}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+  </svg>
+);
+
 // ─── Data ──────────────────────────────────────────────────────────────────
 const DEFAULT_CATEGORIES = [
   { id: "all", label: "All", image: "/categories/all.png" },
@@ -60,6 +76,25 @@ function ProductCard({ product }) {
   const [added, setAdded] = useState(false);
   const addToCart = useCartStore((state) => state.addToCart);
   const showToast = useToastStore((state) => state.showToast);
+  const wishlistItems = useWishlistStore((state) => state.items);
+  const addToWishlist = useWishlistStore((state) => state.addToWishlist);
+  const removeFromWishlist = useWishlistStore((state) => state.removeFromWishlist);
+  const inWishlist = wishlistItems.some((item) => item.id === product.id);
+
+  const handleWishlistToggle = () => {
+    if (inWishlist) {
+      removeFromWishlist(product.id);
+      showToast(`${product.name} removed from wishlist`);
+      return;
+    }
+    addToWishlist({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+    });
+    showToast(`${product.name} added to wishlist`);
+  };
 
   const handleAdd = () => {
     addToCart({
@@ -77,6 +112,15 @@ function ProductCard({ product }) {
 
   return (
     <div className="relative flex flex-col border border-gray-200 overflow-hidden rounded-lg w-full">
+      <button
+        onClick={handleWishlistToggle}
+        className="absolute top-2 right-2 z-20 w-7 h-7 rounded-full bg-white/90 border border-gray-200 flex items-center justify-center"
+        title={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
+        aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
+      >
+        <HeartIcon filled={inWishlist} />
+      </button>
+
       {/* Discount */}
       {product.discount && (
         <div
