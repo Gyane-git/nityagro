@@ -12,16 +12,7 @@ import { addCartToDb, addWishlistToDb, removeWishlistFromDb } from "@/utils/acco
 
 // ─── Icons ─────────────────────────────────────────────────────────────────
 const CartIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="9" cy="21" r="1" />
     <circle cx="20" cy="21" r="1" />
     <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
@@ -29,37 +20,19 @@ const CartIcon = () => (
 );
 
 const StarIcon = ({ filled }) => (
-  <svg
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill={filled ? "#F5A623" : "none"}
-    stroke="#F5A623"
-    strokeWidth="1.5"
-  >
+  <svg width="14" height="14" viewBox="0 0 24 24" fill={filled ? "#F5A623" : "none"} stroke="#F5A623" strokeWidth="1.5">
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
   </svg>
 );
 
 const HeartIcon = ({ filled }) => (
-  <svg
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill={filled ? "#DC2626" : "none"}
-    stroke={filled ? "#DC2626" : "currentColor"}
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
+  <svg width="14" height="14" viewBox="0 0 24 24" fill={filled ? "#DC2626" : "none"} stroke={filled ? "#DC2626" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
   </svg>
 );
 
 // ─── Data ──────────────────────────────────────────────────────────────────
-const DEFAULT_CATEGORIES = [
-  { id: "all", label: "All", image: "/categories/all.png" },
-];
+const DEFAULT_CATEGORIES = [{ id: "all", label: "All", image: "/categories/all.png" }];
 
 // ─── Star Rating ───────────────────────────────────────────────────────────
 function StarRating({ rating, reviews }) {
@@ -129,12 +102,7 @@ function ProductCard({ product }) {
 
   return (
     <div className="relative flex flex-col border border-gray-200 overflow-hidden rounded-lg w-full">
-      <button
-        onClick={handleWishlistToggle}
-        className="absolute top-2 right-2 z-20 w-7 h-7 rounded-full bg-white/90 border border-gray-200 flex items-center justify-center"
-        title={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
-        aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
-      >
+      <button onClick={handleWishlistToggle} className="absolute top-2 right-2 z-20 w-7 h-7 rounded-full bg-white/90 border text-gray-500 hover:bg-green-100 border-gray-200 flex items-center justify-center" title={inWishlist ? "Remove from wishlist" : "Add to wishlist"} aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}>
         <HeartIcon filled={inWishlist} />
       </button>
 
@@ -175,37 +143,20 @@ function ProductCard({ product }) {
       <Link href={`/products/${product.id}`} className="flex flex-col">
         {/* Image — fixed height */}
         <div className="relative w-full bg-gray-50" style={{ height: "160px" }}>
-          <Image
-            src={product.image}
-            alt={product.name}
-            fill
-            className="object-contain p-3"
-            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 20vw"
-          />
+          <Image src={product.image} alt={product.name} fill className="object-contain p-3" sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 20vw" />
         </div>
 
         {/* Info — fixed height keeps all cards uniform */}
-        <div
-          className="px-2.5 pt-2 pb-1 overflow-hidden"
-          style={{ height: "84px" }}
-        >
+        <div className="px-2.5 pt-2 pb-1 overflow-hidden" style={{ height: "84px" }}>
           <StarRating rating={product.rating} reviews={product.reviews} />
-          <p className="text-xs sm:text-sm font-medium text-gray-800 line-clamp-2 mt-1 leading-tight">
-            {product.name}
-          </p>
-          <p className="text-sm font-bold text-gray-900 mt-1">
-            NPR {product.price}
-          </p>
+          <p className="text-xs sm:text-sm font-medium text-gray-800 line-clamp-2 mt-1 leading-tight">{product.name}</p>
+          <p className="text-sm font-bold text-gray-900 mt-1">NPR {product.price}</p>
         </div>
       </Link>
 
       {/* Add to Cart — always at the bottom */}
       <div className="px-2.5 pb-2.5 pt-1">
-        <button
-          onClick={handleAdd}
-          className="w-full py-2 rounded text-white font-semibold flex items-center justify-center gap-1.5 text-sm transition-colors"
-          style={{ background: added ? "#2d7a4f" : "#00462C" }}
-        >
+        <button onClick={handleAdd} className="w-full py-2 rounded text-white font-semibold flex items-center justify-center gap-1.5 text-sm transition-colors" style={{ background: added ? "#2d7a4f" : "#00462C" }}>
           <CartIcon />
           {added ? "Added!" : "Add"}
         </button>
@@ -222,14 +173,9 @@ export default function ProductSection() {
 
   useEffect(() => {
     const fetchSectionData = async () => {
-      const [categoryResponse, productResponse] = await Promise.all([
-        apiGetRequest("/categories"),
-        apiGetRequest("/products"),
-      ]);
+      const [categoryResponse, productResponse] = await Promise.all([apiGetRequest("/categories"), apiGetRequest("/products")]);
 
-      const categoryRows = Array.isArray(categoryResponse?.data)
-        ? categoryResponse.data
-        : [];
+      const categoryRows = Array.isArray(categoryResponse?.data) ? categoryResponse.data : [];
       const mappedCategories = categoryRows
         .filter((item) => item.categoryStatus !== false && item.categoryStatus !== 0)
         .map((item) => ({
@@ -238,9 +184,7 @@ export default function ProductSection() {
           image: item.categoryLogo || "/categories/all.png",
         }));
 
-      const productRows = Array.isArray(productResponse?.data)
-        ? productResponse.data
-        : [];
+      const productRows = Array.isArray(productResponse?.data) ? productResponse.data : [];
       const mappedProducts = productRows
         .filter((item) => item.productStatus !== false && item.productStatus !== 0)
         .map((item) => ({
@@ -253,42 +197,23 @@ export default function ProductSection() {
             .trim()
             .toLowerCase(),
           badge: item.specialOffer ? "Special Offer" : null,
-          discount:
-            Number(item.actualPrice || 0) > Number(item.sellingPrice || 0)
-              ? `SAVE\n${Math.round(
-                  ((Number(item.actualPrice) - Number(item.sellingPrice)) /
-                    Number(item.actualPrice)) *
-                    100,
-                )}%`
-              : null,
+          discount: Number(item.actualPrice || 0) > Number(item.sellingPrice || 0) ? `SAVE\n${Math.round(((Number(item.actualPrice) - Number(item.sellingPrice)) / Number(item.actualPrice)) * 100)}%` : null,
           image: item.pImage || "/products/mustard-oil.png",
           createdAt: item.createdAt || null,
         }));
 
-      setCategories([
-        ...DEFAULT_CATEGORIES,
-        ...mappedCategories.filter((c) => c.id),
-      ]);
+      setCategories([...DEFAULT_CATEGORIES, ...mappedCategories.filter((c) => c.id)]);
       setProducts(mappedProducts);
     };
     fetchSectionData();
   }, []);
 
-  const filtered = (
-    activeCategory === "all"
-      ? products
-      : products.filter((p) => p.category === activeCategory)
-  )
-    .slice()
-    .sort((a, b) => {
-      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return bTime - aTime;
-    });
-  const activeCategoryLabel = useMemo(
-    () => categories.find((c) => c.id === activeCategory)?.label,
-    [categories, activeCategory],
-  );
+  const filtered = (activeCategory === "all" ? products : products.filter((p) => p.category === activeCategory)).slice().sort((a, b) => {
+    const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return bTime - aTime;
+  });
+  const activeCategoryLabel = useMemo(() => categories.find((c) => c.id === activeCategory)?.label, [categories, activeCategory]);
 
   // const newLocal = "mx-auto w-full max-w-319.5";
   const newLocalOld = "mx-auto w-full max-w-340 px-4 sm:px-6 lg:px-8";
@@ -305,16 +230,10 @@ export default function ProductSection() {
         <div className={newLocalOld}>
           {/* ── Welcome Header ── */}
           <div className="flex flex-col items-center text-center pt-8 sm:pt-10 lg:pt-11.25 pb-2 gap-1 px-4">
-            <h1
-              className="font-bold text-xl sm:text-2xl lg:text-[32px] leading-9.5 tracking-[0.6px] text-[#235A49]"
-              style={{ fontFamily: "Roboto Slab" }}
-            >
+            <h1 className="font-bold text-xl sm:text-2xl lg:text-[32px] leading-9.5 tracking-[0.6px] text-[#235A49]" style={{ fontFamily: "Roboto Slab" }}>
               Welcome To Nityagro!
             </h1>
-            <p
-              className="font-normal text-sm sm:text-lg lg:text-[32px] leading-tight tracking-[0.6px] text-[#235A49]"
-              style={{ fontFamily: "Roboto Slab" }}
-            >
+            <p className="font-normal text-sm sm:text-lg lg:text-[32px] leading-tight tracking-[0.6px] text-[#235A49]" style={{ fontFamily: "Roboto Slab" }}>
               Pure Goodness, Delivered Closer to You
             </p>
           </div>
@@ -324,20 +243,9 @@ export default function ProductSection() {
             {categories.map(({ id, label, image }) => {
               const isActive = activeCategory === id;
               return (
-                <button
-                  key={id}
-                  onClick={() => setActiveCategory(id)}
-                  className="flex flex-col items-center relative transition-all shrink-0"
-                  style={{ minWidth: "52px" }}
-                >
+                <button key={id} onClick={() => setActiveCategory(id)} className="flex flex-col items-center relative transition-all shrink-0" style={{ minWidth: "52px" }}>
                   <div className="flex flex-col items-center justify-center cursor-pointer pb-2">
-                    <Image
-                      src={image}
-                      alt={label}
-                      width={50}
-                      height={51}
-                      className="sm:w-8 sm:h-10 w-6 h-8 "
-                    />
+                    <Image src={image} alt={label} width={50} height={51} className="sm:w-8 sm:h-10 w-6 h-8 " />
                     <span
                       className="text-xs font-medium mt-1 font-figtree"
                       style={{
@@ -368,16 +276,8 @@ export default function ProductSection() {
           {/* ── Title Row ── */}
           <div className="w-full max-w-340 h-102 flex flex-col">
             <div className="flex items-center justify-between mt-4 mb-3 px-4 ">
-              <h2 className="font-bold text-lg sm:text-xl lg:text-[22px] text-[#00462C]">
-                {activeCategory === "all"
-                  ? "All Products"
-                  : activeCategoryLabel}
-              </h2>
-              <Link
-                href="/products"
-                className="font-semibold text-sm hover:underline"
-                style={{ color: "#00462C" }}
-              >
+              <h2 className="font-bold text-lg sm:text-xl lg:text-[22px] text-[#00462C]">{activeCategory === "all" ? "All Products" : activeCategoryLabel}</h2>
+              <Link href="/products" className="font-semibold text-sm hover:underline" style={{ color: "#00462C" }}>
                 View All
               </Link>
             </div>
@@ -387,11 +287,7 @@ export default function ProductSection() {
                 <div className="lg:hidden overflow-x-auto scrollbar pb-6 px-4">
                   <div className="flex gap-3" style={{ width: "max-content" }}>
                     {visibleProducts.map((product) => (
-                      <div
-                        key={product.id}
-                        className="shrink-0"
-                        style={{ width: "160px" }}
-                      >
+                      <div key={product.id} className="shrink-0" style={{ width: "160px" }}>
                         <ProductCard product={product} />
                       </div>
                     ))}
@@ -408,9 +304,7 @@ export default function ProductSection() {
                 </div>
               </>
             ) : (
-              <p className="text-gray-400 text-sm py-10 w-full text-center px-4">
-                No products in this category yet.
-              </p>
+              <p className="text-gray-400 text-sm py-10 w-full text-center px-4">No products in this category yet.</p>
             )}
           </div>
         </div>

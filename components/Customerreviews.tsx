@@ -59,14 +59,7 @@ function StarRating({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-0.5">
       {Array.from({ length: 5 }).map((_, i) => (
-        <svg
-          key={i}
-          className={`w-4 sm:w-5 h-4 sm:h-5 ${
-            i < rating ? "text-yellow-400" : "text-gray-300"
-          }`}
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
+        <svg key={i} className={`w-4 sm:w-5 h-4 sm:h-5 ${i < rating ? "text-yellow-400" : "text-gray-300"}`} fill="currentColor" viewBox="0 0 20 20">
           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
         </svg>
       ))}
@@ -77,19 +70,14 @@ function StarRating({ rating }: { rating: number }) {
 // ── Review Card ───────────────────────────────────────────────────────
 function ReviewCard({ review }: { review: Review }) {
   return (
-    <div className="flex flex-col w-[528px] h-[306px] sm:flex-row bg-white rounded-lg border shadow-sm overflow-hidden w-full">
+    <div className="flex flex-col sm:flex-row bg-white rounded-lg border shadow-sm overflow-hidden w-full min-w-0">
       {/* Image */}
-      <div className="relative w-[180px] h-[256px] sm:w-44 sm:h-auto overflow-hidden rounded-md m-2">
-        <Image
-          src={review.image}
-          alt={review.name}
-          fill
-          className="object-cover"
-        />
+      <div className="relative w-full h-56 sm:w-44 sm:h-auto overflow-hidden shrink-0">
+        <Image src={review.image} alt={review.name} fill className="object-cover" />
       </div>
 
       {/* Content */}
-      <div className="flex flex-col justify-between w-[274px] h-[256px] p-4 sm:p-6 gap-3 flex-1">
+      <div className="flex flex-col justify-between p-4 sm:p-6 gap-3 flex-1 min-w-0">
         <div className="space-y-2">
           <h3 className="text-base font-bold text-gray-900">{review.title}</h3>
 
@@ -115,10 +103,7 @@ export default function CustomerReviews() {
 
   const totalPages = Math.ceil(reviews.length / CARDS_PER_PAGE);
 
-  const visible = reviews.slice(
-    page * CARDS_PER_PAGE,
-    page * CARDS_PER_PAGE + CARDS_PER_PAGE,
-  );
+  const visible = reviews.slice(page * CARDS_PER_PAGE, page * CARDS_PER_PAGE + CARDS_PER_PAGE);
 
   const resetAutoSlide = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -138,9 +123,7 @@ export default function CustomerReviews() {
   return (
     <section className="bg-white py-2 sm:py-8 px-4 sm:px-8 lg:px-16">
       {/* Heading */}
-      <h1 className="text-center text-lg sm:text-xl lg:text-2xl font-bold text-[#235A49] mb-10 font-roboto-slab">
-        What Our Customers Say
-      </h1>
+      <h1 className="text-center text-lg sm:text-xl lg:text-2xl font-bold text-[#235A49] mb-10 font-roboto-slab">What Our Customers Say</h1>
 
       {/* Layout */}
       <div className="max-w-6xl mx-auto flex items-center gap-3 sm:gap-4">
@@ -156,7 +139,7 @@ export default function CustomerReviews() {
         </button>
 
         {/* Cards */}
-        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
           {visible.map((r) => (
             <ReviewCard key={r.id} review={r} />
           ))}
@@ -183,9 +166,7 @@ export default function CustomerReviews() {
               setPage(i);
               resetAutoSlide();
             }}
-            className={`h-2 rounded-full transition-all ${
-              i === page ? "w-4 bg-[#2d7a4f]" : "w-2 bg-gray-300"
-            }`}
+            className={`h-2 rounded-full transition-all ${i === page ? "w-4 bg-[#2d7a4f]" : "w-2 bg-gray-300"}`}
           />
         ))}
       </div>

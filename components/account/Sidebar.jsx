@@ -23,19 +23,13 @@ export default function Sidebar({ activeTab, onTabChange, user, onLogout }) {
   const displayName = user?.name || "User";
   const displayEmail = user?.email || "";
   return (
-    <div className="w-67.5 min-w-67.5 flex flex-col gap-4">
+    <div className="w-[260px] sm:w-[280px] flex flex-col gap-4 sm:gap-1 rounded-xl">
       {/* CARD 1 */}
       <div className="bg-white rounded-lg shadow-sm px-5 py-4 flex items-center gap-3">
-        <div className="w-12 h-12 rounded-full bg-[#DB8F00] flex items-center justify-center text-white text-xl font-bold shrink-0">
-          {displayName.charAt(0)}
-        </div>
+        <div className="w-12 h-12 rounded-full bg-[#DB8F00] flex items-center justify-center text-white text-xl font-bold shrink-0">{displayName.charAt(0)}</div>
         <div className="overflow-hidden">
-          <p className="text-[14px] font-semibold text-gray-800 truncate">
-            {displayName}
-          </p>
-          <p className="text-[12px] text-gray-400 mt-0.5 truncate">
-            {displayEmail}
-          </p>
+          <p className="text-[14px] font-semibold text-gray-800 truncate">{displayName}</p>
+          <p className="text-[12px] text-gray-400 mt-0.5 truncate">{displayEmail}</p>
         </div>
       </div>
 
@@ -45,9 +39,7 @@ export default function Sidebar({ activeTab, onTabChange, user, onLogout }) {
           <div key={section.title}>
             {/* Title */}
             <div className="mb-3">
-              <p className="text-[13px] font-bold text-gray-800 pb-1.5 border-b-2 border-[#DB8F00] inline-block">
-                {section.title}
-              </p>
+              <p className="text-[13px] font-bold text-gray-800 pb-1.5 border-b-2 border-[#DB8F00] inline-block">{section.title}</p>
             </div>
 
             {/* Items */}
@@ -57,36 +49,15 @@ export default function Sidebar({ activeTab, onTabChange, user, onLogout }) {
                   key={item.id}
                   onClick={() => onTabChange(item.id)}
                   className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-md text-[13.5px] text-left transition-colors duration-150
-                    ${
-                      activeTab === item.id
-                        ? "bg-[#fdf3d7] text-gray-800 font-semibold"
-                        : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"
-                    }`}
+                    ${activeTab === item.id ? "bg-[#fdf3d7] text-gray-800 font-semibold" : "text-gray-400 hover:bg-gray-50 hover:text-gray-600"}`}
                 >
-                  <span
-                    className={
-                      activeTab === item.id ? "text-[#DB8F00]" : "text-gray-400"
-                    }
-                  >
-                    {item.icon}
-                  </span>
+                  <span className={activeTab === item.id ? "text-[#DB8F00]" : "text-gray-400"}>{item.icon}</span>
                   {item.label}
                 </button>
               ))}
             </div>
           </div>
         ))}
-
-        <div className="pt-2 border-t border-gray-100">
-          <button
-            type="button"
-            onClick={onLogout}
-            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-md text-[13.5px] text-left text-red-500 hover:bg-red-50 transition-colors duration-150"
-          >
-            <LogOut size={16} />
-            Logout
-          </button>
-        </div>
       </div>
     </div>
   );

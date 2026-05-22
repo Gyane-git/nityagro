@@ -38,17 +38,13 @@ export default function CheckoutPaymentPage() {
   }, []);
 
   const getTotalAmount = (sourceItems: CheckoutSourceItem[]) => {
-    const itemTotal = sourceItems.reduce(
-      (sum, item) => sum + Number(item.total ?? item.unitPrice ?? 0),
-      0,
-    );
+    const itemTotal = sourceItems.reduce((sum, item) => sum + Number(item.total ?? item.unitPrice ?? 0), 0);
     const deliveryCharge = itemTotal > 0 ? 200 : 0;
     return Number((itemTotal + deliveryCharge).toFixed(2));
   };
 
   const placeCodOrder = async () => {
-    const sourceItems: CheckoutSourceItem[] =
-      checkoutItems.length > 0 ? checkoutItems : checkoutItem ? [checkoutItem] : [];
+    const sourceItems: CheckoutSourceItem[] = checkoutItems.length > 0 ? checkoutItems : checkoutItem ? [checkoutItem] : [];
 
     if (sourceItems.length === 0) {
       toast.error("No checkout items selected");
@@ -67,10 +63,7 @@ export default function CheckoutPaymentPage() {
 
       setProcessing(true);
 
-      const localUserId =
-        typeof window !== "undefined"
-          ? window.localStorage.getItem("userId")
-          : null;
+      const localUserId = typeof window !== "undefined" ? window.localStorage.getItem("userId") : null;
       const parsedUserId = Number(localUserId || 1);
 
       const payload = {
@@ -116,8 +109,7 @@ export default function CheckoutPaymentPage() {
   };
 
   const startConnectIpsPayment = async () => {
-    const sourceItems: CheckoutSourceItem[] =
-      checkoutItems.length > 0 ? checkoutItems : checkoutItem ? [checkoutItem] : [];
+    const sourceItems: CheckoutSourceItem[] = checkoutItems.length > 0 ? checkoutItems : checkoutItem ? [checkoutItem] : [];
 
     if (sourceItems.length === 0) {
       toast.error("No checkout items selected");
@@ -136,8 +128,7 @@ export default function CheckoutPaymentPage() {
 
       setProcessing(true);
 
-      const localUserId =
-        typeof window !== "undefined" ? window.localStorage.getItem("userId") : null;
+      const localUserId = typeof window !== "undefined" ? window.localStorage.getItem("userId") : null;
       const parsedUserId = Number(localUserId || 1);
 
       const normalizedItems = sourceItems.map((item) => ({
@@ -225,14 +216,13 @@ export default function CheckoutPaymentPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="mx-auto px-10 py-10" style={{ maxWidth: "1440px" }}>
+      <div className="mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-8 lg:py-10 max-w-[1440px]">
+        {/* Header */}
         <div className="mb-5">
-          <h1
-            className="font-bold mb-2"
-            style={{ fontSize: "28px", color: "#00462C" }}
-          >
+          <h1 className="font-bold mb-2 text-2xl sm:text-3xl" style={{ color: "#00462C" }}>
             Checkout
           </h1>
+
           <div
             style={{
               width: "160px",
@@ -243,29 +233,26 @@ export default function CheckoutPaymentPage() {
           />
         </div>
 
-        <div className="mb-8">
+        {/* Breadcrumb */}
+        <div className="mb-6 sm:mb-8 overflow-x-auto">
           <Breadcrumb />
         </div>
 
-        <div className="flex items-start gap-6">
-          <PaymentMethodSelector
-            selected={paymentMethod}
-            onSelect={setPaymentMethod}
-          />
+        {/* Main Content */}
+        <div className="flex flex-col xl:flex-row items-stretch xl:items-start gap-6">
+          {/* Payment Methods */}
+          <div className="flex-1 min-w-0">
+            <PaymentMethodSelector selected={paymentMethod} onSelect={setPaymentMethod} />
+          </div>
 
-          <div style={{ width: "300px", flexShrink: 0 }}>
+          {/* Order Summary */}
+          <div className="w-full xl:w-[400px] flex-shrink-0">
             <OrderSummary onProceed={handleProceed} processing={processing} />
           </div>
         </div>
       </div>
 
-      {showConfirmation && (
-        <OrderConfirmedModal
-          orderId={confirmedOrderId || "-"}
-          placedAt={placedAt || new Date().toLocaleString()}
-          onContinue={handleContinue}
-        />
-      )}
+      {showConfirmation && <OrderConfirmedModal orderId={confirmedOrderId || "-"} placedAt={placedAt || new Date().toLocaleString()} onContinue={handleContinue} />}
     </div>
   );
 }

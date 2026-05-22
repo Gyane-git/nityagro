@@ -9,6 +9,7 @@ import OrderTracking from "@/components/account/OrderTracking";
 import toast from "react-hot-toast";
 import useCartStore from "@/store/cartStore";
 import useWishlistStore from "@/store/wishlistStore";
+import { Menu, X } from "lucide-react";
 
 const USER = {
   userId: "1",
@@ -26,6 +27,7 @@ export default function MyAccountPage() {
   const [user, setUser] = useState(USER);
   const clearCart = useCartStore((state) => state.clearCart);
   const clearWishlist = useWishlistStore((state) => state.clearWishlist);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -80,14 +82,13 @@ export default function MyAccountPage() {
     fetchProfile();
   }, []);
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setSidebarOpen(false);
+  };
+
   const tabComponents = {
-    profile: (
-      <MyProfile
-        user={user}
-        userId={user.userId || USER.userId}
-        onProfileUpdated={(data) => setUser((prev) => ({ ...prev, ...data }))}
-      />
-    ),
+    profile: <MyProfile user={user} userId={user.userId || USER.userId} onProfileUpdated={(data) => setUser((prev) => ({ ...prev, ...data }))} />,
     address: <AddressBook userId={user.userId || USER.userId} />,
     history: <OrderHistory userId={user.userId || USER.userId} />,
     tracking: <OrderTracking userId={user.userId || USER.userId} userName={user.name || "User"} />,
@@ -119,23 +120,46 @@ export default function MyAccountPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
-      <nav className="px-6 py-3 text-[13px] flex items-center text-gray-500">
+      {/* Breadcrumb */}
+      <nav className="px-4 sm:px-6 py-3 text-[13px] flex items-center text-gray-500">
         <span>Home</span>
+
         <span className="mx-1 text-gray-400 text-lg font-semibold">›</span>
+
         <span className="text-gray-800 font-semibold">My Account</span>
       </nav>
 
-      <div className="flex items-start gap-5 px-6 pb-10">
-        <Sidebar
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          user={user}
-          onLogout={handleLogout}
-        />
+      {/* Mobile Header */}
+      <div className="lg:hidden px-4 sm:px-6 mb-2">
+        <button onClick={() => setSidebarOpen(true)} className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg shadow-sm border border-gray-200">
+          <Menu size={22} className="text-gray-900" />
+          <span className="hidden sm:inline text-sm font-medium text-gray-900">Menu</span>
+        </button>
+      </div>
 
-        <main className="flex-1 bg-white rounded-lg shadow-sm p-8 min-h-100">
-          {tabComponents[activeTab]}
-        </main>
+      {/* Mobile Overlay */}
+      {sidebarOpen && <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
+
+      <div className="flex gap-5 px-4 sm:px-6 pb-10">
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:block">
+          <Sidebar activeTab={activeTab} onTabChange={handleTabChange} user={user} />
+        </div>
+
+        {/* Mobile Sidebar Drawer */}
+        <div className={`fixed top-23 left-0 h-full z-50 transform transition-transform duration-300 lg:hidden ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
+          <div className="relative h-full bg-white shadow-xl p-4 overflow-y-auto">
+            {/* Close Button */}
+            <button onClick={() => setSidebarOpen(false)} className="absolute top-6 right-6">
+              <X size={22} className="bg-red-500 rounded-md" />
+            </button>
+
+            <Sidebar activeTab={activeTab} onTabChange={handleTabChange} user={user} />
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <main className="flex-1 bg-white rounded-lg shadow-sm p-4 sm:p-6 lg:p-8 min-h-[500px] overflow-hidden">{tabComponents[activeTab]}</main>
       </div>
     </div>
   );

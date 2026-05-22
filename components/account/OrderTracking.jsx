@@ -83,42 +83,80 @@ export default function OrderTracking({ userId = "1", userName = "User" }) {
   }
 
   return (
-    <div className="min-h-screen p-6 font-sans">
-      <div className="max-w-240 mx-auto">
-        <div className="flex justify-between items-start mb-5">
+    <div className="min-h-screen p-4 sm:p-6 font-sans">
+      <div className="max-w-6xl mx-auto">
+        {/* HEADER (responsive fix only) */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-5">
           <div>
-            <h2 className="text-[20px] font-bold text-[#235a49]">Hi {userName},</h2>
-            <p className="text-[13px] text-gray-500 mt-0.5">Here&apos;s the latest update on your order</p>
+            <h2 className="text-[18px] sm:text-[20px] font-bold text-[#235a49]">Hi {userName},</h2>
+            <p className="text-[12px] sm:text-[13px] text-gray-500 mt-0.5">Here&apos;s the latest update on your order</p>
           </div>
-          <Link href="/products" className="flex items-center gap-2 bg-[#235a3e] hover:bg-[#1a4730] text-white px-4 py-2.5 rounded-lg text-[13px] font-semibold transition-colors">
+
+          <Link href="/products" className="flex items-center justify-center sm:justify-start gap-2 bg-[#235a3e] hover:bg-[#1a4730] text-white px-4 py-2.5 rounded-lg text-[13px] font-semibold transition-colors w-full sm:w-auto">
             <MoveLeft size={16} /> Continue Shopping
           </Link>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-2">
+        {/* STATUS CARD */}
+        <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 mb-2">
           <div className="text-[14px] font-bold text-[#235a4e]">Order Status</div>
-          <div className="text-[12px] text-[#4E5663] mt-0.5 mb-5">Order ID <span className="text-[#4E5663] font-medium"># {latestOrder.orderNumber}</span></div>
 
-          <div className="relative flex justify-between items-start">
+          <div className="text-[12px] text-[#4E5663] mt-0.5 mb-5">
+            Order ID <span className="text-[#4E5663] font-medium"># {latestOrder.orderNumber}</span>
+          </div>
+
+          {/* ================= MOBILE (VERTICAL) ================= */}
+          <div className="flex flex-col gap-6 sm:hidden relative">
+            {/* vertical line background */}
+            <div className="absolute left-4 top-0 bottom-0 w-1 bg-gray-200 z-0" />
+
+            {/* vertical progress line */}
+            <div
+              className="absolute left-4 top-0 w-1 bg-[#235a3e] z-10"
+              style={{
+                height: latestOrder?.orderStatus === "delivered" ? "100%" : latestOrder?.orderStatus === "shipped" ? "66%" : latestOrder?.orderStatus === "cancelled" ? "100%" : "35%",
+              }}
+            />
+
+            {steps.map((step, i) => (
+              <div key={i} className="relative flex items-start gap-5 z-20">
+                <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${step.status !== "pending" ? "bg-[#266A3F] text-white" : "bg-gray-100 border border-gray-200 text-gray-300"}`}>{step.icon}</div>
+
+                <div>
+                  <div className="text-[12px] font-semibold text-gray-700">{step.label}</div>
+                  <div className="text-[11px] text-gray-400">{step.sub}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* ================= DESKTOP (HORIZONTAL) ================= */}
+          <div className="relative hidden sm:flex justify-between items-start">
             <div className="absolute top-5 left-5 right-5 h-1 bg-gray-200 z-0" />
+
             <div className="absolute top-5 left-5 h-1 bg-[#235a3e] z-10" style={{ width: progressWidth }} />
 
             {steps.map((step, i) => (
               <div key={i} className="relative z-20 flex flex-col items-center gap-2 flex-1">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-base ${step.status !== "pending" ? "bg-[#266A3F] text-white" : "bg-gray-100 border-2 border-gray-200 text-gray-300"}`}>
-                  {step.icon}
-                </div>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-base ${step.status !== "pending" ? "bg-[#266A3F] text-white" : "bg-gray-100 border-2 border-gray-200 text-gray-300"}`}>{step.icon}</div>
+
                 <div className="text-[12px] font-semibold text-center text-gray-700">{step.label}</div>
+
                 <div className="text-[11px] text-gray-400 text-center">{step.sub}</div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 mb-2">
-          <div className="bg-white border border-gray-200 rounded-xl p-5">
-            <div className="flex items-center gap-1.5 text-[13px] font-bold text-[#235a3e] border-b-2 border-[#235a3e] pb-1.5 mb-3"><MapPin size={20} /> Delivery Address</div>
+        {/* INFO CARDS (grid fix only) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
+          <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5">
+            <div className="flex items-center gap-1.5 text-[13px] font-bold text-[#235a3e] border-b-2 border-[#235a3e] pb-1.5 mb-3">
+              <MapPin size={20} /> Delivery Address
+            </div>
+
             <div className="text-[13px] font-semibold text-gray-800 mb-1.5">{selectedAddress?.fullName || "N/A"}</div>
+
             <div className="text-[12px] text-gray-500 leading-relaxed">
               {selectedAddress?.address || "-"}
               <br />
@@ -128,8 +166,11 @@ export default function OrderTracking({ userId = "1", userName = "User" }) {
             </div>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-xl p-5">
-            <div className="flex items-center gap-1.5 text-[13px] font-bold text-[#235a3e] border-b-2 border-[#235a3e] pb-1.5 mb-3"><ShoppingCart size={20} /> Order Information</div>
+          <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5">
+            <div className="flex items-center gap-1.5 text-[13px] font-bold text-[#235a3e] border-b-2 border-[#235a3e] pb-1.5 mb-3">
+              <ShoppingCart size={20} /> Order Information
+            </div>
+
             {[
               { label: "Order Date", value: formatDateTime(latestOrder.createdAt), green: false },
               { label: "Payment Method", value: latestOrder.paymentMethod || "COD", green: false },
@@ -140,6 +181,7 @@ export default function OrderTracking({ userId = "1", userName = "User" }) {
                 <span className={`text-[12px] font-medium ${row.green ? "text-[#235a3e]" : "text-gray-700"}`}>{row.value}</span>
               </div>
             ))}
+
             <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-100">
               <span className="text-[12px] font-semibold text-gray-800">Total Amount :</span>
               <span className="text-[14px] font-bold text-[#235a3e]">{formatMoney(latestOrder.totalAmount)}</span>
@@ -147,22 +189,29 @@ export default function OrderTracking({ userId = "1", userName = "User" }) {
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
+        {/* TABLE (ONLY responsiveness added, NO content removed) */}
+        <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 overflow-x-auto">
           <div className="mb-4">
-            <div className="inline-block pb-1.5 text-[13px] font-bold text-[#235a3e]"><Package size={20} /> Order Items</div>
+            <div className="inline-block pb-1.5 text-[13px] font-bold text-[#235a3e]">
+              <Package size={20} /> Order Items
+            </div>
+
             <div className="h-0.5 w-full bg-gray-200 relative">
               <div className="absolute left-0 top-0 h-full bg-[#235a3e] w-25"></div>
             </div>
           </div>
 
-          <table className="w-full text-[12px]">
+          <table className="w-full min-w-[700px] text-[12px]">
             <thead>
               <tr className="border-b-2 border-gray-100">
                 {["Product", "Product ID", "Quantity", "Unit Price", "Total"].map((h) => (
-                  <th key={h} className="pb-2 text-[#266A3F] font-semibold ps-10 first:text-left text-center last:text-center">{h}</th>
+                  <th key={h} className="pb-2 text-[#266A3F] font-semibold ps-10 first:text-left text-center last:text-center">
+                    {h}
+                  </th>
                 ))}
               </tr>
             </thead>
+
             <tbody>
               {orderItems.map((item, i) => (
                 <tr key={i} className="border-b-2 border-gray-100 last:border-0">

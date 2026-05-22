@@ -5,7 +5,7 @@ import ComboPackSection from "@/components/ComboPackSection";
 import WhyChooseNityagro from "@/components/Whychoosenityagro";
 import Faq from "@/components/Faq";
 import Shopctabanner from "@/components/Shopctabanner";
-import CustomerReviews from "@/components/CustomerReviews";
+import CustomerReviews from "@/components/Customerreviews";
 
 function page() {
   return (

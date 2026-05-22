@@ -99,60 +99,43 @@ export default function MyProfile({ user, userId = "1", onProfileUpdated }) {
 
   return (
     <div>
-      <h2 className="text-xl font-bold text-[#266A3F] mb-1">My Profile</h2>
-      <p className="text-[13px] text-[#4C6759] mb-6 border-b border-gray-100 pb-4">
-        Edit your personal details and login info.
-      </p>
+      <h2 className="text-xl sm:text-2xl font-bold text-[#266A3F] mb-1">My Profile</h2>
+      <p className="text-[14px] text-[#4C6759] mb-6 border-b border-gray-100 pb-4">Edit your personal details and login info.</p>
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div className="flex flex-col gap-1.5">
           <label className="text-[13px] text-[#4C6759]">First name</label>
-          <input type="text" value={form.firstName} onChange={set("firstName")}
-            className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-[13.5px] text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
+          <input type="text" value={form.firstName} onChange={set("firstName")} className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-sm text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
         </div>
         <div className="flex flex-col gap-1.5">
           <label className="text-[13px] text-[#4C6759]">Last name</label>
-          <input type="text" value={form.lastName} onChange={set("lastName")}
-            className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-[13.5px] text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
+          <input type="text" value={form.lastName} onChange={set("lastName")} className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-sm text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div className="flex flex-col gap-1.5">
           <label className="text-[13px] text-gray-600">Email</label>
-          <input type="email" value={form.email} onChange={set("email")}
-            className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-[13.5px] text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
+          <input type="email" value={form.email} onChange={set("email")} className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-sm text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
         </div>
         <div className="flex flex-col gap-1.5">
           <label className="text-[13px] text-[#4C6759]">Phone no</label>
-          <input type="text" value={form.phone} onChange={set("phone")}
-            className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-[13.5px] text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
+          <input type="text" value={form.phone} onChange={set("phone")} className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-sm text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        <input type="text" placeholder="City" value={form.city} onChange={set("city")}
-          className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-[13.5px] text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
-        <input type="text" placeholder="State" value={form.state} onChange={set("state")}
-          className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-[13.5px] text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
-        <input type="text" placeholder="Zip Code" value={form.zipCode} onChange={set("zipCode")}
-          className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-[13.5px] text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
-        <input type="text" placeholder="Country" value={form.country} onChange={set("country")}
-          className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-[13.5px] text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <input type="text" placeholder="City" value={form.city} onChange={set("city")} className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-sm text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
+        <input type="text" placeholder="State" value={form.state} onChange={set("state")} className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-sm text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
+        <input type="text" placeholder="Zip Code" value={form.zipCode} onChange={set("zipCode")} className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-sm text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
+        <input type="text" placeholder="Country" value={form.country} onChange={set("country")} className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-sm text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
       </div>
 
-      <div className="flex justify-end gap-4">
-        <button
-          onClick={() => setForm(initial)}
-          className="px-6 py-2.5 text-[13.5px] hover:bg-[#F9F6F0] rounded-md text-[#0A0A0A] hover:text-gray-700 transition-colors"
-        >
+      <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
+        <button onClick={() => setForm(initial)} className="px-6 py-2.5 text-sm border border-gray-100 hover:bg-[#fce7be] rounded-md text-[#0A0A0A] hover:text-gray-700 transition-colors">
           Cancel
         </button>
-        <button
-          onClick={handleSubmit}
-          disabled={saving}
-          className="px-7 py-2.5 bg-[#2e5e2e] text-white text-[13.5px] font-semibold rounded-md hover:opacity-90 transition-opacity disabled:opacity-60"
-        >
+        <button onClick={handleSubmit} disabled={saving} className="px-3 py-2 bg-[#2e5e2e] text-white text-sm font-normal rounded-md hover:opacity-90 transition-opacity disabled:opacity-60">
           {saving ? "Saving..." : "Save Changes"}
         </button>
       </div>

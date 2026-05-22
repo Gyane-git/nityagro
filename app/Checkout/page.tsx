@@ -58,7 +58,7 @@ export default function CheckoutReviewPage() {
          *  Right → Order summary panel                  (300px fixed)
          *  gap-6 = 24px gutter
          */}
-        <div className="flex items-start gap-6">
+        <div className="flex sm:flex-row items-start gap-6">
 
           {/* Left column */}
           <div className="flex flex-col flex-1 min-w-0">

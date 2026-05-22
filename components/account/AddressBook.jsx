@@ -32,10 +32,7 @@ export default function AddressBook({ userId = "1" }) {
 
   const [addresses, setAddresses] = useState([]);
   const [editingId, setEditingId] = useState(null);
-  const selectedAddress = useMemo(
-    () => addresses.find((address) => address.id === editingId),
-    [addresses, editingId],
-  );
+  const selectedAddress = useMemo(() => addresses.find((address) => address.id === editingId), [addresses, editingId]);
   const [form, setForm] = useState(EMPTY_FORM);
   const [loading, setLoading] = useState(false);
 
@@ -171,12 +168,9 @@ export default function AddressBook({ userId = "1" }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h2 className="text-xl font-bold text-[#2e5e2e]">Address Book</h2>
-        <button
-          onClick={openAdd}
-          className="rounded-md bg-[#2e5e2e] px-4 py-2 text-sm font-semibold text-white"
-        >
+        <button onClick={openAdd} className="rounded-md bg-[#2e5e2e] px-4 py-2 text-sm font-semibold text-white">
           Add New Address
         </button>
       </div>
@@ -188,42 +182,29 @@ export default function AddressBook({ userId = "1" }) {
           <div className="px-4 py-4 text-sm text-gray-500">No addresses found.</div>
         ) : (
           addresses.map((address) => (
-            <div
-              key={address.id}
-              className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-4 py-4 last:border-b-0"
-            >
+            <div key={address.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-100 px-4 py-4 last:border-b-0">
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-gray-800">{address.fullName}</p>
                 <p className="text-sm text-gray-600">{address.phone}</p>
                 <p className="text-sm text-gray-600">{address.address}</p>
-                <p className="text-xs text-gray-500">
-                  {[address.colony, address.city, address.region].filter(Boolean).join(", ")}
-                </p>
+                <p className="text-xs text-gray-500">{[address.colony, address.city, address.region].filter(Boolean).join(", ")}</p>
               </div>
-              <div className="flex items-center gap-2">
+              {/* <div className="flex flex-col sm:flex-row gap-2 sm:items-center"> */}
+              {/* <div className="flex flex-row flex-nowrap gap-2 items-center overflow-x-auto"> */}
+              <div className="flex flex-row flex-nowrap gap-2 items-center w-fit">
                 <button
                   onClick={() => {
                     setSelectedAddress(address.id);
                     if (nextPath) router.push(nextPath);
                   }}
-                  className={`rounded border px-3 py-1 text-xs font-semibold ${
-                    selectedAddressId === address.id
-                      ? "border-[#2e5e2e] bg-[#2e5e2e] text-white"
-                      : "border-gray-300 text-gray-700"
-                  }`}
+                  className={`rounded border px-3 py-1 text-xs font-semibold ${selectedAddressId === address.id ? "border-[#2e5e2e] bg-[#2e5e2e] text-white" : "border-gray-300 text-gray-700"}`}
                 >
                   {selectedAddressId === address.id ? "Selected" : "Use This"}
                 </button>
-                <button
-                  onClick={() => openEdit(address)}
-                  className="rounded border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-700"
-                >
+                <button onClick={() => openEdit(address)} className="rounded border border-gray-300 px-3 py-1 text-xs font-semibold text-gray-700">
                   Edit
                 </button>
-                <button
-                  onClick={() => handleDelete(address.id)}
-                  className="rounded border border-red-300 px-3 py-1 text-xs font-semibold text-red-600"
-                >
+                <button onClick={() => handleDelete(address.id)} className="rounded border border-red-300 px-3 py-1 text-xs font-semibold text-red-600">
                   Delete
                 </button>
               </div>
@@ -233,10 +214,8 @@ export default function AddressBook({ userId = "1" }) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-gray-100 p-4 text-gray-700">
-        <h3 className="text-base font-semibold text-gray-800">
-          {editingId ? "Edit Address" : "Add Address"}
-        </h3>
-        <div className="grid grid-cols-2 gap-3">
+        <h3 className="text-base font-semibold text-gray-800">{editingId ? "Edit Address" : "Add Address"}</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {[
             ["fullName", "Full Name"],
             ["phone", "Phone"],
@@ -248,27 +227,14 @@ export default function AddressBook({ userId = "1" }) {
             ["locality", "Locality"],
             ["zipCode", "Zip Code"],
           ].map(([key, label]) => (
-            <input
-              key={key}
-              value={form[key] || ""}
-              onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))}
-              placeholder={label}
-              className="rounded border border-gray-300 px-3 py-2 text-sm"
-            />
+            <input key={key} value={form[key] || ""} onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))} placeholder={label} className="rounded border border-gray-300 px-3 py-2 text-sm" />
           ))}
-          <select
-            value={form.addType}
-            onChange={(e) => setForm((prev) => ({ ...prev, addType: e.target.value }))}
-            className="rounded border border-gray-300 px-3 py-2 text-sm"
-          >
+          <select value={form.addType} onChange={(e) => setForm((prev) => ({ ...prev, addType: e.target.value }))} className="rounded border border-gray-300 px-3 py-2 text-sm">
             <option value="Home">Home</option>
             <option value="Office">Office</option>
           </select>
         </div>
-        <button
-          type="submit"
-          className="rounded-md bg-[#2e5e2e] px-4 py-2 text-sm font-semibold text-white"
-        >
+        <button type="submit" className="rounded-md bg-[#2e5e2e] px-4 py-2 text-sm font-semibold text-white">
           Save Address
         </button>
       </form>
