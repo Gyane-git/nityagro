@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { requireAuth } from "@/lib/auth";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,9 +17,8 @@ export async function OPTIONS() {
 
 export async function GET(req: Request) {
   try {
-    const { searchParams } = new URL(req.url);
-    const userIdRaw = searchParams.get("userId") || "1";
-    const userId = BigInt(userIdRaw);
+    const auth = await requireAuth();
+    const userId = BigInt(auth.sub);
 
     const user = await prisma.users.findUnique({
       where: { userId },
@@ -61,8 +61,9 @@ export async function GET(req: Request) {
 
 export async function PUT(req: Request) {
   try {
+    const auth = await requireAuth();
     const body = await req.json();
-    const userId = BigInt(body?.userId || "1");
+    const userId = BigInt(auth.sub);
 
     const name = String(body?.name || "").trim();
     const email = String(body?.email || "").trim().toLowerCase();

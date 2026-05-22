@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import useCartStore from "@/store/cartStore";
 import useCheckoutStore from "@/store/checkoutStore";
 import useToastStore from "@/store/toastStore";
+import { requireLoginForAction } from "@/utils/clientAuthGuard";
+import { addCartToDb } from "@/utils/accountListApi";
 
 // ─── Icons ──────────────────────────────────────────────────────────────────
 const StarIcon = ({ filled }) => (
@@ -115,21 +117,33 @@ export default function ProductInfo({ product }) {
   const selectedLabel = selectedVariant?.label || p.label || p.name;
   const displayName = `${p.name} - ${selectedLabel}`;
 
-  const handleAdd = () => {
-    addToCart({
+  const handleAdd = async () => {
+    if (!requireLoginForAction()) {
+      showToast("Please login to add products to cart");
+      return;
+    }
+
+    const item = {
       id: selectedVariant?.id || p.id,
       name: displayName,
       price: currentPrice,
       image: selectedVariant?.image || p.image || p.images?.[0] || "/products/mustard-oil.png",
       qty,
       weight: selectedLabel,
-    });
+    };
+    addToCart(item);
+    await addCartToDb(item).catch(() => null);
     showToast(`${displayName} added to cart`);
     setAdded(true);
     setTimeout(() => setAdded(false), 1400);
   };
 
   const handleBuyNow = () => {
+    if (!requireLoginForAction()) {
+      showToast("Please login to buy this product");
+      return;
+    }
+
     setCheckoutItem({
       id: selectedVariant?.id || p.id,
       name: displayName,

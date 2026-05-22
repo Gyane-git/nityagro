@@ -6,6 +6,8 @@ import { useEffect, useMemo, useState } from "react";
 import useCartStore from "@/store/cartStore";
 import useToastStore from "@/store/toastStore";
 import { apiGetRequest } from "@/apihelper/apiHelper";
+import { requireLoginForAction } from "@/utils/clientAuthGuard";
+import { addCartToDb } from "@/utils/accountListApi";
 
 const CartIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -26,15 +28,22 @@ function ProductCard({ product }) {
   const addToCart = useCartStore((state) => state.addToCart);
   const showToast = useToastStore((state) => state.showToast);
 
-  const handleAdd = () => {
-    addToCart({
+  const handleAdd = async () => {
+    if (!requireLoginForAction()) {
+      showToast("Please login to add products to cart");
+      return;
+    }
+
+    const item = {
       id: product.id,
       name: product.name,
       price: product.price,
       image: product.image,
       qty: 1,
       weight: "100 gm",
-    });
+    };
+    addToCart(item);
+    await addCartToDb(item).catch(() => null);
     showToast(`${product.name} added to cart`);
     setAdded(true);
     setTimeout(() => setAdded(false), 1400);

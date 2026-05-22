@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import useCartStore from "@/store/cartStore";
+import { clearCartInDb, removeCartFromDb, updateCartQtyInDb } from "@/utils/accountListApi";
 
 // ─── Icons ───────────────────────────────────────────────────────────────────
 const TrashIcon = () => (
@@ -144,15 +145,20 @@ export default function CartItems({ checkedIds, setCheckedIds }) {
     setCheckedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
-  const handleQtyChange = (id, qty) => updateQty(id, qty);
+  const handleQtyChange = (id, qty) => {
+    updateQty(id, qty);
+    updateCartQtyInDb(id, qty).catch(() => null);
+  };
 
   const handleRemove = (id) => {
     removeItem(id);
+    removeCartFromDb(id).catch(() => null);
     setCheckedIds((prev) => prev.filter((x) => x !== id));
   };
 
   const handleClearCart = () => {
     clearCart();
+    clearCartInDb().catch(() => null);
     setCheckedIds([]);
   };
 

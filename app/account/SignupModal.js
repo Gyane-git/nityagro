@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import AuthModal from "./AuthModal";
+import toast from "react-hot-toast";
 
 const EyeIcon = ({ show }) => (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -36,12 +37,48 @@ export default function SignupModal({ isOpen, onClose, onLogin }) {
   const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
   const [showPw, setShowPw]   = useState(false);
   const [showCPw, setShowCPw] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
-    console.log("Signup:", form);
+
+    if (form.password.length < 8) {
+      toast.error("Password must be at least 8 characters");
+      return;
+    }
+    if (form.password !== form.confirm) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          password: form.password,
+        }),
+      });
+      const payload = await response.json();
+
+      if (!response.ok || !payload?.success) {
+        toast.error(payload?.message || "Signup failed");
+        return;
+      }
+
+      toast.success("Account created. Please login.");
+      onClose?.();
+      onLogin?.();
+    } catch {
+      toast.error("Signup failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -66,7 +103,7 @@ export default function SignupModal({ isOpen, onClose, onLogin }) {
           {/* Email */}
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-gray-800">Email <span className="text-red-500">*</span></label>
-            <input type="tel" placeholder="Please enter your email  address" value={form.email} onChange={set("email")}
+            <input type="email" placeholder="Please enter your email address" value={form.email} onChange={set("email")}
               className={inputClass} style={{ height: "48px" }} required />
           </div>
 
@@ -96,9 +133,10 @@ export default function SignupModal({ isOpen, onClose, onLogin }) {
 
           {/* Sign Up button */}
           <button type="submit"
+            disabled={loading}
             className="w-full flex items-center justify-center text-white font-bold text-sm rounded-lg mt-1 transition-all hover:opacity-90 active:scale-[0.99]"
-            style={{ background: "#266A3F", height: "48px", boxShadow: "0 4px 14px rgba(38,106,63,0.28)" }}>
-            Sign Up
+            style={{ background: "#266A3F", height: "48px", boxShadow: "0 4px 14px rgba(38,106,63,0.28)", opacity: loading ? 0.75 : 1 }}>
+            {loading ? "Creating..." : "Sign Up"}
           </button>
 
           {/* Divider */}

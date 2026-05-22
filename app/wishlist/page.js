@@ -2,10 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect } from "react";
 import useWishlistStore from "@/store/wishlistStore";
 import useToastStore from "@/store/toastStore";
 import useCartStore from "@/store/cartStore";
 import Banner from "@/app/products/Banner";
+import { requireLoginForAction } from "@/utils/clientAuthGuard";
+import { addCartToDb, clearWishlistInDb, removeWishlistFromDb } from "@/utils/accountListApi";
 
 const HeartIcon = ({ filled }) => (
   <svg
@@ -46,31 +49,46 @@ export default function WishlistPage() {
   const addToCart = useCartStore((state) => state.addToCart);
   const showToast = useToastStore((state) => state.showToast);
 
+  useEffect(() => {
+    if (!requireLoginForAction()) {
+      showToast("Please login to view your wishlist");
+    }
+  }, [showToast]);
+
   const resolveImageUrl = (imageUrl) => {
     if (!imageUrl) return "/products/mustard-oil.png";
     if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
     return imageUrl.startsWith("/") ? imageUrl : `/${imageUrl}`;
   };
 
-  const handleRemove = (item) => {
+  const handleRemove = async (item) => {
     removeFromWishlist(item.id);
+    await removeWishlistFromDb(item.id).catch(() => null);
     showToast(`${item.name} removed from wishlist`);
   };
 
-  const handleAddToCart = (item) => {
-    addToCart({
+  const handleAddToCart = async (item) => {
+    if (!requireLoginForAction()) {
+      showToast("Please login to add products to cart");
+      return;
+    }
+
+    const cartItem = {
       id: item.id,
       name: item.name,
       price: item.price,
       image: item.image,
       qty: 1,
       weight: "100 gm",
-    });
+    };
+    addToCart(cartItem);
+    await addCartToDb(cartItem).catch(() => null);
     showToast(`${item.name} added to cart`);
   };
 
-  const handleClearWishlist = () => {
+  const handleClearWishlist = async () => {
     clearWishlist();
+    await clearWishlistInDb().catch(() => null);
     showToast("Wishlist cleared");
   };
 

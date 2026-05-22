@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CartItems from "./Cartitems";
 import OrderSummary from "./Ordersummary";
 import Link from "next/link";
+import useToastStore from "@/store/toastStore";
+import { requireLoginForAction } from "@/utils/clientAuthGuard";
 
 function Breadcrumb() {
   return (
@@ -19,6 +21,13 @@ function Breadcrumb() {
 
 export default function CartPage() {
   const [checkedIds, setCheckedIds] = useState([]);
+  const showToast = useToastStore((state) => state.showToast);
+
+  useEffect(() => {
+    if (!requireLoginForAction()) {
+      showToast("Please login to view your cart");
+    }
+  }, [showToast]);
 
   return (
     <main className="min-h-screen bg-white">

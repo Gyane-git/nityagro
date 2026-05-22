@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import OrderSummary from "@/app/adress_book/components/OrderSummary";
 import Breadcrumb from "@/app/adress_book/components/Breadcrumb";
@@ -8,6 +8,7 @@ import OrderConfirmedModal from "@/app/Checkout/payment/Orderconfirmedmodal";
 import useCheckoutStore from "@/store/checkoutStore";
 import useCartStore from "@/store/cartStore";
 import toast from "react-hot-toast";
+import { requireLoginForAction } from "@/utils/clientAuthGuard";
 
 type CheckoutSourceItem = {
   id: number;
@@ -29,6 +30,12 @@ export default function CheckoutPaymentPage() {
   const clearCheckoutItem = useCheckoutStore((state) => state.clearCheckoutItem);
   const getSelectedAddress = useCheckoutStore((state) => state.getSelectedAddress);
   const removeItems = useCartStore((state) => state.removeItems);
+
+  useEffect(() => {
+    if (!requireLoginForAction()) {
+      toast.error("Please login to continue payment");
+    }
+  }, []);
 
   const getTotalAmount = (sourceItems: CheckoutSourceItem[]) => {
     const itemTotal = sourceItems.reduce(

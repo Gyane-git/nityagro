@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import AuthModal from "./AuthModal";
+import toast from "react-hot-toast";
 
 // ─── Icons ───────────────────────────────────────────────────────────────────
 const EyeIcon = ({ show }) => (
@@ -40,11 +41,59 @@ export default function LoginModal({ isOpen, onClose, onSignup, onForgot }) {
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [showPw, setShowPw] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    // Add your auth logic here
-    console.log("Login:", { tab, email, password, otp });
+
+    if (tab !== "password") {
+      toast.error("OTP login is not enabled yet. Please use password login.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
+      const payload = await response.json();
+
+      if (!response.ok || !payload?.success) {
+        toast.error(payload?.message || "Login failed");
+        return;
+      }
+
+      const token = payload.data?.token;
+      const user = payload.data?.user;
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("userId", user.userId);
+      localStorage.setItem("auth_user", JSON.stringify(user));
+
+      if (user.type === "ADMIN") {
+        localStorage.setItem("admin_token", token);
+        localStorage.setItem("admin_auth", JSON.stringify({ token, user }));
+      } else {
+        localStorage.removeItem("admin_token");
+        localStorage.removeItem("admin_auth");
+      }
+
+      toast.success("Login successful");
+      onClose?.();
+
+      const params = new URLSearchParams(window.location.search);
+      const next = params.get("next");
+      const redirectTo =
+        user.type === "ADMIN" ? user.redirectTo || "/admin/dashboard" : next || "/";
+      window.location.href = redirectTo;
+    } catch {
+      toast.error("Login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -82,7 +131,7 @@ export default function LoginModal({ isOpen, onClose, onSignup, onForgot }) {
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-gray-800">Email</label>
             <input
-              type="tel"
+              type="email"
               placeholder="Please enter your email address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -156,10 +205,11 @@ export default function LoginModal({ isOpen, onClose, onSignup, onForgot }) {
           {/* ── Login button ── */}
           <button
             type="submit"
+            disabled={loading}
             className="w-full flex items-center justify-center text-white font-bold text-sm rounded-lg mt-1 transition-all hover:opacity-90 active:scale-[0.99]"
-            style={{ background: "#266A3F", height: "48px", boxShadow: "0 4px 14px rgba(38,106,63,0.28)" }}
+            style={{ background: "#266A3F", height: "48px", boxShadow: "0 4px 14px rgba(38,106,63,0.28)", opacity: loading ? 0.75 : 1 }}
           >
-            Login
+            {loading ? "Logging in..." : "Login"}
           </button>
 
           {/* ── Divider ── */}

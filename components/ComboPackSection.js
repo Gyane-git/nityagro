@@ -6,6 +6,8 @@ import { useState } from "react";
 import { ALL_PRODUCTS } from "@/app/products/productsData";
 import useCartStore from "@/store/cartStore";
 import useToastStore from "@/store/toastStore";
+import { requireLoginForAction } from "@/utils/clientAuthGuard";
+import { addCartToDb } from "@/utils/accountListApi";
 
 // ─── Icons ─────────────────────────────────────────────────────────────────
 const CartIcon = () => (
@@ -118,15 +120,22 @@ function ProductCard({ product }) {
   const addToCart = useCartStore((state) => state.addToCart);
   const showToast = useToastStore((state) => state.showToast);
 
-  const handleAdd = () => {
-    addToCart({
+  const handleAdd = async () => {
+    if (!requireLoginForAction()) {
+      showToast("Please login to add products to cart");
+      return;
+    }
+
+    const item = {
       id: detailProduct.id,
       name: product.name,
       price: product.price,
       image: product.image,
       qty: 1,
       weight: "100 gm",
-    });
+    };
+    addToCart(item);
+    await addCartToDb(item).catch(() => null);
     showToast(`${product.name} added to cart`);
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);

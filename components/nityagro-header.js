@@ -8,6 +8,7 @@ import useWishlistStore from "@/store/wishlistStore";
 import { useAuthModal } from "@/app/account/useAuthModal";
 import AuthModals from "@/app/account/AuthModals";
 import { apiGetRequest } from "@/apihelper/apiHelper";
+import toast from "react-hot-toast";
 
 /* ── Icons ── */
 const SearchIcon = () => (
@@ -164,18 +165,56 @@ export default function Header() {
     "12% OFF above · Code: NEW12",
   ]);
   const [promoIndex, setPromoIndex] = useState(0);
+  const [authUser, setAuthUser] = useState(null);
 
   const auth = useAuthModal();
   const cartItems = useCartStore((state) => state.items);
+  const clearCart = useCartStore((state) => state.clearCart);
+  const setCartUser = useCartStore((state) => state.setCartUser);
+  const setCartItems = useCartStore((state) => state.setCartItems);
+  const clearAllCartState = useCartStore((state) => state.clearAllCartState);
   const wishlistItems = useWishlistStore((state) => state.items);
+  const clearWishlist = useWishlistStore((state) => state.clearWishlist);
+  const setWishlistUser = useWishlistStore((state) => state.setWishlistUser);
+  const setWishlistItems = useWishlistStore((state) => state.setWishlistItems);
+  const clearAllWishlistState = useWishlistStore((state) => state.clearAllWishlistState);
   const cartCount = cartItems.reduce(
     (sum, item) => sum + Number(item.qty || 1),
     0,
   );
   const wishlistCount = wishlistItems.length;
+  const isLoggedIn = Boolean(authUser?.userId);
+  const accountHref = "/profile";
 
   const categoryRef = useRef(null);
   const methodsRef = useRef(null);
+
+  const clearAuthState = () => {
+    setAuthUser(null);
+    clearAllCartState();
+    clearAllWishlistState();
+    window.localStorage.removeItem("token");
+    window.localStorage.removeItem("admin_token");
+    window.localStorage.removeItem("admin_auth");
+    window.localStorage.removeItem("auth_user");
+    window.localStorage.removeItem("userId");
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch {
+      // Local cleanup below is the source of truth for the browser state.
+    }
+
+    clearAuthState();
+    setMobileMenuOpen(false);
+    toast.success("Logged out successfully");
+    window.location.href = "/";
+  };
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -207,6 +246,77 @@ export default function Header() {
       setCategories(active);
     };
     fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    const loadAuthUser = async () => {
+      try {
+        const cachedUser = window.localStorage.getItem("auth_user");
+        if (cachedUser) {
+          setAuthUser(JSON.parse(cachedUser));
+        }
+      } catch {
+        window.localStorage.removeItem("auth_user");
+      }
+
+      try {
+        const token = window.localStorage.getItem("token");
+        const response = await fetch("/api/auth/me", {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            Accept: "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const payload = await response.json();
+
+        if (!response.ok || !payload?.success || !payload?.data?.userId) {
+          clearAuthState();
+          return;
+        }
+
+        const nextUser = payload.data;
+        setAuthUser(nextUser);
+        setCartUser(nextUser.userId);
+        setWishlistUser(nextUser.userId);
+        window.localStorage.setItem("auth_user", JSON.stringify(nextUser));
+        window.localStorage.setItem("userId", nextUser.userId);
+
+        const authHeaders = {
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        };
+        const [cartResponse, wishlistResponse] = await Promise.all([
+          fetch("/api/account/cart", {
+            headers: authHeaders,
+            credentials: "include",
+          }).then((res) => res.json()).catch(() => null),
+          fetch("/api/account/wishlist", {
+            headers: authHeaders,
+            credentials: "include",
+          }).then((res) => res.json()).catch(() => null),
+        ]);
+
+        if (cartResponse?.success) {
+          setCartItems(cartResponse.data || []);
+        }
+        if (wishlistResponse?.success) {
+          setWishlistItems(wishlistResponse.data || []);
+        }
+      } catch {
+        setAuthUser(null);
+      }
+    };
+
+    loadAuthUser();
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("login") === "1") {
+      auth.openLogin();
+    }
   }, []);
 
   useEffect(() => {
@@ -393,29 +503,54 @@ export default function Header() {
                 <SearchIcon className="text-[#266A3F]" />
               </button>
 
-              <Link
-                href="/wishlist"
-                className="relative hover:text-[#00462C] transition-colors"
-              >
-                <WishlistIcon />
-                <Badge count={wishlistCount} />
-              </Link>
+              {isLoggedIn ? (
+                <>
+                  <Link
+                    href="/wishlist"
+                    className="relative hover:text-[#00462C] transition-colors"
+                    aria-label="Wishlist"
+                  >
+                    <WishlistIcon />
+                    <Badge count={wishlistCount} />
+                  </Link>
 
-              <Link
-                href="/cart"
-                className="relative hover:text-[#00462C] transition-colors"
-              >
-                <CartIcon className="text-[#266A3F]" />
-                <Badge count={cartCount} />
-              </Link>
+                  <Link
+                    href="/cart"
+                    className="relative hover:text-[#00462C] transition-colors"
+                    aria-label="Cart"
+                  >
+                    <CartIcon className="text-[#266A3F]" />
+                    <Badge count={cartCount} />
+                  </Link>
 
-              <button
-                className="flex items-center gap-1.5 text-[15px] font-medium hover:text-[#00462C] transition-colors"
-                onClick={auth.openLogin}
-              >
-                <UserIcon />
-                <span className="hidden sm:inline text-sm">Log in</span>
-              </button>
+                  <Link
+                    href={accountHref}
+                    className="flex items-center gap-1.5 text-[15px] font-medium hover:text-[#00462C] transition-colors"
+                    title={authUser?.name || "My Account"}
+                  >
+                    <UserIcon />
+                    <span className="hidden sm:inline max-w-28 truncate text-sm">
+                      {authUser?.name || "Account"}
+                    </span>
+                  </Link>
+
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="hidden sm:inline-flex text-xs font-semibold text-red-500 hover:text-red-600 transition-colors"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <button
+                  className="flex items-center gap-1.5 text-[15px] font-medium hover:text-[#00462C] transition-colors"
+                  onClick={auth.openLogin}
+                >
+                  <UserIcon />
+                  <span className="hidden sm:inline text-sm">Log in</span>
+                </button>
+              )}
 
               {/* Hamburger — mobile/tablet only */}
               <button
@@ -553,18 +688,53 @@ export default function Header() {
 
           <div className="mx-5 h-px bg-[#E6ECF0] my-1" />
 
-          {/* Log in (mobile) */}
           <div className="px-5">
-            <button
-              onClick={() => {
-                auth.openLogin();
-                setMobileMenuOpen(false);
-              }}
-              className="w-full flex items-center gap-3 py-3 text-[15px] font-medium text-[#266A3F] hover:text-[#00462C] transition-colors"
-            >
-              <UserIcon className="text-[#266A3F]" />
-              Log in
-            </button>
+            {isLoggedIn ? (
+              <div className="space-y-1">
+                <Link
+                  href={accountHref}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full flex items-center gap-3 py-3 text-[15px] font-medium text-[#266A3F] hover:text-[#00462C] transition-colors"
+                >
+                  <UserIcon className="text-[#266A3F]" />
+                  {authUser?.name || "My Account"}
+                </Link>
+                <Link
+                  href="/wishlist"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full flex items-center gap-3 py-3 text-[15px] font-medium text-[#266A3F] hover:text-[#00462C] transition-colors"
+                >
+                  <WishlistIcon />
+                  Wishlist ({wishlistCount})
+                </Link>
+                <Link
+                  href="/cart"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full flex items-center gap-3 py-3 text-[15px] font-medium text-[#266A3F] hover:text-[#00462C] transition-colors"
+                >
+                  <CartIcon />
+                  Cart ({cartCount})
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 py-3 text-[15px] font-medium text-red-500 hover:text-red-600 transition-colors"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => {
+                  auth.openLogin();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-3 py-3 text-[15px] font-medium text-[#266A3F] hover:text-[#00462C] transition-colors"
+              >
+                <UserIcon className="text-[#266A3F]" />
+                Log in
+              </button>
+            )}
           </div>
         </div>
 

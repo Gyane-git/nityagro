@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { apiPutRequest } from "@/apihelper/apiHelper";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_REGEX = /^[+\d\s-]{7,20}$/;
@@ -72,7 +71,17 @@ export default function MyProfile({ user, userId = "1", onProfileUpdated }) {
         country: form.country.trim(),
       };
 
-      const response = await apiPutRequest("/account/profile", payload, false);
+      const token = window.localStorage.getItem("token");
+      const response = await fetch("/api/account/profile", {
+        method: "PUT",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      }).then((res) => res.json());
       if (!response.success) {
         toast.error(response.message || "Failed to update profile");
         return;

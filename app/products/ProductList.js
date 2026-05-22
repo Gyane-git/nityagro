@@ -7,6 +7,8 @@ import { ALL_PRODUCTS } from "./productsData";
 import useCartStore from "@/store/cartStore";
 import useToastStore from "@/store/toastStore";
 import useWishlistStore from "@/store/wishlistStore";
+import { requireLoginForAction } from "@/utils/clientAuthGuard";
+import { addCartToDb, addWishlistToDb, removeWishlistFromDb } from "@/utils/accountListApi";
 
 // ─── Icons ─────────────────────────────────────────────────────────────────
 const CartIcon = () => (
@@ -106,30 +108,45 @@ function ProductCard({ product }) {
   const removeFromWishlist = useWishlistStore((state) => state.removeFromWishlist);
   const inWishlist = wishlistItems.some((item) => item.id === product.id);
 
-  const handleWishlistToggle = () => {
+  const handleWishlistToggle = async () => {
+    if (!requireLoginForAction()) {
+      showToast("Please login to use wishlist");
+      return;
+    }
+
     if (inWishlist) {
       removeFromWishlist(product.id);
+      await removeWishlistFromDb(product.id).catch(() => null);
       showToast(`${product.name} removed from wishlist`);
       return;
     }
-    addToWishlist({
+    const item = {
       id: product.id,
       name: product.name,
       price: product.price,
       image: product.image,
-    });
+    };
+    addToWishlist(item);
+    await addWishlistToDb(item).catch(() => null);
     showToast(`${product.name} added to wishlist`);
   };
 
-  const handleAdd = () => {
-    addToCart({
+  const handleAdd = async () => {
+    if (!requireLoginForAction()) {
+      showToast("Please login to add products to cart");
+      return;
+    }
+
+    const item = {
       id: product.id,
       name: product.name,
       price: product.price,
       image: product.image,
       qty: 1,
       weight: "100 gm",
-    });
+    };
+    addToCart(item);
+    await addCartToDb(item).catch(() => null);
     showToast(`${product.name} added to cart`);
     setAdded(true);
     setTimeout(() => setAdded(false), 1400);

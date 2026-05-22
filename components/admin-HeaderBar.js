@@ -9,9 +9,18 @@ export default function AdminHeaderBar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    }).catch(() => null);
+
     localStorage.removeItem("admin_auth");
-    router.push("/login-admin");
+    localStorage.removeItem("admin_token");
+    localStorage.removeItem("token");
+    localStorage.removeItem("auth_user");
+    localStorage.removeItem("userId");
+    router.push("/?login=1&next=/admin/dashboard");
   };
 
   return (

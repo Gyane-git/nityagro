@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import useCheckoutStore from "@/store/checkoutStore";
 import toast from "react-hot-toast";
-import { apiDeleteRequest, apiGetRequest, apiPostRequest, apiPutRequest } from "@/apihelper/apiHelper";
 
 const EMPTY_FORM = {
   fullName: "",
@@ -43,7 +42,14 @@ export default function AddressBook({ userId = "1" }) {
   const fetchAddresses = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await apiGetRequest(`/account/addresses?userId=${userId}`, false);
+      const token = window.localStorage.getItem("token");
+      const response = await fetch("/api/account/addresses", {
+        headers: {
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: "include",
+      }).then((res) => res.json());
       if (!response.success) {
         toast.error(response.message || "Failed to fetch addresses");
         return;
@@ -116,9 +122,17 @@ export default function AddressBook({ userId = "1" }) {
       label: form.addType,
     };
 
-    const response = selectedAddress
-      ? await apiPutRequest("/account/addresses", payload, false)
-      : await apiPostRequest("/account/addresses", payload, false);
+    const token = window.localStorage.getItem("token");
+    const response = await fetch("/api/account/addresses", {
+      method: selectedAddress ? "PUT" : "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    }).then((res) => res.json());
 
     if (!response.success) {
       toast.error(response.message || "Failed to save address");
@@ -136,7 +150,17 @@ export default function AddressBook({ userId = "1" }) {
   };
 
   const handleDelete = async (id) => {
-    const response = await apiDeleteRequest("/account/addresses", { id }, false);
+    const token = window.localStorage.getItem("token");
+    const response = await fetch("/api/account/addresses", {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      credentials: "include",
+      body: JSON.stringify({ id }),
+    }).then((res) => res.json());
     if (!response.success) {
       toast.error(response.message || "Failed to delete address");
       return;

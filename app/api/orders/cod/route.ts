@@ -318,7 +318,7 @@ export async function POST(req: Request) {
             : "",
         });
 
-        const invoicePdf = generateInvoicePdf({
+        const invoicePdf = await generateInvoicePdf({
           customerName: user.name || "Customer",
           transactionId: txCode,
           lines: lines.map((line) => ({

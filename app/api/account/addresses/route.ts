@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { requireAuth } from "@/lib/auth";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -42,8 +43,7 @@ function normalize(row: {
   };
 }
 
-function parsePayload(body: Record<string, unknown>) {
-  const userId = BigInt(String(body?.userId || "1"));
+function parsePayload(body: Record<string, unknown>, userId: bigint) {
   const fullName = String(body?.fullName || "").trim();
   const phone = String(body?.phone || "").trim();
   const region = String(body?.region || "").trim();
@@ -91,9 +91,8 @@ export async function OPTIONS() {
 
 export async function GET(req: Request) {
   try {
-    const { searchParams } = new URL(req.url);
-    const userIdRaw = searchParams.get("userId") || "1";
-    const userId = BigInt(userIdRaw);
+    const auth = await requireAuth();
+    const userId = BigInt(auth.sub);
 
     const addresses = await prisma.address.findMany({
       where: { userId },
@@ -117,8 +116,9 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const auth = await requireAuth();
     const body = (await req.json()) as Record<string, unknown>;
-    const payload = parsePayload(body);
+    const payload = parsePayload(body, BigInt(auth.sub));
 
     const created = await prisma.address.create({ data: payload });
 
@@ -140,6 +140,7 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
+    const auth = await requireAuth();
     const body = (await req.json()) as Record<string, unknown>;
     const addressId = Number(body?.id);
 
@@ -150,7 +151,20 @@ export async function PUT(req: Request) {
       );
     }
 
-    const payload = parsePayload(body);
+    const userId = BigInt(auth.sub);
+    const existing = await prisma.address.findFirst({
+      where: { addressId: BigInt(addressId), userId },
+      select: { addressId: true },
+    });
+
+    if (!existing) {
+      return NextResponse.json(
+        { success: false, message: "Address not found" },
+        { status: 404, headers: corsHeaders },
+      );
+    }
+
+    const payload = parsePayload(body, userId);
     const updated = await prisma.address.update({
       where: { addressId: BigInt(addressId) },
       data: payload,
@@ -174,6 +188,7 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
+    const auth = await requireAuth();
     const body = (await req.json()) as Record<string, unknown>;
     const addressId = Number(body?.id);
 
@@ -184,9 +199,19 @@ export async function DELETE(req: Request) {
       );
     }
 
-    await prisma.address.delete({
-      where: { addressId: BigInt(addressId) },
+    const deleted = await prisma.address.deleteMany({
+      where: {
+        addressId: BigInt(addressId),
+        userId: BigInt(auth.sub),
+      },
     });
+
+    if (deleted.count === 0) {
+      return NextResponse.json(
+        { success: false, message: "Address not found" },
+        { status: 404, headers: corsHeaders },
+      );
+    }
 
     return NextResponse.json(
       { success: true, message: "Address deleted successfully" },

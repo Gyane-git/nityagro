@@ -1,3 +1,5 @@
+"use client";
+
 // app/checkout/review/page.tsx
 //
 // This is the ORDER REVIEW step of checkout — shown after the user
@@ -9,8 +11,17 @@ import Breadcrumb          from "@/app/adress_book/components/Breadcrumb";
 import ShippingAddressCard from "@/app/adress_book/components/ShippingAddressCard";
 import OrderItemsList      from "@/app/Checkout/components/Orderitemslist";
 import OrderSummary        from "@/app/adress_book/components/OrderSummary";
+import { useEffect } from "react";
+import toast from "react-hot-toast";
+import { requireLoginForAction } from "@/utils/clientAuthGuard";
 
 export default function CheckoutReviewPage() {
+  useEffect(() => {
+    if (!requireLoginForAction()) {
+      toast.error("Please login to continue checkout");
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-white">
       <div

@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, MapPin, Truck, User } from "lucide-react";
+import { Clock, LogOut, MapPin, Truck, User } from "lucide-react";
 
 const NAV_SECTIONS = [
   {
@@ -19,7 +19,7 @@ const NAV_SECTIONS = [
   },
 ];
 
-export default function Sidebar({ activeTab, onTabChange, user }) {
+export default function Sidebar({ activeTab, onTabChange, user, onLogout }) {
   const displayName = user?.name || "User";
   const displayEmail = user?.email || "";
   return (
@@ -76,6 +76,17 @@ export default function Sidebar({ activeTab, onTabChange, user }) {
             </div>
           </div>
         ))}
+
+        <div className="pt-2 border-t border-gray-100">
+          <button
+            type="button"
+            onClick={onLogout}
+            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-md text-[13.5px] text-left text-red-500 hover:bg-red-50 transition-colors duration-150"
+          >
+            <LogOut size={16} />
+            Logout
+          </button>
+        </div>
       </div>
     </div>
   );

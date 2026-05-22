@@ -1,5 +1,5 @@
-import bcrypt from "bcryptjs";
-import { prisma } from "@/prisma/prisma-client";
+import { createHash, randomBytes, timingSafeEqual } from "crypto";
+import { prisma } from "@/lib/prisma";
 
 type OtpPurpose = "VERIFY_EMAIL" | "RESET_PASSWORD";
 
@@ -10,11 +10,38 @@ type StoredOtp = {
 };
 
 const OTP_LENGTH = 6;
+const HASH_PREFIX = "sha256";
 
 export function generateOtpCode() {
   const min = 10 ** (OTP_LENGTH - 1);
   const max = 10 ** OTP_LENGTH - 1;
   return String(Math.floor(min + Math.random() * (max - min + 1)));
+}
+
+function hashOtpCode(otpCode: string) {
+  const salt = randomBytes(16).toString("hex");
+  const digest = createHash("sha256")
+    .update(`${salt}:${otpCode}`)
+    .digest("hex");
+
+  return `${HASH_PREFIX}$${salt}$${digest}`;
+}
+
+function compareOtpCode(otpCode: string, storedHash: string) {
+  const [prefix, salt, digest] = storedHash.split("$");
+  if (prefix !== HASH_PREFIX || !salt || !digest) return false;
+
+  const nextDigest = createHash("sha256")
+    .update(`${salt}:${otpCode}`)
+    .digest("hex");
+
+  const storedBuffer = Buffer.from(digest, "hex");
+  const nextBuffer = Buffer.from(nextDigest, "hex");
+
+  return (
+    storedBuffer.length === nextBuffer.length &&
+    timingSafeEqual(storedBuffer, nextBuffer)
+  );
 }
 
 function parseStoredOtp(rawToken: string | null): StoredOtp | null {
@@ -37,11 +64,11 @@ export async function saveUserOtp(
   otpCode: string,
   ttlMinutes = 10
 ) {
-  const hash = await bcrypt.hash(otpCode, 10);
+  const hash = hashOtpCode(otpCode);
   const expiresAt = Date.now() + ttlMinutes * 60 * 1000;
 
-  await prisma.user.update({
-    where: { id: userId },
+  await (prisma as any).users.update({
+    where: { userId },
     data: {
       rememberToken: JSON.stringify({
         purpose,
@@ -63,6 +90,5 @@ export async function verifyUserOtp(
   if (stored.purpose !== purpose) return false;
   if (Date.now() > stored.expiresAt) return false;
 
-  return bcrypt.compare(otpCode, stored.hash);
+  return compareOtpCode(otpCode, stored.hash);
 }
-

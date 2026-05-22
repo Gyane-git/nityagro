@@ -1,8 +1,19 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { hashPassword } from "@/lib/password";
+import { requireAdminRole } from "@/lib/auth";
 
 // GET all users
 export async function GET() {
+  try {
+    await requireAdminRole();
+  } catch {
+    return NextResponse.json(
+      { success: false, message: "Unauthorized" },
+      { status: 401 },
+    );
+  }
+
   const users = await prisma.users.findMany({
     select: {
       userId: true,
@@ -43,14 +54,32 @@ export async function POST(req: Request) {
     );
   }
 
+  const email = String(body.email || "").trim().toLowerCase();
+  const password = String(body.password || "");
+
+  if (password.length < 8) {
+    return NextResponse.json(
+      { success: false, message: "Password must be at least 8 characters" },
+      { status: 400 },
+    );
+  }
+
+  const existing = await prisma.users.findUnique({ where: { email } });
+  if (existing) {
+    return NextResponse.json(
+      { success: false, message: "Email already registered" },
+      { status: 409 },
+    );
+  }
+
   const user = await prisma.users.create({
     data: {
-      email: body.email,
-      name: body.name,
-      password: body.password,
-      role: body.role || "customer",
-      status: typeof body.status === "boolean" ? body.status : true,
-      rolePermission: body.rolePermission || null,
+      email,
+      name: String(body.name || "").trim(),
+      password: hashPassword(password),
+      role: "customer",
+      status: true,
+      rolePermission: null,
       phone: body.phone || null,
       city: body.city || null,
       state: body.state || null,

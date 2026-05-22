@@ -364,7 +364,7 @@ export async function POST(req: Request) {
           addressText,
         });
 
-        const invoicePdf = generateInvoicePdf({
+        const invoicePdf = await generateInvoicePdf({
           customerName: user.name || "Customer",
           transactionId: connectipsReferenceId,
           lines,
