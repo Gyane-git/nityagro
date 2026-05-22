@@ -66,18 +66,9 @@ export default async function ProductDetailPage({ params }) {
     notFound();
   }
 
-  const safeProduct = JSON.parse(
-    JSON.stringify(product, (_, value) =>
-      typeof value === "bigint" ? value.toString() : value,
-    ),
-  );
+  const safeProduct = JSON.parse(JSON.stringify(product, (_, value) => (typeof value === "bigint" ? value.toString() : value)));
 
-  const galleryImages = [
-    ...(Array.isArray(safeProduct.images)
-      ? safeProduct.images.map((item) => item.imageUrl).filter(Boolean)
-      : []),
-    ...(safeProduct.pImage ? [safeProduct.pImage] : []),
-  ].filter((value, index, arr) => arr.indexOf(value) === index);
+  const galleryImages = [...(Array.isArray(safeProduct.images) ? safeProduct.images.map((item) => item.imageUrl).filter(Boolean) : []), ...(safeProduct.pImage ? [safeProduct.pImage] : [])].filter((value, index, arr) => arr.indexOf(value) === index);
 
   const normalizedProduct = {
     id: Number(safeProduct.productId),
@@ -85,10 +76,7 @@ export default async function ProductDetailPage({ params }) {
     name: safeProduct.subGroupName || safeProduct.productName || "Unnamed Product",
     label: safeProduct.productName || "",
     image: safeProduct.pImage || "/products/mustard-oil.png",
-    images:
-      galleryImages.length > 0
-        ? galleryImages
-        : ["/products/mustard-oil.png"],
+    images: galleryImages.length > 0 ? galleryImages : ["/products/mustard-oil.png"],
     rating: 4,
     reviews: 0,
     price: Number(safeProduct.sellingPrice ?? safeProduct.actualPrice ?? 0),
@@ -103,7 +91,8 @@ export default async function ProductDetailPage({ params }) {
 
   return (
     <main className="min-h-screen bg-white">
-      <div className="mx-auto px-6 py-6" style={{ maxWidth: "1440px" }}>
+      {/* <div className="mx-auto px-4 sm:px-6 py-4 md:py-6" style={{ maxWidth: "1440px" }}> */}
+      <div className="mx-auto px-4 sm:px-6 py-4 md:py-6" style={{ maxWidth: "1440px" }}>
         {/* ── Banner ── */}
         <Banner />
 
@@ -111,7 +100,7 @@ export default async function ProductDetailPage({ params }) {
         <Breadcrumb productName={normalizedProduct.name} />
 
         {/* ── Main row: Gallery | Info | Delivery Card ── */}
-        <div className="flex gap-6 items-start mt-2 mb-8">
+        <div className="flex flex-col lg:flex-row gap-6 items-start mt-2 mb-8">
           {/* Left: image gallery (thumbnails + main) */}
           <ProductImageGallery images={normalizedProduct.images} />
 

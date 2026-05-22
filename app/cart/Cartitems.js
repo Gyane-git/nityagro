@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import useCartStore from "@/store/cartStore";
 
-// ─── Icons ──────────────────────────────────────────────────────────────────
+// ─── Icons ───────────────────────────────────────────────────────────────────
 const TrashIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="3 6 5 6 21 6" />
@@ -26,29 +26,16 @@ const ChevronDownIcon = () => (
   </svg>
 );
 
-// ─── Qty spinner ─────────────────────────────────────────────────────────────
+// ─── Qty spinner ──────────────────────────────────────────────────────────────
 function QtySpinner({ value, onChange }) {
   return (
-    <div
-      className="flex items-center border border-gray-200 rounded-md overflow-hidden bg-gray-50"
-      style={{ width: "64px", height: "38px" }}
-    >
-      <span
-        className="flex-1 text-center text-sm font-semibold text-gray-800 select-none"
-      >
-        {value}
-      </span>
+    <div className="flex items-center border border-gray-200 rounded-md overflow-hidden bg-gray-50" style={{ width: "64px", height: "38px" }}>
+      <span className="flex-1 text-center text-sm font-semibold text-gray-800 select-none">{value}</span>
       <div className="flex flex-col border-l border-gray-200 h-full">
-        <button
-          onClick={() => onChange(value + 1)}
-          className="flex-1 flex items-center justify-center hover:bg-gray-100 transition-colors px-1.5"
-        >
+        <button onClick={() => onChange(value + 1)} className="flex-1 flex items-center justify-center hover:bg-gray-100 text-gray-900 transition-colors px-1.5">
           <ChevronUpIcon />
         </button>
-        <button
-          onClick={() => onChange(Math.max(1, value - 1))}
-          className="flex-1 flex items-center justify-center hover:bg-gray-100 transition-colors px-1.5 border-t border-gray-200"
-        >
+        <button onClick={() => onChange(Math.max(1, value - 1))} className="flex-1 flex items-center justify-center hover:bg-gray-100 text-gray-900 transition-colors px-1.5 border-t border-gray-200">
           <ChevronDownIcon />
         </button>
       </div>
@@ -56,74 +43,84 @@ function QtySpinner({ value, onChange }) {
   );
 }
 
-// ─── Single cart row ─────────────────────────────────────────────────────────
-function CartRow({ item, checked, onCheck, onQtyChange, onRemove }) {
+// ─── Desktop cart row (md+) ───────────────────────────────────────────────────
+function CartRowDesktop({ item, checked, onCheck, onQtyChange, onRemove }) {
   const subtotal = item.price * item.qty;
 
   return (
     <>
-      <div className="flex items-center gap-5 py-5">
-        {/* Checkbox */}
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={onCheck}
-          className="w-4 h-4 rounded border-gray-300 flex-shrink-0 cursor-pointer"
-          style={{ accentColor: "#00462C" }}
-        />
+      <div className="hidden md:flex items-center gap-5 py-5">
+        <input type="checkbox" checked={checked} onChange={onCheck} className="w-4 h-4 rounded border-gray-300 flex-shrink-0 cursor-pointer" style={{ accentColor: "#00462C" }} />
 
-        {/* Product image */}
-        <div
-          className="relative flex-shrink-0 bg-gray-50 rounded-md border border-gray-100"
-          style={{ width: "80px", height: "80px" }}
-        >
-          <Image
-            src={item.image}
-            alt={item.name}
-            fill
-            className="object-contain p-2"
-            sizes="80px"
-          />
+        <div className="relative flex-shrink-0 bg-gray-50 rounded-md border border-gray-100" style={{ width: "80px", height: "80px" }}>
+          <Image src={item.image} alt={item.name} fill className="object-contain p-2" sizes="80px" />
         </div>
 
-        {/* Name + weight */}
-        <div className="flex flex-col gap-0.5" style={{ minWidth: "180px" }}>
-          <p className="text-sm font-semibold text-gray-800">{item.name}</p>
+        <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+          <p className="text-sm font-semibold text-gray-800 truncate">{item.name}</p>
           <p className="text-xs text-gray-500">Weight: {item.weight}</p>
         </div>
 
-        {/* Price */}
-        <div className="flex-1 text-center">
-          <p className="text-sm text-gray-500 font-medium">
-            NPR {item.price.toFixed(2)}
-          </p>
+        <div className="w-28 text-center flex-shrink-0">
+          <p className="text-sm text-gray-500 font-medium">NPR {item.price.toFixed(2)}</p>
         </div>
 
-        {/* Qty spinner */}
-        <div style={{ width: "80px" }} className="flex justify-center">
+        <div className="w-20 flex justify-center flex-shrink-0">
           <QtySpinner value={item.qty} onChange={(v) => onQtyChange(item.id, v)} />
         </div>
 
-        {/* Subtotal */}
-        <div style={{ width: "130px" }} className="text-right">
+        <div className="w-32 text-right flex-shrink-0">
           <p className="font-bold" style={{ color: "#00462C", fontSize: "15px" }}>
             NPR {(subtotal * 10).toLocaleString("en-NP", { minimumFractionDigits: 2 })}
           </p>
         </div>
 
-        {/* Delete */}
-        <button
-          onClick={() => onRemove(item.id)}
-          className="flex-shrink-0 ml-2 p-1 rounded hover:bg-red-50 transition-colors"
-          aria-label="Remove item"
-        >
+        <button onClick={() => onRemove(item.id)} className="flex-shrink-0 ml-2 p-1 rounded hover:bg-red-50 transition-colors" aria-label="Remove item">
           <TrashIcon />
         </button>
       </div>
 
-      {/* Row divider */}
-      <div className="border-t border-gray-100" />
+      {/* Row divider — desktop only */}
+      <div className="hidden md:block border-t border-gray-100" />
     </>
+  );
+}
+
+// ─── Mobile cart card (< md) ──────────────────────────────────────────────────
+function CartRowMobile({ item, checked, onCheck, onQtyChange, onRemove }) {
+  const subtotal = item.price * item.qty;
+
+  return (
+    <div className="md:hidden py-4 border-b border-gray-100">
+      <div className="flex gap-3">
+        {/* Checkbox */}
+        <input type="checkbox" checked={checked} onChange={onCheck} className="w-4 h-4 mt-1 rounded border-gray-300 cursor-pointer flex-shrink-0" style={{ accentColor: "#00462C" }} />
+
+        {/* Image */}
+        <div className="relative flex-shrink-0 bg-gray-50 rounded-md border border-gray-100" style={{ width: "72px", height: "72px" }}>
+          <Image src={item.image} alt={item.name} fill className="object-contain p-1.5" sizes="72px" />
+        </div>
+
+        {/* Info */}
+        <div className="flex flex-col gap-1 flex-1 min-w-0">
+          <div className="flex justify-between items-start gap-2">
+            <p className="text-sm font-semibold text-gray-800 leading-tight">{item.name}</p>
+            <button onClick={() => onRemove(item.id)} className="flex-shrink-0 p-1 rounded hover:bg-red-50 transition-colors" aria-label="Remove item">
+              <TrashIcon />
+            </button>
+          </div>
+
+          <p className="text-xs text-gray-500">Weight: {item.weight}</p>
+
+          <div className="flex items-center justify-between mt-2">
+            <QtySpinner value={item.qty} onChange={(v) => onQtyChange(item.id, v)} />
+            <p className="font-bold text-sm" style={{ color: "#00462C" }}>
+              NPR {(subtotal * 10).toLocaleString("en-NP", { minimumFractionDigits: 2 })}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -134,9 +131,7 @@ export default function CartItems({ checkedIds, setCheckedIds }) {
   const removeItem = useCartStore((state) => state.removeItem);
   const clearCart = useCartStore((state) => state.clearCart);
 
-  const validCheckedIds = checkedIds.filter((id) =>
-    items.some((item) => item.id === id)
-  );
+  const validCheckedIds = checkedIds.filter((id) => items.some((item) => item.id === id));
 
   const allChecked = items.length > 0 && validCheckedIds.length === items.length;
 
@@ -146,14 +141,10 @@ export default function CartItems({ checkedIds, setCheckedIds }) {
   };
 
   const toggleCheck = (id) => {
-    setCheckedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+    setCheckedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
-  const handleQtyChange = (id, qty) => {
-    updateQty(id, qty);
-  };
+  const handleQtyChange = (id, qty) => updateQty(id, qty);
 
   const handleRemove = (id) => {
     removeItem(id);
@@ -166,80 +157,56 @@ export default function CartItems({ checkedIds, setCheckedIds }) {
   };
 
   return (
-    <div
-      className="flex flex-col border border-gray-200 rounded-xl bg-white overflow-hidden"
-      style={{ flex: 1, minWidth: 0 }}
-    >
+    <div className="flex flex-col border border-gray-200 rounded-xl bg-white overflow-hidden w-full">
       {/* ── Select All header ── */}
-      <div className="flex items-center gap-3 px-6 pt-5 pb-4">
-        <input
-          type="checkbox"
-          checked={allChecked}
-          onChange={toggleSelectAll}
-          className="w-4 h-4 rounded border-gray-300 cursor-pointer"
-          style={{ accentColor: "#00462C" }}
-        />
+      <div className="flex items-center gap-3 px-4 sm:px-6 pt-5 pb-4">
+        <input type="checkbox" checked={allChecked} onChange={toggleSelectAll} className="w-4 h-4 rounded border-gray-300 cursor-pointer" style={{ accentColor: "#00462C" }} />
         <span className="text-sm font-medium text-gray-700">Select All</span>
       </div>
 
-      {/* ── Column headers ── */}
-      <div className="flex items-center gap-5 px-6 py-2 border-t border-b border-gray-200 bg-gray-50">
+      {/* ── Column headers (desktop only) ── */}
+      <div className="hidden md:flex items-center gap-5 px-6 py-2 border-t border-b border-gray-200 bg-gray-50">
         <div style={{ width: "16px" }} />
         <div style={{ width: "80px" }} />
-        {/* Product label */}
-        <p className="text-sm font-bold text-gray-800" style={{ minWidth: "180px" }}>
-          Product
-        </p>
-        {/* Price */}
-        <p className="flex-1 text-center text-sm font-bold text-gray-800">Price</p>
-        {/* Qty */}
-        <p className="text-sm font-bold text-gray-800 text-center" style={{ width: "80px" }}>
-          Qty
-        </p>
-        {/* Sub Total */}
-        <p className="text-sm font-bold text-gray-800 text-right" style={{ width: "130px" }}>
-          Sub Total
-        </p>
-        {/* Delete spacer */}
+        <p className="text-sm font-bold text-gray-800 flex-1">Product</p>
+        <p className="text-sm font-bold text-gray-800 text-center w-28">Price</p>
+        <p className="text-sm font-bold text-gray-800 text-center w-20">Qty</p>
+        <p className="text-sm font-bold text-gray-800 text-right w-32">Sub Total</p>
         <div style={{ width: "34px" }} />
       </div>
 
+      {/* ── Mobile divider ── */}
+      <div className="md:hidden border-t border-gray-200" />
+
       {/* ── Cart rows ── */}
-      <div className="flex flex-col px-6">
+      <div className="flex flex-col px-4 sm:px-6">
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
             <p className="text-gray-400 text-sm font-medium">Your cart is empty.</p>
-            <Link
-              href="/products"
-              className="text-sm font-semibold underline"
-              style={{ color: "#00462C" }}
-            >
+            <Link href="/products" className="text-sm font-semibold underline" style={{ color: "#00462C" }}>
               Browse Products
             </Link>
           </div>
         ) : (
           items.map((item) => (
-            <CartRow
-              key={item.id}
-              item={item}
-              checked={validCheckedIds.includes(item.id)}
-              onCheck={() => toggleCheck(item.id)}
-              onQtyChange={handleQtyChange}
-              onRemove={handleRemove}
-            />
+            <div key={item.id}>
+              {/* Desktop row */}
+              <CartRowDesktop item={item} checked={validCheckedIds.includes(item.id)} onCheck={() => toggleCheck(item.id)} onQtyChange={handleQtyChange} onRemove={handleRemove} />
+              {/* Mobile card */}
+              <CartRowMobile item={item} checked={validCheckedIds.includes(item.id)} onCheck={() => toggleCheck(item.id)} onQtyChange={handleQtyChange} onRemove={handleRemove} />
+            </div>
           ))
         )}
       </div>
 
       {/* ── Footer: Continue Shopping + Clear Cart ── */}
-      <div className="flex items-center justify-between px-6 py-5 mt-2">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6 py-5 mt-2">
         <Link
           href="/products"
-          className="inline-flex items-center justify-center border-2 rounded-lg font-semibold text-sm transition-all hover:bg-gray-50"
+          className="inline-flex items-center justify-center border-2 rounded-lg font-semibold text-sm transition-all hover:bg-gray-50 w-full sm:w-[200px]"
           style={{
             borderColor: "#00462C",
             color: "#00462C",
-            width: "200px",
             height: "44px",
           }}
         >
@@ -248,11 +215,10 @@ export default function CartItems({ checkedIds, setCheckedIds }) {
 
         <button
           onClick={handleClearCart}
-          className="inline-flex items-center justify-center border-2 rounded-lg font-semibold text-sm transition-all hover:bg-amber-50"
+          className="inline-flex items-center justify-center border-2 rounded-lg font-semibold text-sm transition-all hover:bg-amber-50 w-full sm:w-[160px]"
           style={{
             borderColor: "#F5A623",
             color: "#F5A623",
-            width: "160px",
             height: "44px",
           }}
         >

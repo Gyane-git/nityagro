@@ -18,11 +18,7 @@ const ChevronDownIcon = () => (
   </svg>
 );
 
-const DELIVERY_OPTIONS = [
-  "Standard Delivery",
-  "Express/Same-Day Delivery",
-  "Click & Collect",
-];
+const DELIVERY_OPTIONS = ["Standard Delivery", "Express/Same-Day Delivery", "Click & Collect"];
 
 export default function OrderSummary({ checkedIds = [] }) {
   const [promo, setPromo] = useState("");
@@ -34,20 +30,10 @@ export default function OrderSummary({ checkedIds = [] }) {
   const cartItems = useCartStore((state) => state.items);
   const selectedItems = cartItems.filter((item) => checkedIds.includes(item.id));
 
-  const itemsTotal = selectedItems.reduce(
-    (sum, item) => sum + Number(item.price || 0) * Number(item.qty || 1),
-    0,
-  );
+  const itemsTotal = selectedItems.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.qty || 1), 0);
   const discount = 0;
-  const deliveryFee =
-    itemsTotal === 0
-      ? 0
-      : delivery === "Express/Same-Day Delivery"
-        ? 300
-        : delivery === "Click & Collect"
-          ? 0
-          : 200;
-  const total        = itemsTotal - discount + deliveryFee;
+  const deliveryFee = itemsTotal === 0 ? 0 : delivery === "Express/Same-Day Delivery" ? 300 : delivery === "Click & Collect" ? 0 : 200;
+  const total = itemsTotal - discount + deliveryFee;
   const totalQty = selectedItems.reduce((sum, item) => sum + Number(item.qty || 1), 0);
 
   const checkoutPayload = selectedItems.map((item) => ({
@@ -70,46 +56,25 @@ export default function OrderSummary({ checkedIds = [] }) {
   };
 
   return (
-    <div
-      className="flex flex-col border border-gray-200 rounded-xl bg-white p-6 gap-5"
-      style={{ width: "340px", flexShrink: 0, alignSelf: "flex-start" }}
-    >
+    // On mobile: full width. On lg+: fixed 340px handled by parent.
+    <div className="flex flex-col border border-gray-200 rounded-xl bg-white p-4 sm:p-6 gap-5 w-full">
       {/* ── Title ── */}
       <div className="flex flex-col gap-1.5">
-        <h2 className="font-bold text-gray-900" style={{ fontSize: "20px" }}>
-          Order Summary
-        </h2>
-        {/* Green underline */}
-        <div
-          style={{ width: "80px", height: "2.5px", background: "#00462C", borderRadius: "2px" }}
-        />
+        <h2 className="font-bold text-gray-900 text-lg sm:text-[20px]">Order Summary</h2>
+        <div style={{ width: "80px", height: "2.5px", background: "#00462C", borderRadius: "2px" }} />
       </div>
 
       {/* ── Promo code row ── */}
-      <div className="flex items-center gap-2">
-        <div
-          className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 flex-1"
-          style={{ height: "44px" }}
-        >
-          <PromoIcon />
-          <input
-            type="text"
-            value={promo}
-            onChange={(e) => setPromo(e.target.value)}
-            placeholder="Enter Promo code"
-            className="flex-1 text-sm outline-none text-gray-600 placeholder-gray-400 bg-transparent"
-          />
+      <div className="flex items-center gap-2 w-full min-w-0">
+        {/* INPUT */}
+        <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-2 sm:px-3 md:px-4 flex-1 min-w-0 h-10 sm:h-11 md:h-12">
+          <PromoIcon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+
+          <input type="text" value={promo} onChange={(e) => setPromo(e.target.value)} placeholder="Enter Promo code" className="flex-1 min-w-0 text-xs sm:text-sm md:text-base outline-none text-gray-600 placeholder-gray-400 bg-transparent" />
         </div>
-        <button
-          onClick={handleApply}
-          className="text-white font-semibold text-sm rounded-lg transition-all hover:opacity-90 active:scale-95"
-          style={{
-            background: "#00462C",
-            height: "44px",
-            width: "72px",
-            flexShrink: 0,
-          }}
-        >
+
+        {/* BUTTON */}
+        <button onClick={handleApply} className="flex-shrink-0 text-white font-semibold rounded-lg transition-all hover:opacity-90 active:scale-95 h-10 sm:h-11 md:h-12 w-16 sm:w-20 md:w-[72px] text-xs sm:text-sm" style={{ background: "#00462C" }}>
           Apply
         </button>
       </div>
@@ -121,15 +86,11 @@ export default function OrderSummary({ checkedIds = [] }) {
 
       {/* ── Line items ── */}
       <div className="flex flex-col gap-3">
-        {/* Items total */}
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-500">Item(s) total ({totalQty})</span>
-          <span className="text-sm font-semibold text-gray-800">
-            NPR {itemsTotal.toLocaleString()}.00
-          </span>
+          <span className="text-sm font-semibold text-gray-800">NPR {itemsTotal.toLocaleString()}.00</span>
         </div>
 
-        {/* Discount */}
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-500">Discount</span>
           <span className="text-sm font-semibold" style={{ color: "#EF4444" }}>
@@ -137,12 +98,9 @@ export default function OrderSummary({ checkedIds = [] }) {
           </span>
         </div>
 
-        {/* Delivery Charge */}
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-500">Delivery Charge</span>
-          <span className="text-sm font-semibold text-gray-800">
-            NRP {deliveryFee.toLocaleString()}.00
-          </span>
+          <span className="text-sm font-semibold text-gray-800">NPR {deliveryFee.toLocaleString()}.00</span>
         </div>
       </div>
 
@@ -151,21 +109,16 @@ export default function OrderSummary({ checkedIds = [] }) {
 
       {/* ── Total Amount ── */}
       <div className="flex items-center justify-between">
-        <span className="font-bold text-gray-900" style={{ fontSize: "15px" }}>
-          Total Amount
-        </span>
-        <span className="font-bold" style={{ color: "#00462C", fontSize: "16px" }}>
-          NRP {total.toLocaleString()}.00
+        <span className="font-bold text-gray-900 text-sm sm:text-[15px]">Total Amount</span>
+        <span className="font-bold text-[15px] sm:text-[16px]" style={{ color: "#00462C" }}>
+          NPR {total.toLocaleString()}.00
         </span>
       </div>
 
       {/* ── Delivery dropdown ── */}
       <div className="flex flex-col gap-2">
         <label className="text-sm font-semibold text-gray-800">Delivery</label>
-        <div
-          className="relative border border-gray-200 rounded-lg px-3 flex items-center"
-          style={{ height: "44px" }}
-        >
+        <div className="relative border border-gray-200 rounded-lg px-3 flex items-center" style={{ height: "44px" }}>
           <select
             value={delivery}
             onChange={(e) => {
@@ -179,9 +132,13 @@ export default function OrderSummary({ checkedIds = [] }) {
             }}
             className="w-full text-sm text-gray-500 bg-transparent outline-none appearance-none cursor-pointer pr-6"
           >
-            <option value="" disabled>Choose delivery option</option>
+            <option value="" disabled>
+              Choose delivery option
+            </option>
             {DELIVERY_OPTIONS.map((opt) => (
-              <option key={opt} value={opt}>{opt}</option>
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
             ))}
           </select>
           <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
@@ -191,7 +148,7 @@ export default function OrderSummary({ checkedIds = [] }) {
       </div>
 
       {/* ── Proceed to Checkout ── */}
-        <button
+      <button
         disabled={itemsTotal === 0}
         className="w-full flex items-center justify-center text-white font-bold text-sm rounded-lg transition-all hover:opacity-90 active:scale-95"
         style={{

@@ -9,15 +9,15 @@ import useToastStore from "@/store/toastStore";
 
 // ─── Icons ──────────────────────────────────────────────────────────────────
 const StarIcon = ({ filled }) => (
-  <svg width="15" height="15" viewBox="0 0 24 24"
-    fill={filled ? "#F5A623" : "none"} stroke="#F5A623" strokeWidth="1.5">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill={filled ? "#F5A623" : "none"} stroke="#F5A623" strokeWidth="1.5">
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
   </svg>
 );
 
 const CartIcon = () => (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
+    <circle cx="9" cy="21" r="1" />
+    <circle cx="20" cy="21" r="1" />
     <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
   </svg>
 );
@@ -30,21 +30,13 @@ const MinusIcon = () => (
 
 const PlusIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+    <line x1="12" y1="5" x2="12" y2="19" />
+    <line x1="5" y1="12" x2="19" y2="12" />
   </svg>
 );
 
 const ShareIcon = () => (
-  <svg
-    width="15"
-    height="15"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="18" cy="5" r="3" />
     <circle cx="6" cy="12" r="3" />
     <circle cx="18" cy="19" r="3" />
@@ -56,9 +48,7 @@ const ShareIcon = () => (
 export default function ProductInfo({ product }) {
   const [qty, setQty] = useState(1);
   const [variantsFromApi, setVariantsFromApi] = useState([]);
-  const [selectedVariantId, setSelectedVariantId] = useState(
-    Number(product?.id || 0)
-  );
+  const [selectedVariantId, setSelectedVariantId] = useState(Number(product?.id || 0));
   const [added, setAdded] = useState(false);
   const router = useRouter();
   const addToCart = useCartStore((state) => state.addToCart);
@@ -78,9 +68,7 @@ export default function ProductInfo({ product }) {
       if (!groupName) return;
 
       try {
-        const response = await fetch(
-          `/api/subcategories/${encodeURIComponent(groupName)}`
-        );
+        const response = await fetch(`/api/subcategories/${encodeURIComponent(groupName)}`);
         const result = await response.json();
         const rows = Array.isArray(result?.data) ? result.data : [];
 
@@ -88,22 +76,14 @@ export default function ProductInfo({ product }) {
           id: Number(item.variantId),
           productCode: item.pCode || "",
           label: item.variationName || item.pCode || "Variant",
-          price:
-            String(item.pCode || "") === String(p.productCode || "")
-              ? Number(p.price ?? item.salesRate ?? 0)
-              : Number(item.salesRate ?? p.price ?? 0),
-          actualPrice:
-            String(item.pCode || "") === String(p.productCode || "")
-              ? Number(p.actualPrice ?? p.price ?? item.salesRate ?? 0)
-              : Number(item.salesRate ?? p.price ?? 0),
+          price: String(item.pCode || "") === String(p.productCode || "") ? Number(p.price ?? item.salesRate ?? 0) : Number(item.salesRate ?? p.price ?? 0),
+          actualPrice: String(item.pCode || "") === String(p.productCode || "") ? Number(p.actualPrice ?? p.price ?? item.salesRate ?? 0) : Number(item.salesRate ?? p.price ?? 0),
           image: p.image || p.images?.[0] || "/products/mustard-oil.png",
         }));
 
         setVariantsFromApi(mapped);
 
-        const matched = mapped.find(
-          (v) => String(v.productCode) === String(p.productCode)
-        );
+        const matched = mapped.find((v) => String(v.productCode) === String(p.productCode));
         if (matched) {
           setSelectedVariantId(Number(matched.id));
         } else if (mapped[0]) {
@@ -120,22 +100,18 @@ export default function ProductInfo({ product }) {
   const variants = variantsFromApi.length
     ? variantsFromApi
     : [
-      {
-        id: p.id,
-        productCode: p.productCode || "",
-        label: p.label || p.name,
-        price: p.price,
-        actualPrice: p.actualPrice || p.price,
-        image: p.image || p.images?.[0] || "/products/mustard-oil.png",
-      },
-    ];
-  const selectedVariant =
-    variants.find((v) => Number(v.id) === Number(selectedVariantId)) ||
-    variants[0];
+        {
+          id: p.id,
+          productCode: p.productCode || "",
+          label: p.label || p.name,
+          price: p.price,
+          actualPrice: p.actualPrice || p.price,
+          image: p.image || p.images?.[0] || "/products/mustard-oil.png",
+        },
+      ];
+  const selectedVariant = variants.find((v) => Number(v.id) === Number(selectedVariantId)) || variants[0];
   const currentPrice = Number(selectedVariant?.price ?? p.price ?? 0);
-  const currentActualPrice = Number(
-    selectedVariant?.actualPrice ?? p.actualPrice ?? currentPrice
-  );
+  const currentActualPrice = Number(selectedVariant?.actualPrice ?? p.actualPrice ?? currentPrice);
   const selectedLabel = selectedVariant?.label || p.label || p.name;
   const displayName = `${p.name} - ${selectedLabel}`;
 
@@ -144,11 +120,7 @@ export default function ProductInfo({ product }) {
       id: selectedVariant?.id || p.id,
       name: displayName,
       price: currentPrice,
-      image:
-        selectedVariant?.image ||
-        p.image ||
-        p.images?.[0] ||
-        "/products/mustard-oil.png",
+      image: selectedVariant?.image || p.image || p.images?.[0] || "/products/mustard-oil.png",
       qty,
       weight: selectedLabel,
     });
@@ -161,11 +133,7 @@ export default function ProductInfo({ product }) {
     setCheckoutItem({
       id: selectedVariant?.id || p.id,
       name: displayName,
-      image:
-        selectedVariant?.image ||
-        p.image ||
-        p.images?.[0] ||
-        "/products/mustard-oil.png",
+      image: selectedVariant?.image || p.image || p.images?.[0] || "/products/mustard-oil.png",
       weight: selectedLabel,
       qty,
       unitPrice: currentPrice,
@@ -196,13 +164,10 @@ export default function ProductInfo({ product }) {
   };
 
   return (
-    <div className="product-info-panel flex flex-col gap-5 flex-1 min-w-0">
+    <div className="product-info-panel flex flex-col gap-5 flex-1 min-w-full lg:min-w-50">
       {/* ── Product Name ── */}
       <div className="flex items-start justify-between gap-3">
-        <h1
-          className="font-bold text-gray-900"
-          style={{ fontSize: "24px", lineHeight: 1.2 }}
-        >
+        <h1 className="font-bold text-gray-900" style={{ fontSize: "clamp(18px, 3vw, 24px)", lineHeight: 1.2 }}>
           {p.name}
         </h1>
         <button
@@ -235,13 +200,9 @@ export default function ProductInfo({ product }) {
       </div>
 
       {/* ── Price ── */}
-      <p className="font-bold" style={{ color: "#00462C", fontSize: "22px" }}>
+      <p className="font-bold" style={{ color: "#00462C", fontSize: "clamp(18px, 3vw, 22px)" }}>
         NPR {currentPrice}
-        {currentActualPrice > currentPrice && (
-          <span className="text-gray-400 line-through text-base ml-2">
-            NPR {currentActualPrice}
-          </span>
-        )}
+        {currentActualPrice > currentPrice && <span className="text-gray-400 line-through text-base ml-2">NPR {currentActualPrice}</span>}
       </p>
 
       {/* ── Divider ── */}
@@ -275,26 +236,14 @@ export default function ProductInfo({ product }) {
       {/* ── Quantity ── */}
       <div className="flex flex-col gap-2">
         <p className="text-sm font-semibold text-gray-700">Quantity</p>
-        <div
-          className="flex items-center border border-gray-300 rounded-md overflow-hidden"
-          style={{ width: "110px", height: "40px" }}
-        >
-          <button
-            onClick={() => setQty((q) => Math.max(1, q - 1))}
-            className="flex items-center justify-center flex-1 h-full hover:bg-gray-100 transition-colors text-gray-600"
-          >
+        <div className="flex items-center border border-gray-300 rounded-md overflow-hidden" style={{ width: "110px", height: "40px" }}>
+          <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="flex items-center justify-center flex-1 h-full hover:bg-gray-100 transition-colors text-gray-600">
             <MinusIcon />
           </button>
-          <span
-            className="flex items-center justify-center font-semibold text-sm text-gray-800 border-x border-gray-300 h-full"
-            style={{ width: "36px" }}
-          >
+          <span className="flex items-center justify-center font-semibold text-sm text-gray-800 border-x border-gray-300 h-full" style={{ width: "36px" }}>
             {qty}
           </span>
-          <button
-            onClick={() => setQty((q) => q + 1)}
-            className="flex items-center justify-center flex-1 h-full hover:bg-gray-100 transition-colors text-gray-600"
-          >
+          <button onClick={() => setQty((q) => q + 1)} className="flex items-center justify-center flex-1 h-full hover:bg-gray-100 transition-colors text-gray-600">
             <PlusIcon />
           </button>
         </div>
@@ -302,14 +251,13 @@ export default function ProductInfo({ product }) {
 
       {/* ── Add + Buy Now ── */}
       <div className="flex gap-3">
-        {/* Add (filled green) */}
         <button
           onClick={handleAdd}
-          className="flex items-center justify-center gap-2 text-white font-semibold text-sm rounded-md transition-all duration-200 hover:scale-105 active:scale-95"
+          className="flex items-center justify-center gap-2 text-white font-semibold text-sm rounded-md transition-all duration-200 hover:scale-105 active:scale-95 flex-1 sm:flex-none"
           style={{
             background: added ? "#2d7a4f" : "#00462C",
             height: "44px",
-            width: "220px",
+            width: "clamp(140px, 40%, 220px)",
             boxShadow: "0 3px 14px rgba(0,70,44,0.25)",
           }}
         >
@@ -317,19 +265,18 @@ export default function ProductInfo({ product }) {
           {added ? "Added!" : "Add"}
         </button>
 
-        {/* Buy Now (outlined) */}
         <button
-          className="flex items-center justify-center font-semibold text-sm rounded-md border-2 transition-all duration-200 hover:bg-gray-50 active:scale-95"
+          className="flex items-center justify-center font-semibold text-sm rounded-md border-2 transition-all duration-200 hover:bg-gray-50 active:scale-95 flex-1 sm:flex-none"
           style={{
             borderColor: "#00462C",
             color: "#00462C",
             height: "44px",
-            width: "220px",
+            width: "clamp(140px, 40%, 220px)",
           }}
-          onClick={handleBuyNow}   >
+          onClick={handleBuyNow}
+        >
           Buy Now
         </button>
-
       </div>
     </div>
   );

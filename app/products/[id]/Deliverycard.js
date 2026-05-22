@@ -50,10 +50,7 @@ export default function DeliveryCard({ deliveryTargetDays }) {
 
   useEffect(() => {
     const run = async () => {
-      const localUserId =
-        typeof window !== "undefined"
-          ? window.localStorage.getItem("userId")
-          : null;
+      const localUserId = typeof window !== "undefined" ? window.localStorage.getItem("userId") : null;
       const userId = localUserId || "1";
       const response = await apiGetRequest(`/account/addresses?userId=${userId}`, false);
       if (!response?.success) return;
@@ -72,109 +69,185 @@ export default function DeliveryCard({ deliveryTargetDays }) {
     return byId || addresses[0];
   }, [addresses, selectedId]);
 
-  const addressLine1 = selectedAddress
-    ? [selectedAddress.region, selectedAddress.district, selectedAddress.city]
-        .filter(Boolean)
-        .join(", ")
-    : "No saved address";
-  const addressLine2 = selectedAddress
-    ? [selectedAddress.colony, selectedAddress.area].filter(Boolean).join(", ")
-    : "Add address from Profile";
+  const addressLine1 = selectedAddress ? [selectedAddress.region, selectedAddress.district, selectedAddress.city].filter(Boolean).join(", ") : "No saved address";
+  const addressLine2 = selectedAddress ? [selectedAddress.colony, selectedAddress.area].filter(Boolean).join(", ") : "Add address from Profile";
   const deliveryText = formatDeliveryRange(deliveryTargetDays);
 
   return (
-    <div
-      className="flex flex-col border border-gray-200 rounded-lg overflow-hidden bg-white"
-      style={{ width: "220px", flexShrink: 0 }}
-    >
-      {/* ── Delivery Options ── */}
-      <div className="p-4 flex flex-col gap-3 border-b border-gray-200">
-        <h4 className="font-bold text-gray-800" style={{ fontSize: "14px" }}>
-          Delivery Options
-        </h4>
+    // <div
+    //   className="flex flex-col border border-gray-200 rounded-lg overflow-hidden bg-white"
+    //   style={{ width: "220px", flexShrink: 0 }}
+    // >
+    //   {/* ── Delivery Options ── */}
+    //   <div className="p-4 flex flex-col gap-3 border-b border-gray-200">
+    //     <h4 className="font-bold text-gray-800" style={{ fontSize: "14px" }}>
+    //       Delivery Options
+    //     </h4>
 
-        {/* Location row */}
-        <div className="flex items-start gap-2">
-          <span className="mt-0.5 flex-shrink-0">
-            <LocationIcon />
-          </span>
-          <div className="flex flex-col gap-0.5">
-            <p className="text-xs text-gray-600 leading-snug">
-              {addressLine1}
-            </p>
-            <p className="text-xs text-gray-600 leading-snug">
-              {addressLine2 || "N/A"}
-            </p>
-            {addresses.length > 0 ? (
-              <div className="mt-1 flex items-center justify-between gap-1.5 w-full">
-                <select
-                  className="text-xs border border-gray-300 rounded px-1.5 py-1 text-gray-700 flex-1 min-w-0"
-                  value={selectedId}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (value === ADD_NEW_VALUE) {
-                      window.location.href = "/profile?tab=address";
-                      return;
-                    }
-                    setSelectedId(value);
-                  }}
-                >
-                  <option value={ADD_NEW_VALUE}>+ Add New Address</option>
-                  {addresses.map((address) => (
-                    <option key={address.id} value={String(address.id)}>
-                      {address.fullName} - {address.city}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : (
-              <a
-                href="/profile?tab=address"
-                className="text-xs font-semibold mt-0.5 text-left"
-                style={{ color: "#00462C" }}
-              >
-                Add Address
-              </a>
-            )}
+    //     {/* Location row */}
+    //     <div className="flex items-start gap-2">
+    //       <span className="mt-0.5 flex-shrink-0">
+    //         <LocationIcon />
+    //       </span>
+    //       <div className="flex flex-col gap-0.5">
+    //         <p className="text-xs text-gray-600 leading-snug">
+    //           {addressLine1}
+    //         </p>
+    //         <p className="text-xs text-gray-600 leading-snug">
+    //           {addressLine2 || "N/A"}
+    //         </p>
+    //         {addresses.length > 0 ? (
+    //           <div className="mt-1 flex items-center justify-between gap-1.5 w-full">
+    //             <select
+    //               className="text-xs border border-gray-300 rounded px-1.5 py-1 text-gray-700 flex-1 min-w-0"
+    //               value={selectedId}
+    //               onChange={(e) => {
+    //                 const value = e.target.value;
+    //                 if (value === ADD_NEW_VALUE) {
+    //                   window.location.href = "/profile?tab=address";
+    //                   return;
+    //                 }
+    //                 setSelectedId(value);
+    //               }}
+    //             >
+    //               <option value={ADD_NEW_VALUE}>+ Add New Address</option>
+    //               {addresses.map((address) => (
+    //                 <option key={address.id} value={String(address.id)}>
+    //                   {address.fullName} - {address.city}
+    //                 </option>
+    //               ))}
+    //             </select>
+    //           </div>
+    //         ) : (
+    //           <a
+    //             href="/profile?tab=address"
+    //             className="text-xs font-semibold mt-0.5 text-left"
+    //             style={{ color: "#00462C" }}
+    //           >
+    //             Add Address
+    //           </a>
+    //         )}
+    //       </div>
+    //     </div>
+
+    //     {/* Standard Delivery */}
+    //     <div className="flex items-start gap-2">
+    //       <span className="mt-0.5 flex-shrink-0">
+    //         <TruckIcon />
+    //       </span>
+    //       <div className="flex flex-col gap-0.5">
+    //         <p className="text-xs font-semibold text-gray-700">
+    //           Standard Delivery
+    //         </p>
+    //         <p className="text-xs text-gray-500">{deliveryText}</p>
+    //       </div>
+    //     </div>
+    //   </div>
+
+    //   {/* ── Return & Warranty ── */}
+    //   <div className="p-4 flex flex-col gap-3">
+    //     <h4 className="font-bold text-gray-800" style={{ fontSize: "14px" }}>
+    //       Return &amp; Warranty
+    //     </h4>
+
+    //     {/* 7 Days Free Return */}
+    //     <div className="flex items-start gap-2">
+    //       <span className="mt-0.5 flex-shrink-0">
+    //         <ShieldIcon />
+    //       </span>
+    //       <p className="text-xs text-gray-600">7 Days Free Return</p>
+    //     </div>
+
+    //     {/* Warranty not available */}
+    //     <div className="flex items-start gap-2">
+    //       <span className="mt-0.5 flex-shrink-0">
+    //         <ShieldIcon />
+    //       </span>
+    //       <p className="text-xs text-gray-500">Warranty not available</p>
+    //     </div>
+    //   </div>
+    // </div>
+
+    <>
+      {/* ── DeliveryCard ── */}
+      <div className="flex flex-col border border-gray-200 rounded-lg overflow-hidden bg-white w-full lg:w-[220px] lg:flex-shrink-0">
+        {/* ── Delivery Options ── */}
+        <div className="p-4 flex flex-col gap-3 border-b border-gray-200">
+          <h4 className="font-bold text-gray-800" style={{ fontSize: "14px" }}>
+            Delivery Options
+          </h4>
+
+          {/* Location row */}
+          <div className="flex items-start gap-2">
+            <span className="mt-0.5 flex-shrink-0">
+              <LocationIcon />
+            </span>
+            <div className="flex flex-col gap-0.5">
+              <p className="text-xs text-gray-600 leading-snug">{addressLine1}</p>
+              <p className="text-xs text-gray-600 leading-snug">{addressLine2 || "N/A"}</p>
+              {addresses.length > 0 ? (
+                <div className="mt-1 flex items-center justify-between gap-1.5 w-full">
+                  <select
+                    className="text-xs border border-gray-300 rounded px-1.5 py-1 text-gray-700 flex-1 min-w-0"
+                    value={selectedId}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === ADD_NEW_VALUE) {
+                        window.location.href = "/profile?tab=address";
+                        return;
+                      }
+                      setSelectedId(value);
+                    }}
+                  >
+                    <option value={ADD_NEW_VALUE}>+ Add New Address</option>
+                    {addresses.map((address) => (
+                      <option key={address.id} value={String(address.id)}>
+                        {address.fullName} - {address.city}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <a href="/profile?tab=address" className="text-xs font-semibold mt-0.5 text-left" style={{ color: "#00462C" }}>
+                  Add Address
+                </a>
+              )}
+            </div>
+          </div>
+
+          {/* Standard Delivery */}
+          <div className="flex items-start gap-2">
+            <span className="mt-0.5 flex-shrink-0">
+              <TruckIcon />
+            </span>
+            <div className="flex flex-col gap-0.5">
+              <p className="text-xs font-semibold text-gray-700">Standard Delivery</p>
+              <p className="text-xs text-gray-500">{deliveryText}</p>
+            </div>
           </div>
         </div>
 
-        {/* Standard Delivery */}
-        <div className="flex items-start gap-2">
-          <span className="mt-0.5 flex-shrink-0">
-            <TruckIcon />
-          </span>
-          <div className="flex flex-col gap-0.5">
-            <p className="text-xs font-semibold text-gray-700">
-              Standard Delivery
-            </p>
-            <p className="text-xs text-gray-500">{deliveryText}</p>
+        {/* ── Return & Warranty ── */}
+        <div className="p-4 flex flex-col gap-3">
+          <h4 className="font-bold text-gray-800" style={{ fontSize: "14px" }}>
+            Return &amp; Warranty
+          </h4>
+
+          <div className="flex items-start gap-2">
+            <span className="mt-0.5 flex-shrink-0">
+              <ShieldIcon />
+            </span>
+            <p className="text-xs text-gray-600">7 Days Free Return</p>
+          </div>
+
+          <div className="flex items-start gap-2">
+            <span className="mt-0.5 flex-shrink-0">
+              <ShieldIcon />
+            </span>
+            <p className="text-xs text-gray-500">Warranty not available</p>
           </div>
         </div>
       </div>
-
-      {/* ── Return & Warranty ── */}
-      <div className="p-4 flex flex-col gap-3">
-        <h4 className="font-bold text-gray-800" style={{ fontSize: "14px" }}>
-          Return &amp; Warranty
-        </h4>
-
-        {/* 7 Days Free Return */}
-        <div className="flex items-start gap-2">
-          <span className="mt-0.5 flex-shrink-0">
-            <ShieldIcon />
-          </span>
-          <p className="text-xs text-gray-600">7 Days Free Return</p>
-        </div>
-
-        {/* Warranty not available */}
-        <div className="flex items-start gap-2">
-          <span className="mt-0.5 flex-shrink-0">
-            <ShieldIcon />
-          </span>
-          <p className="text-xs text-gray-500">Warranty not available</p>
-        </div>
-      </div>
-    </div>
+    </>
   );
 }
