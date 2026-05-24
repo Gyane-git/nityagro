@@ -317,6 +317,24 @@ export default function Header() {
     if (params.get("login") === "1") {
       auth.openLogin();
     }
+    if (params.get("google_login") === "1") {
+      toast.success("Google login successful. Welcome!");
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete("google_login");
+      window.history.replaceState({}, "", cleanUrl.toString());
+    }
+    if (params.get("google_error") === "1") {
+      toast.error("Google login failed. Please try again.");
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete("google_error");
+      window.history.replaceState({}, "", cleanUrl.toString());
+    }
+    if (params.get("google_inactive") === "1") {
+      toast.error("Your account is inactive. Please contact support.");
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete("google_inactive");
+      window.history.replaceState({}, "", cleanUrl.toString());
+    }
   }, []);
 
   useEffect(() => {

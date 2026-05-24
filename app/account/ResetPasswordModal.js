@@ -17,12 +17,13 @@ const EyeIcon = ({ show }) => (
 const inputClass =
   "w-full border border-gray-200 rounded-lg px-4 text-sm text-gray-700 placeholder-gray-400 outline-none transition-all focus:border-[#266A3F] focus:ring-1 focus:ring-[#266A3F]/20 bg-gray-50";
 
-export default function ResetPasswordModal({ isOpen, onClose, onSuccess }) {
+export default function ResetPasswordModal({ isOpen, onClose, onSuccess, email }) {
   const [newPw,  setNewPw]  = useState("");
   const [confPw, setConfPw] = useState("");
   const [showNew,  setShowNew]  = useState(false);
   const [showConf, setShowConf] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleReset = (e) => {
     e.preventDefault();
@@ -37,9 +38,31 @@ export default function ResetPasswordModal({ isOpen, onClose, onSuccess }) {
       return;
     }
     setError("");
-    console.log("Password reset");
-    toast.success("Password reset successfully. Please login.");
-    onSuccess?.();
+    const loadingToastId = toast.loading("Resetting password...");
+    setLoading(true);
+    fetch("/api/auth/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email, password: newPw }),
+    })
+      .then((res) => res.json().then((payload) => ({ ok: res.ok, payload })))
+      .then(({ ok, payload }) => {
+        if (!ok || !payload?.success) {
+          toast.error(payload?.message || "Password reset failed", {
+            id: loadingToastId,
+          });
+          return;
+        }
+        toast.success(payload.message || "Password reset successfully. Please login.", {
+          id: loadingToastId,
+        });
+        setNewPw("");
+        setConfPw("");
+        onSuccess?.();
+      })
+      .catch(() => toast.error("Password reset failed", { id: loadingToastId }))
+      .finally(() => setLoading(false));
   };
 
   return (
@@ -90,9 +113,10 @@ export default function ResetPasswordModal({ isOpen, onClose, onSuccess }) {
 
           {/* Reset button */}
           <button type="submit"
+            disabled={loading}
             className="w-full flex items-center justify-center text-white font-bold text-sm rounded-lg mt-1 transition-all hover:opacity-90 active:scale-[0.99]"
-            style={{ background: "#266A3F", height: "48px", boxShadow: "0 4px 14px rgba(38,106,63,0.28)" }}>
-            Reset Password
+            style={{ background: "#266A3F", height: "48px", boxShadow: "0 4px 14px rgba(38,106,63,0.28)", opacity: loading ? 0.75 : 1 }}>
+            {loading ? "Resetting..." : "Reset Password"}
           </button>
         </form>
       </div>

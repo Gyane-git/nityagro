@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import LoginModal          from "./LoginModal";
 import SignupModal         from "./SignupModal";
 import ForgotPasswordModal from "./ForgotPasswordModal";
@@ -21,6 +22,12 @@ import ResetPasswordModal  from "./ResetPasswordModal";
  */
 export default function AuthModals({ auth }) {
   const { modal, close, openLogin, openSignup, openForgot, openOtp, openReset } = auth;
+  const [resetEmail, setResetEmail] = useState("");
+  const [otpContext, setOtpContext] = useState({
+    purpose: "reset-password",
+    email: "",
+    signupData: null,
+  });
 
   return (
     <>
@@ -35,25 +42,54 @@ export default function AuthModals({ auth }) {
         isOpen={modal === "signup"}
         onClose={close}
         onLogin={openLogin}
+        onOtp={(signupData) => {
+          setOtpContext({
+            purpose: "signup",
+            email: signupData.email,
+            signupData,
+          });
+          close();
+          openOtp();
+        }}
       />
 
       <ForgotPasswordModal
         isOpen={modal === "forgot"}
         onClose={close}
         onLogin={openLogin}
-        onOtp={() => { close(); openOtp(); }}
+        onOtp={(email) => {
+          setResetEmail(email);
+          setOtpContext({
+            purpose: "reset-password",
+            email,
+            signupData: null,
+          });
+          close();
+          openOtp();
+        }}
       />
 
       <OtpModal
         isOpen={modal === "otp"}
         onClose={close}
-        onSuccess={() => { close(); openReset(); }}
-        email="example@me.com"
+        onSuccess={() => {
+          close();
+          if (otpContext.purpose === "signup") {
+            openLogin();
+            return;
+          }
+          openReset();
+        }}
+        email={otpContext.email || resetEmail}
+        purpose={otpContext.purpose}
+        signupData={otpContext.signupData}
+        onResend={() => otpContext.email || resetEmail}
       />
 
       <ResetPasswordModal
         isOpen={modal === "reset"}
         onClose={close}
+        email={resetEmail}
         onSuccess={() => { close(); openLogin(); }}
       />
     </>

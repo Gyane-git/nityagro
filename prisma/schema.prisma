@@ -39,6 +39,20 @@ model Users {
   @@map("users")
 }
 
+model AuthOtp {
+  authOtpId BigInt   @id @default(autoincrement())
+  email     String
+  purpose   String
+  codeHash  String
+  expiresAt DateTime
+  consumed  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email, purpose])
+  @@map("authOtp")
+}
+
 model Categories {
   categoryId          BigInt   @id @default(autoincrement())
   categoryName        String

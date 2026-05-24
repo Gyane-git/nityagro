@@ -34,13 +34,18 @@ const GoogleIcon = () => (
 
 const inputClass = "w-full border border-gray-200 rounded-lg px-4 text-sm text-gray-700 placeholder-gray-400 outline-none transition-all focus:border-[#266A3F] focus:ring-1 focus:ring-[#266A3F]/20 bg-gray-50";
 
-export default function SignupModal({ isOpen, onClose, onLogin }) {
+export default function SignupModal({ isOpen, onClose, onLogin, onOtp }) {
   const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
   const [showPw, setShowPw] = useState(false);
   const [showCPw, setShowCPw] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const startGoogleSignup = () => {
+    toast.loading("Opening Google signup...");
+    window.location.href = "/api/auth/google?next=/";
+  };
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -62,15 +67,16 @@ export default function SignupModal({ isOpen, onClose, onLogin }) {
       return;
     }
 
-    const loadingToastId = toast.loading("Creating your account...");
+    const loadingToastId = toast.loading("Sending verification OTP...");
     try {
       setLoading(true);
-      const response = await fetch("/api/users", {
+      const response = await fetch("/api/auth/signup/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
-          name: form.name,
-          email: form.email,
+          name: form.name.trim(),
+          email: form.email.trim().toLowerCase(),
           password: form.password,
         }),
       });
@@ -81,11 +87,16 @@ export default function SignupModal({ isOpen, onClose, onLogin }) {
         return;
       }
 
-      toast.success("Account created successfully. Please login.", { id: loadingToastId });
-      onClose?.();
-      onLogin?.();
+      toast.success(payload.message || "OTP sent. Please verify your email.", {
+        id: loadingToastId,
+      });
+      onOtp?.({
+        name: form.name.trim(),
+        email: form.email.trim().toLowerCase(),
+        password: form.password,
+      });
     } catch {
-      toast.error("Signup failed. Please try again.", { id: loadingToastId });
+      toast.error("Failed to send OTP. Please try again.", { id: loadingToastId });
     } finally {
       setLoading(false);
     }
@@ -145,7 +156,7 @@ export default function SignupModal({ isOpen, onClose, onLogin }) {
 
           {/* Sign Up button */}
           <button type="submit" disabled={loading} className="w-full flex items-center justify-center text-white font-bold text-sm rounded-lg mt-1 transition-all hover:opacity-90 active:scale-[0.99]" style={{ background: "#266A3F", height: "48px", boxShadow: "0 4px 14px rgba(38,106,63,0.28)", opacity: loading ? 0.75 : 1 }}>
-            {loading ? "Creating..." : "Sign Up"}
+            {loading ? "Sending OTP..." : "Sign Up"}
           </button>
 
           {/* Divider */}
@@ -158,7 +169,7 @@ export default function SignupModal({ isOpen, onClose, onLogin }) {
           {/* Sign Up with Google */}
           <button
             type="button"
-            onClick={() => toast("Google signup is not enabled yet.")}
+            onClick={startGoogleSignup}
             className="w-full flex items-center justify-center gap-2.5 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-all"
             style={{ height: "46px" }}
           >

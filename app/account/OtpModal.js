@@ -9,10 +9,14 @@ export default function OtpModal({
   onClose,
   onSuccess,
   email = "example@me.com",
+  onResend,
+  purpose = "reset-password",
+  signupData = null,
 }) {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [timer, setTimer] = useState(30);
   const [canResend, setCanResend] = useState(false);
+  const [loading, setLoading] = useState(false);
   const inputs = useRef([]);
 
   // Countdown timer
@@ -53,9 +57,39 @@ export default function OtpModal({
       toast.error("Please enter the 6-digit OTP");
       return;
     }
-    console.log("OTP submitted:", code);
-    toast.success("OTP verified successfully");
-    onSuccess?.();
+    const loadingToastId = toast.loading("Verifying OTP...");
+    setLoading(true);
+    const isSignup = purpose === "signup";
+    const verifyUrl = isSignup
+      ? "/api/auth/signup/verify"
+      : "/api/auth/verify-reset-otp";
+    const requestBody = isSignup
+      ? { ...signupData, otp: code }
+      : { email, otp: code };
+
+    fetch(verifyUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(requestBody),
+    })
+      .then((res) => res.json().then((payload) => ({ ok: res.ok, payload })))
+      .then(({ ok, payload }) => {
+        if (!ok || !payload?.success) {
+          toast.error(payload?.message || "Invalid OTP", { id: loadingToastId });
+          return;
+        }
+        toast.success(
+          payload.message ||
+            (isSignup
+              ? "Account verified and created successfully"
+              : "OTP verified successfully"),
+          { id: loadingToastId },
+        );
+        onSuccess?.();
+      })
+      .catch(() => toast.error("OTP verification failed", { id: loadingToastId }))
+      .finally(() => setLoading(false));
   };
 
   const handleResend = () => {
@@ -66,8 +100,34 @@ export default function OtpModal({
     setOtp(["", "", "", "", "", ""]);
     setTimer(30);
     setCanResend(false);
-    console.log("OTP resent");
-    toast.success("OTP resent successfully");
+    const resendEmail = onResend?.() || email;
+    const loadingToastId = toast.loading("Resending OTP...");
+    const isSignup = purpose === "signup";
+    fetch(isSignup ? "/api/auth/signup/send-otp" : "/api/auth/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(
+        isSignup
+          ? {
+              name: signupData?.name,
+              email: signupData?.email || resendEmail,
+              password: signupData?.password,
+            }
+          : { email: resendEmail },
+      ),
+    })
+      .then((res) => res.json().then((payload) => ({ ok: res.ok, payload })))
+      .then(({ ok, payload }) => {
+        if (!ok || !payload?.success) {
+          toast.error(payload?.message || "Failed to resend OTP", {
+            id: loadingToastId,
+          });
+          return;
+        }
+        toast.success("OTP resent successfully", { id: loadingToastId });
+      })
+      .catch(() => toast.error("Failed to resend OTP", { id: loadingToastId }));
   };
 
   return (
@@ -172,7 +232,7 @@ export default function OtpModal({
             }}
             disabled={otp.join("").length < 6}
           >
-            Verify OTP
+            {loading ? "Verifying..." : "Verify OTP"}
           </button>
         </form>
       </div>

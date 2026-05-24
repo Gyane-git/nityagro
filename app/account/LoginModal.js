@@ -45,6 +45,13 @@ export default function LoginModal({ isOpen, onClose, onSignup, onForgot }) {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const startGoogleLogin = () => {
+    const params = new URLSearchParams(window.location.search);
+    const next = params.get("next") || "/";
+    toast.loading("Opening Google sign in...");
+    window.location.href = `/api/auth/google?next=${encodeURIComponent(next)}`;
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
 
@@ -245,7 +252,7 @@ export default function LoginModal({ isOpen, onClose, onSignup, onForgot }) {
           {/* ── Login with Google ── */}
           <button
             type="button"
-            onClick={() => toast("Google login is not enabled yet.")}
+            onClick={startGoogleLogin}
             className="w-full flex items-center justify-center gap-2.5 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-all"
             style={{ height: "46px" }}
           >

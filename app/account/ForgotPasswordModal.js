@@ -11,6 +11,7 @@ const inputClass =
 
 export default function ForgotPasswordModal({ isOpen, onClose, onOtp, onLogin }) {
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSend = (e) => {
     e.preventDefault();
@@ -18,9 +19,31 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOtp, onLogin })
       toast.error("Please enter a valid email address");
       return;
     }
-    console.log("Send OTP to:", email);
-    toast.success("Verification code sent to your email");
-    onOtp?.();
+    const loadingToastId = toast.loading("Sending OTP to your email...");
+    setLoading(true);
+    fetch("/api/auth/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email }),
+    })
+      .then((res) => res.json().then((payload) => ({ ok: res.ok, payload })))
+      .then(({ ok, payload }) => {
+        if (!ok || !payload?.success) {
+          toast.error(payload?.message || "Failed to send OTP", {
+            id: loadingToastId,
+          });
+          return;
+        }
+        toast.success(payload.message || "Verification code sent to your email", {
+          id: loadingToastId,
+        });
+        onOtp?.(email.trim().toLowerCase());
+      })
+      .catch(() => {
+        toast.error("Failed to send OTP", { id: loadingToastId });
+      })
+      .finally(() => setLoading(false));
   };
 
   return (
@@ -57,9 +80,10 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOtp, onLogin })
 
           {/* Send OTP */}
           <button type="submit"
+            disabled={loading}
             className="w-full flex items-center justify-center text-white font-bold text-sm rounded-lg mt-1 transition-all hover:opacity-90 active:scale-[0.99]"
-            style={{ background: "#266A3F", height: "48px", boxShadow: "0 4px 14px rgba(38,106,63,0.28)" }}>
-            Send Verification Code
+            style={{ background: "#266A3F", height: "48px", boxShadow: "0 4px 14px rgba(38,106,63,0.28)", opacity: loading ? 0.75 : 1 }}>
+            {loading ? "Sending..." : "Send Verification Code"}
           </button>
 
           {/* Back to Login */}

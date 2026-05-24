@@ -1,94 +1,92 @@
-import { createHash, randomBytes, timingSafeEqual } from "crypto";
+import { createHash, randomInt, timingSafeEqual } from "crypto";
 import { prisma } from "@/lib/prisma";
 
-type OtpPurpose = "VERIFY_EMAIL" | "RESET_PASSWORD";
+export type AuthOtpPurpose = "VERIFY_EMAIL" | "RESET_PASSWORD";
 
-type StoredOtp = {
-  purpose: OtpPurpose;
-  hash: string;
-  expiresAt: number;
-};
-
-const OTP_LENGTH = 6;
-const HASH_PREFIX = "sha256";
+const OTP_TTL_MINUTES = 10;
+const OTP_PEPPER = process.env.JWT_SECRET || "nityagro-local-development-secret";
 
 export function generateOtpCode() {
-  const min = 10 ** (OTP_LENGTH - 1);
-  const max = 10 ** OTP_LENGTH - 1;
-  return String(Math.floor(min + Math.random() * (max - min + 1)));
+  return String(randomInt(100000, 1000000));
 }
 
-function hashOtpCode(otpCode: string) {
-  const salt = randomBytes(16).toString("hex");
-  const digest = createHash("sha256")
-    .update(`${salt}:${otpCode}`)
+function normalizeEmail(email: string) {
+  return String(email || "").trim().toLowerCase();
+}
+
+function hashOtpCode(email: string, purpose: AuthOtpPurpose, code: string) {
+  return createHash("sha256")
+    .update(`${normalizeEmail(email)}:${purpose}:${code}:${OTP_PEPPER}`)
     .digest("hex");
-
-  return `${HASH_PREFIX}$${salt}$${digest}`;
 }
 
-function compareOtpCode(otpCode: string, storedHash: string) {
-  const [prefix, salt, digest] = storedHash.split("$");
-  if (prefix !== HASH_PREFIX || !salt || !digest) return false;
-
-  const nextDigest = createHash("sha256")
-    .update(`${salt}:${otpCode}`)
-    .digest("hex");
-
-  const storedBuffer = Buffer.from(digest, "hex");
-  const nextBuffer = Buffer.from(nextDigest, "hex");
-
-  return (
-    storedBuffer.length === nextBuffer.length &&
-    timingSafeEqual(storedBuffer, nextBuffer)
-  );
+function safeEqual(a: string, b: string) {
+  const aBuffer = Buffer.from(a);
+  const bBuffer = Buffer.from(b);
+  return aBuffer.length === bBuffer.length && timingSafeEqual(aBuffer, bBuffer);
 }
 
-function parseStoredOtp(rawToken: string | null): StoredOtp | null {
-  if (!rawToken) return null;
+export async function saveAuthOtp(email: string, purpose: AuthOtpPurpose, code: string) {
+  const normalizedEmail = normalizeEmail(email);
+  const now = new Date();
+  const expiresAt = new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000);
 
-  try {
-    const parsed = JSON.parse(rawToken) as StoredOtp;
-    if (!parsed.hash || !parsed.purpose || !parsed.expiresAt) {
-      return null;
-    }
-    return parsed;
-  } catch {
-    return null;
-  }
-}
-
-export async function saveUserOtp(
-  userId: bigint,
-  purpose: OtpPurpose,
-  otpCode: string,
-  ttlMinutes = 10
-) {
-  const hash = hashOtpCode(otpCode);
-  const expiresAt = Date.now() + ttlMinutes * 60 * 1000;
-
-  await (prisma as any).users.update({
-    where: { userId },
+  await prisma.authOtp.updateMany({
+    where: {
+      email: normalizedEmail,
+      purpose,
+      consumed: false,
+    },
     data: {
-      rememberToken: JSON.stringify({
-        purpose,
-        hash,
-        expiresAt,
-      } satisfies StoredOtp),
-      updatedAt: new Date(),
+      consumed: true,
+      updatedAt: now,
+    },
+  });
+
+  return prisma.authOtp.create({
+    data: {
+      email: normalizedEmail,
+      purpose,
+      codeHash: hashOtpCode(normalizedEmail, purpose, code),
+      expiresAt,
+      consumed: false,
     },
   });
 }
 
-export async function verifyUserOtp(
-  rememberToken: string | null,
-  purpose: OtpPurpose,
-  otpCode: string
-) {
-  const stored = parseStoredOtp(rememberToken);
-  if (!stored) return false;
-  if (stored.purpose !== purpose) return false;
-  if (Date.now() > stored.expiresAt) return false;
+export async function verifyAuthOtp(email: string, purpose: AuthOtpPurpose, code: string) {
+  const normalizedEmail = normalizeEmail(email);
+  const otp = await prisma.authOtp.findFirst({
+    where: {
+      email: normalizedEmail,
+      purpose,
+      consumed: false,
+      expiresAt: {
+        gt: new Date(),
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
 
-  return compareOtpCode(otpCode, stored.hash);
+  if (!otp) return false;
+
+  const isValid = safeEqual(
+    otp.codeHash,
+    hashOtpCode(normalizedEmail, purpose, code),
+  );
+
+  if (!isValid) return false;
+
+  await prisma.authOtp.update({
+    where: {
+      authOtpId: otp.authOtpId,
+    },
+    data: {
+      consumed: true,
+    },
+  });
+
+  return true;
 }

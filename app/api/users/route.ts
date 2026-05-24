@@ -42,6 +42,18 @@ export async function GET() {
 
 // CREATE user
 export async function POST(req: Request) {
+  try {
+    await requireAdminRole();
+  } catch {
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Public signup requires email OTP verification",
+      },
+      { status: 401 },
+    );
+  }
+
   const body = await req.json();
 
   if (!body?.email || !body?.name || !body?.password) {
