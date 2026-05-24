@@ -57,6 +57,7 @@ export default function EditCategoryPage() {
     if (file) {
       setImage(file);
       setPreview(URL.createObjectURL(file));
+      toast.success("Category image selected");
     } else {
       setImage(null);
       setPreview(existingImage ? resolveImageUrl(existingImage) : null);
@@ -73,6 +74,7 @@ export default function EditCategoryPage() {
 
     if (!categoryId) return;
 
+    const saveToastId = toast.loading("Updating category...");
     setSaving(true);
     try {
       const formData = new FormData();
@@ -90,11 +92,11 @@ export default function EditCategoryPage() {
       const data = await res.json();
       if (!data.success) throw new Error(data.message || "Failed to update category");
 
-      toast.success("Category updated successfully!");
+      toast.success("Category updated successfully!", { id: saveToastId });
       router.push("/admin/categories-list");
     } catch (err) {
       console.error(err);
-      toast.error(err.message || "Something went wrong!");
+      toast.error(err.message || "Something went wrong!", { id: saveToastId });
     } finally {
       setSaving(false);
     }

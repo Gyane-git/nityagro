@@ -160,6 +160,7 @@ export default function CategoriesListPage() {
   }, [categories, search]);
 
   const handleOmsSync = async () => {
+    const syncToastId = toast.loading("Syncing categories, products and variants from OMS...");
     setSyncingOms(true);
     try {
       const omsResponse = await fetch(
@@ -168,7 +169,7 @@ export default function CategoriesListPage() {
       );
 
       if (!omsResponse.ok) {
-        toast.error("Failed to fetch OMS categories");
+        toast.error("Failed to fetch OMS categories", { id: syncToastId });
         return;
       }
 
@@ -236,7 +237,10 @@ export default function CategoriesListPage() {
       );
 
       if (uniqueCategoryNames.length === 0) {
-        toast("No categories found in OMS");
+        toast("No categories found in OMS", {
+          id: syncToastId,
+          icon: "⚠️",
+        });
         return;
       }
 
@@ -272,18 +276,31 @@ export default function CategoriesListPage() {
             productSync.message ||
             subCategorySync.message ||
             "OMS sync failed",
+          { id: syncToastId },
         );
         return;
       }
 
-      toast.success("OMS sync completed");
+      toast.success(
+        `OMS sync completed: ${uniqueCategoryNames.length} categories, ${product.length} products, ${productsubGroup.length} variants checked.`,
+        { id: syncToastId },
+      );
       await fetchCategories();
     } catch (error) {
       console.error(error);
-      toast.error("OMS sync failed");
+      toast.error("OMS sync failed", { id: syncToastId });
     } finally {
       setSyncingOms(false);
     }
+  };
+
+  const confirmOmsSync = () => {
+    openConfirm({
+      title: "Sync OMS Data",
+      message:
+        "This will refresh categories, products and variants from OMS. New synced items remain inactive until you review and activate them.",
+      onConfirm: handleOmsSync,
+    });
   };
 
   const handleEditOpen = (category: Category) => {
@@ -300,10 +317,17 @@ export default function CategoriesListPage() {
     setCategoryImageFile(null);
     setCategoryLogoFile(null);
     setCategoryBannerFile(null);
+    toast("Category edit form opened");
   };
 
   const handleEditSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!editForm.categoryId) {
+      toast.error("Please select a category before updating");
+      return;
+    }
+
+    const updateToastId = toast.loading("Updating category...");
     setLoading(true);
     try {
       let categoryImage = editForm.categoryImage;
@@ -313,6 +337,7 @@ export default function CategoriesListPage() {
       if (
         [categoryImageFile, categoryLogoFile, categoryBannerFile].some(Boolean)
       ) {
+        toast.loading("Uploading category media...", { id: updateToastId });
         
         const uploadFormData = new FormData();
         if (categoryImageFile)
@@ -329,7 +354,9 @@ export default function CategoriesListPage() {
         }>("/uploads/category-assets", uploadFormData);
 
         if (!uploadResponse.success) {
-          toast.error(uploadResponse.message ?? "Image upload failed");
+          toast.error(uploadResponse.message ?? "Image upload failed", {
+            id: updateToastId,
+          });
           setLoading(false);
           return;
         }
@@ -350,12 +377,16 @@ export default function CategoriesListPage() {
       });
 
       if (!response.success) {
-        toast.error(response.message ?? "Failed to update category");
+        toast.error(response.message ?? "Failed to update category", {
+          id: updateToastId,
+        });
         setLoading(false);
         return;
       }
 
-      toast.success(response.message ?? "Category updated successfully");
+      toast.success(response.message ?? "Category updated successfully", {
+        id: updateToastId,
+      });
       setEditForm(emptyForm);
       setCategoryImageFile(null);
       setCategoryLogoFile(null);
@@ -363,7 +394,7 @@ export default function CategoriesListPage() {
       await fetchCategories();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to update category");
+      toast.error("Failed to update category", { id: updateToastId });
     } finally {
       setLoading(false);
     }
@@ -375,19 +406,24 @@ export default function CategoriesListPage() {
       message:
         "Are you sure you want to delete this category? This action cannot be undone.",
       onConfirm: async () => {
+        const deleteToastId = toast.loading("Deleting category...");
         try {
           const response = await apiDeleteRequest("/categories", {
             categoryId,
           });
           if (!response.success) {
-            toast.error(response.message ?? "Failed to delete category");
+            toast.error(response.message ?? "Failed to delete category", {
+              id: deleteToastId,
+            });
             return;
           }
-          toast.success(response.message ?? "Category deleted");
+          toast.success(response.message ?? "Category deleted", {
+            id: deleteToastId,
+          });
           await fetchCategories();
         } catch (error) {
           console.error(error);
-          toast.error("Failed to delete category");
+          toast.error("Failed to delete category", { id: deleteToastId });
         }
       },
     });
@@ -415,7 +451,7 @@ export default function CategoriesListPage() {
               Categories
             </div>
             <button
-              onClick={handleOmsSync}
+              onClick={confirmOmsSync}
               disabled={syncingOms}
               className={`rounded-md px-4 py-2 text-sm font-semibold text-white ${
                 syncingOms
@@ -528,7 +564,10 @@ export default function CategoriesListPage() {
                     </td>
                     <td className="px-4 py-2 text-center space-x-2">
                       <button
-                        onClick={() => setInfoDialog(category)}
+                        onClick={() => {
+                          setInfoDialog(category);
+                          toast("Category details opened");
+                        }}
                         className="p-1 text-blue-600 hover:bg-blue-50 rounded-lg transition"
                       >
                         <Info size={16} />
@@ -743,9 +782,13 @@ export default function CategoriesListPage() {
                         type="file"
                         accept="image/*"
                         className="hidden"
-                        onChange={(e) =>
-                          item.setter(e.target.files?.[0] || null)
-                        }
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null;
+                          item.setter(file);
+                          if (file) {
+                            toast.success(`${item.title} selected`);
+                          }
+                        }}
                       />
                     </label>
                   ))}

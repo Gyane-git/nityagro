@@ -1,8 +1,18 @@
 "use client";
 import { useState } from 'react';
 import { MapPin, Phone, Mail, Globe, Video, Save } from 'lucide-react';
+import toast from "react-hot-toast";
+import useConfirmModalStore from "@/store/confirmModalStore";
+import useInfoModalStore from "@/store/infoModalStore";
+import useWarningModalStore from "@/store/warningModalStore";
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const URL_REGEX = /^https?:\/\/.+/i;
 
 export default function AdminContactPage() {
+  const openConfirm = useConfirmModalStore((state) => state.open);
+  const openInfo = useInfoModalStore((state) => state.open);
+  const openWarning = useWarningModalStore((state) => state.open);
   const [contactData, setContactData] = useState({
     address: '123 Main Street, New York, NY 10001',
     mapLink: 'https://maps.google.com/?q=123+Main+Street',
@@ -14,8 +24,6 @@ export default function AdminContactPage() {
     tiktokUrl: 'https://tiktok.com/@yourcompany'
   });
 
-  const [successMessage, setSuccessMessage] = useState(false);
-
   const handleChange = (e) => {
     setContactData({
       ...contactData,
@@ -23,25 +31,65 @@ export default function AdminContactPage() {
     });
   };
 
+  const validateContactData = () => {
+    if (!contactData.address.trim()) return "Physical address is required.";
+    if (!contactData.phone.trim()) return "Phone number is required.";
+    if (!EMAIL_REGEX.test(contactData.email.trim())) return "Please enter a valid email address.";
+
+    const urlFields = [
+      ["mapLink", "Google Maps link"],
+      ["facebookUrl", "Facebook URL"],
+      ["instagramUrl", "Instagram URL"],
+      ["youtubeUrl", "YouTube URL"],
+      ["tiktokUrl", "TikTok URL"],
+    ];
+
+    const invalidUrl = urlFields.find(([key]) => {
+      const value = contactData[key]?.trim();
+      return value && !URL_REGEX.test(value);
+    });
+
+    if (invalidUrl) return `${invalidUrl[1]} must start with http:// or https://`;
+    return null;
+  };
+
   const handleSubmit = () => {
-    console.log('Contact data updated:', contactData);
-    setSuccessMessage(true);
-    setTimeout(() => setSuccessMessage(false), 3000);
+    const error = validateContactData();
+    if (error) {
+      openWarning({
+        title: "Check Contact Details",
+        message: error,
+      });
+      toast.error(error);
+      return;
+    }
+
+    console.log("Contact data updated:", contactData);
+    toast.success("Contact settings saved successfully");
+    openInfo({
+      title: "Contact Updated",
+      message: "Your contact information and social links are ready for users.",
+    });
   };
 
   const handleReset = () => {
-    if (window.confirm('Are you sure you want to reset all fields?')) {
-      setContactData({
-        address: '',
-        mapLink: '',
-        phone: '',
-        email: '',
-        facebookUrl: '',
-        instagramUrl: '',
-        youtubeUrl: '',
-        tiktokUrl: ''
-      });
-    }
+    openConfirm({
+      title: "Reset Contact Form",
+      message: "Are you sure you want to clear every contact and social link field?",
+      onConfirm: () => {
+        setContactData({
+          address: '',
+          mapLink: '',
+          phone: '',
+          email: '',
+          facebookUrl: '',
+          instagramUrl: '',
+          youtubeUrl: '',
+          tiktokUrl: ''
+        });
+        toast.success("Contact form reset");
+      },
+    });
   };
 
   return (
@@ -57,13 +105,6 @@ export default function AdminContactPage() {
             <p className="text-gray-600 mt-2">Manage your company's contact information and social media links</p>
           </div>
         </div>
-
-        {/* Success Message */}
-        {successMessage && (
-          <div className="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-lg shadow animate-pulse">
-            <p className="text-green-700 font-semibold">✓ Contact information updated successfully!</p>
-          </div>
-        )}
 
         <div className=" lg:grid-cols-3 gap-6">
           {/* Main Form */}

@@ -4,6 +4,8 @@ import { useState } from "react";
 import AuthModal from "./AuthModal";
 import toast from "react-hot-toast";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const EyeIcon = ({ show }) => (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     {show ? (
@@ -43,6 +45,14 @@ export default function SignupModal({ isOpen, onClose, onLogin }) {
   const handleSignup = async (e) => {
     e.preventDefault();
 
+    if (form.name.trim().length < 2) {
+      toast.error("Please enter your full name");
+      return;
+    }
+    if (!EMAIL_REGEX.test(form.email.trim())) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
     if (form.password.length < 8) {
       toast.error("Password must be at least 8 characters");
       return;
@@ -52,6 +62,7 @@ export default function SignupModal({ isOpen, onClose, onLogin }) {
       return;
     }
 
+    const loadingToastId = toast.loading("Creating your account...");
     try {
       setLoading(true);
       const response = await fetch("/api/users", {
@@ -66,15 +77,15 @@ export default function SignupModal({ isOpen, onClose, onLogin }) {
       const payload = await response.json();
 
       if (!response.ok || !payload?.success) {
-        toast.error(payload?.message || "Signup failed");
+        toast.error(payload?.message || "Signup failed", { id: loadingToastId });
         return;
       }
 
-      toast.success("Account created. Please login.");
+      toast.success("Account created successfully. Please login.", { id: loadingToastId });
       onClose?.();
       onLogin?.();
     } catch {
-      toast.error("Signup failed. Please try again.");
+      toast.error("Signup failed. Please try again.", { id: loadingToastId });
     } finally {
       setLoading(false);
     }
@@ -145,7 +156,12 @@ export default function SignupModal({ isOpen, onClose, onLogin }) {
           </div>
 
           {/* Sign Up with Google */}
-          <button type="button" className="w-full flex items-center justify-center gap-2.5 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-all" style={{ height: "46px" }}>
+          <button
+            type="button"
+            onClick={() => toast("Google signup is not enabled yet.")}
+            className="w-full flex items-center justify-center gap-2.5 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-all"
+            style={{ height: "46px" }}
+          >
             <GoogleIcon />
             Sign up with Google
           </button>
@@ -156,6 +172,7 @@ export default function SignupModal({ isOpen, onClose, onLogin }) {
             <button
               type="button"
               onClick={() => {
+                toast("Login to your existing account");
                 onClose();
                 onLogin?.();
               }}

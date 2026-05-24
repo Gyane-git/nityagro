@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import AuthModal from "./AuthModal";
+import toast from "react-hot-toast";
 
 const EyeIcon = ({ show }) => (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -25,10 +26,19 @@ export default function ResetPasswordModal({ isOpen, onClose, onSuccess }) {
 
   const handleReset = (e) => {
     e.preventDefault();
-    if (newPw !== confPw) { setError("Passwords do not match."); return; }
-    if (newPw.length < 8)  { setError("Password must be at least 8 characters."); return; }
+    if (newPw !== confPw) {
+      setError("Passwords do not match.");
+      toast.error("Passwords do not match");
+      return;
+    }
+    if (newPw.length < 8) {
+      setError("Password must be at least 8 characters.");
+      toast.error("Password must be at least 8 characters");
+      return;
+    }
     setError("");
     console.log("Password reset");
+    toast.success("Password reset successfully. Please login.");
     onSuccess?.();
   };
 

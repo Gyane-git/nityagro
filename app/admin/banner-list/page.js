@@ -3,10 +3,12 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import useConfirmModalStore from "@/store/confirmModalStore";
+import useInfoModalStore from "@/store/infoModalStore";
 
 export default function BannerList() {
   const [banners, setBanners] = useState([]);
   const openConfirm = useConfirmModalStore((state) => state.open);
+  const openInfo = useInfoModalStore((state) => state.open);
   const resolveImageUrl = (imageUrl) => {
     if (!imageUrl) return "/no-image.png";
     if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
@@ -52,9 +54,16 @@ export default function BannerList() {
     window.location.href = `/admin/edit-banner/${id}`;
   };
 
-  const handleInfo = (id) => {
-    // Add your info/view logic here
-    console.log("View banner info:", id);
+  const handleInfo = (banner) => {
+    openInfo({
+      title: "Banner Details",
+      message: [
+        `Name: ${banner.bannerName || banner.title || "Untitled banner"}`,
+        `Status: ${banner.isActive || banner.bannerStatus ? "Active" : "Inactive"}`,
+        `Slug: ${banner.slug || "-"}`,
+        `Description: ${banner.bannerDescription || "-"}`,
+      ].join("\n"),
+    });
   };
 
   useEffect(() => {
@@ -159,6 +168,13 @@ export default function BannerList() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleInfo(banner)}
+                          className="px-3 py-1 text-xs font-medium text-sky-600 bg-sky-50 rounded-md hover:bg-sky-100 transition-colors"
+                          title="View Banner Info"
+                        >
+                          Info
+                        </button>
                         <button
                           onClick={() => handleEdit(banner.id)}
                           className="px-3 py-1 text-xs font-medium text-green-600 bg-green-50 rounded-md hover:bg-green-100 transition-colors"

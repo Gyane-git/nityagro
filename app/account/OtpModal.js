@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import AuthModal from "./AuthModal";
+import toast from "react-hot-toast";
 
 export default function OtpModal({
   isOpen,
@@ -48,16 +49,25 @@ export default function OtpModal({
   const handleVerify = (e) => {
     e.preventDefault();
     const code = otp.join("");
+    if (code.length < 6) {
+      toast.error("Please enter the 6-digit OTP");
+      return;
+    }
     console.log("OTP submitted:", code);
+    toast.success("OTP verified successfully");
     onSuccess?.();
   };
 
   const handleResend = () => {
-    if (!canResend) return;
+    if (!canResend) {
+      toast("Please wait before requesting a new OTP");
+      return;
+    }
     setOtp(["", "", "", "", "", ""]);
     setTimer(30);
     setCanResend(false);
     console.log("OTP resent");
+    toast.success("OTP resent successfully");
   };
 
   return (

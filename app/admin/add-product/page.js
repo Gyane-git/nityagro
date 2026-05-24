@@ -16,8 +16,10 @@ import {
   Info,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import useConfirmModalStore from "@/store/confirmModalStore";
 
 export default function ProductUploadPage() {
+  const openConfirm = useConfirmModalStore((state) => state.open);
   const generateProductCode = () => {
     const prefix = "PRD";
     const timestamp = Date.now().toString().slice(-8);
@@ -135,6 +137,7 @@ export default function ProductUploadPage() {
   };
 
   const [formData, setFormData] = useState(defaultForm);
+  const [saving, setSaving] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -177,30 +180,43 @@ export default function ProductUploadPage() {
       ...prev,
       variants: [...prev.variants, { ...defaultVariant }],
     }));
+    toast.success("Variant row added");
   };
 
   const removeVariant = (index) => {
-    setFormData((prev) => ({
-      ...prev,
-      variants: prev.variants.filter((_, i) => i !== index),
-    }));
+    openConfirm({
+      title: "Remove Variant",
+      message: "Are you sure you want to remove this variant row?",
+      onConfirm: () => {
+        setFormData((prev) => ({
+          ...prev,
+          variants: prev.variants.filter((_, i) => i !== index),
+        }));
+        toast.success("Variant row removed");
+      },
+    });
   };
 
   const handleMainImageChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setFormData((prev) => ({ ...prev, productImage: file }));
+    toast.success("Main product image selected");
   };
 
   const handleMultipleImageChange = (e) => {
     const files = Array.from(e.target.files);
     setFormData((prev) => ({ ...prev, productImages: files }));
+    if (files.length > 0) {
+      toast.success(`${files.length} gallery image${files.length > 1 ? "s" : ""} selected`);
+    }
   };
 
   const handleCatalogChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setFormData((prev) => ({ ...prev, productCatalog: file }));
+    toast.success("Product catalog selected");
   };
 
   const toggleSection = (section) => {
@@ -208,14 +224,29 @@ export default function ProductUploadPage() {
   };
 
   const handleReset = () => {
-    setFormData({ ...defaultForm, productCode: generateProductCode() });
-    setActiveDescTab("productDetails");
+    openConfirm({
+      title: "Reset Product Form",
+      message: "Are you sure you want to clear all entered product details?",
+      onConfirm: () => {
+        setFormData({ ...defaultForm, productCode: generateProductCode() });
+        setActiveDescTab("productDetails");
+        toast.success("Product form reset");
+      },
+    });
   };
 
   const handleSubmit = async () => {
     if (!formData.productName) return toast.error("Product name is required!");
     if (!formData.productImage) return toast.error("Main image is required!");
+    if (!formData.actualPrice || Number(formData.actualPrice) < 0) {
+      return toast.error("Valid actual price is required!");
+    }
+    if (!formData.SellingPrice || Number(formData.SellingPrice) < 0) {
+      return toast.error("Valid selling price is required!");
+    }
 
+    const uploadToastId = toast.loading("Uploading product...");
+    setSaving(true);
     const data = new FormData();
 
     data.append("productCode", formData.productCode);
@@ -280,14 +311,19 @@ export default function ProductUploadPage() {
       const res = await fetch("/api/products", { method: "POST", body: data });
       const result = await res.json();
       if (res.ok) {
-        handleReset();
-        toast.success("Product uploaded successfully!");
+        setFormData({ ...defaultForm, productCode: generateProductCode() });
+        setActiveDescTab("productDetails");
+        toast.success("Product uploaded successfully!", { id: uploadToastId });
       } else {
-        toast.error(result.message || "Something went wrong!");
+        toast.error(result.message || "Something went wrong!", {
+          id: uploadToastId,
+        });
       }
     } catch (error) {
       console.error(error);
-      toast.error("Upload failed!");
+      toast.error("Upload failed!", { id: uploadToastId });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -341,9 +377,14 @@ export default function ProductUploadPage() {
             </button>
             <button
               onClick={handleSubmit}
-              className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium flex items-center gap-2 transition-colors shadow-sm"
+              disabled={saving}
+              className={`px-5 py-2 text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-sm ${
+                saving
+                  ? "bg-blue-300 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
             >
-              <Save className="w-4 h-4" /> Save Product
+              <Save className="w-4 h-4" /> {saving ? "Saving..." : "Save Product"}
             </button>
           </div>
         </div>

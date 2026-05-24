@@ -4,6 +4,8 @@ import { useState } from "react";
 import AuthModal from "./AuthModal";
 import toast from "react-hot-toast";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 // ─── Icons ───────────────────────────────────────────────────────────────────
 const EyeIcon = ({ show }) => (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -51,6 +53,17 @@ export default function LoginModal({ isOpen, onClose, onSignup, onForgot }) {
       return;
     }
 
+    if (!EMAIL_REGEX.test(email.trim())) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    if (!password.trim()) {
+      toast.error("Password is required");
+      return;
+    }
+
+    const loadingToastId = toast.loading("Checking your account...");
     try {
       setLoading(true);
       const response = await fetch("/api/auth/login", {
@@ -62,7 +75,7 @@ export default function LoginModal({ isOpen, onClose, onSignup, onForgot }) {
       const payload = await response.json();
 
       if (!response.ok || !payload?.success) {
-        toast.error(payload?.message || "Login failed");
+        toast.error(payload?.message || "Login failed", { id: loadingToastId });
         return;
       }
 
@@ -81,7 +94,12 @@ export default function LoginModal({ isOpen, onClose, onSignup, onForgot }) {
         localStorage.removeItem("admin_auth");
       }
 
-      toast.success("Login successful");
+      toast.success(
+        user.type === "ADMIN"
+          ? "Welcome admin. Opening dashboard..."
+          : "Login successful. Welcome back!",
+        { id: loadingToastId },
+      );
       onClose?.();
 
       const params = new URLSearchParams(window.location.search);
@@ -90,7 +108,7 @@ export default function LoginModal({ isOpen, onClose, onSignup, onForgot }) {
         user.type === "ADMIN" ? user.redirectTo || "/admin/dashboard" : next || "/";
       window.location.href = redirectTo;
     } catch {
-      toast.error("Login failed. Please try again.");
+      toast.error("Login failed. Please try again.", { id: loadingToastId });
     } finally {
       setLoading(false);
     }
@@ -168,7 +186,11 @@ export default function LoginModal({ isOpen, onClose, onSignup, onForgot }) {
               <div className="flex justify-end mt-0.5">
                 <button
                   type="button"
-                  onClick={() => { onClose(); onForgot?.(); }}
+                  onClick={() => {
+                    toast("Password reset flow is opening...");
+                    onClose();
+                    onForgot?.();
+                  }}
                   className="text-xs text-gray-500 hover:text-[#266A3F] transition-colors"
                 >
                   Forgot password?
@@ -193,6 +215,7 @@ export default function LoginModal({ isOpen, onClose, onSignup, onForgot }) {
                 />
                 <button
                   type="button"
+                  onClick={() => toast.error("OTP login is not enabled yet. Please use password login.")}
                   className="shrink-0 text-sm font-semibold px-4 rounded-lg border-2 transition-colors hover:bg-gray-50 whitespace-nowrap"
                   style={{ borderColor: "#266A3F", color: "#266A3F", height: "48px" }}
                 >
@@ -222,6 +245,7 @@ export default function LoginModal({ isOpen, onClose, onSignup, onForgot }) {
           {/* ── Login with Google ── */}
           <button
             type="button"
+            onClick={() => toast("Google login is not enabled yet.")}
             className="w-full flex items-center justify-center gap-2.5 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-all"
             style={{ height: "46px" }}
           >
@@ -234,7 +258,11 @@ export default function LoginModal({ isOpen, onClose, onSignup, onForgot }) {
             Don&apos;t have an account?{" "}
             <button
               type="button"
-              onClick={() => { onClose(); onSignup?.(); }}
+              onClick={() => {
+                toast("Create your Nityagro account");
+                onClose();
+                onSignup?.();
+              }}
               className="font-bold hover:underline"
               style={{ color: "#266A3F" }}
             >

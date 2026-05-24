@@ -67,6 +67,7 @@ export default function EditProductPage() {
 
   const [products, setProducts] = useState<Products>();
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const [expandedSections, setExpandedSections] = useState<ExpandedSections>({
     basic: true,
@@ -189,7 +190,6 @@ export default function EditProductPage() {
           `/products/${productId}`,
         );
         if (response.success) {
-          setLoading(false);
           setProducts(response.data);
 
           setFormData((prev) => ({
@@ -208,9 +208,14 @@ export default function EditProductPage() {
             productStatus: response.data?.productStatus || false,
             specialOffer: Boolean(response.data?.specialOffer),
           }));
+        } else {
+          toast.error(response.message || "Failed to load product");
         }
       } catch (error) {
-        console.error("Error fetching ledger:", error);
+        console.error("Error fetching product:", error);
+        toast.error("Failed to load product");
+      } finally {
+        setLoading(false);
       }
     };
     fetchProductById();
@@ -223,6 +228,7 @@ export default function EditProductPage() {
       ...prev,
       productImage: file,
     }));
+    toast.success("Main product image selected");
   };
 
 
@@ -231,9 +237,13 @@ export default function EditProductPage() {
   ) => {
     const files = Array.from(e.target.files || []) as File[];
     setFormData((prev) => ({ ...prev, productImages: files }));
+    if (files.length > 0) {
+      toast.success(`${files.length} gallery image${files.length > 1 ? "s" : ""} selected`);
+    }
   };
   const handleReset = () => {
     setActiveDescTab("productDetails");
+    toast("Description tab reset");
   };
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -244,8 +254,13 @@ export default function EditProductPage() {
   };
 
   const handleSubmit = async () => {
-   
+    if (!formData.productCode) {
+      toast.error("Product code is missing. Please reload the page.");
+      return;
+    }
 
+    const saveToastId = toast.loading("Updating product...");
+    setSaving(true);
 
      const data = new FormData();
 
@@ -271,12 +286,18 @@ export default function EditProductPage() {
     try {
       const response = await apiPutRequest("/products", data);
       if (response.success) {
-        toast.success(response.message || "Product updated successfully");
+        toast.success(response.message || "Product updated successfully", {
+          id: saveToastId,
+        });
       } else {
-        toast.error(response.message || "Product update failed");
+        toast.error(response.message || "Product update failed", {
+          id: saveToastId,
+        });
       }
     } catch (e) {
-      toast.error("Product update failed");
+      toast.error("Product update failed", { id: saveToastId });
+    } finally {
+      setSaving(false);
     }
   };
   // Shared style tokens ──
@@ -329,9 +350,14 @@ export default function EditProductPage() {
           <div className="flex items-center gap-4">
             <button
               onClick={handleSubmit}
-              className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium flex items-center gap-2 transition-colors shadow-sm"
+              disabled={saving || loading}
+              className={`px-5 py-2 text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-sm ${
+                saving || loading
+                  ? "bg-blue-300 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
             >
-              <Save className="w-4 h-4" /> Save Product
+              <Save className="w-4 h-4" /> {saving ? "Saving..." : "Save Product"}
             </button>
           </div>
         </div>

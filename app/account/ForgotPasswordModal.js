@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import AuthModal from "./AuthModal";
+import toast from "react-hot-toast";
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const inputClass =
   "w-full border border-gray-200 rounded-lg px-4 text-sm text-gray-700 placeholder-gray-400 outline-none transition-all focus:border-[#266A3F] focus:ring-1 focus:ring-[#266A3F]/20 bg-gray-50";
@@ -11,7 +14,12 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOtp, onLogin })
 
   const handleSend = (e) => {
     e.preventDefault();
+    if (!EMAIL_REGEX.test(email.trim())) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
     console.log("Send OTP to:", email);
+    toast.success("Verification code sent to your email");
     onOtp?.();
   };
 
@@ -42,7 +50,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOtp, onLogin })
           {/* Email */}
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-gray-800">Email Address <span className="text-red-500">*</span></label>
-            <input type="tel" placeholder="Please enter your email address" value={email}
+            <input type="email" placeholder="Please enter your email address" value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={inputClass} style={{ height: "48px" }} required />
           </div>
@@ -57,7 +65,7 @@ export default function ForgotPasswordModal({ isOpen, onClose, onOtp, onLogin })
           {/* Back to Login */}
           <p className="text-center text-sm text-gray-500">
             Remember your password?{" "}
-            <button type="button" onClick={() => { onClose(); onLogin?.(); }}
+            <button type="button" onClick={() => { toast("Back to login"); onClose(); onLogin?.(); }}
               className="font-bold hover:underline" style={{ color: "#266A3F" }}>
               Login
             </button>

@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import useWishlistStore from "@/store/wishlistStore";
 import useToastStore from "@/store/toastStore";
 import useCartStore from "@/store/cartStore";
+import useConfirmModalStore from "@/store/confirmModalStore";
 import Banner from "@/app/products/Banner";
 import { requireLoginForAction } from "@/utils/clientAuthGuard";
 import { addCartToDb, clearWishlistInDb, removeWishlistFromDb } from "@/utils/accountListApi";
@@ -48,6 +49,7 @@ export default function WishlistPage() {
   const clearWishlist = useWishlistStore((state) => state.clearWishlist);
   const addToCart = useCartStore((state) => state.addToCart);
   const showToast = useToastStore((state) => state.showToast);
+  const openConfirm = useConfirmModalStore((state) => state.open);
 
   useEffect(() => {
     if (!requireLoginForAction()) {
@@ -87,9 +89,15 @@ export default function WishlistPage() {
   };
 
   const handleClearWishlist = async () => {
-    clearWishlist();
-    await clearWishlistInDb().catch(() => null);
-    showToast("Wishlist cleared");
+    openConfirm({
+      title: "Clear Wishlist",
+      message: "Are you sure you want to remove all saved products from your wishlist?",
+      onConfirm: async () => {
+        clearWishlist();
+        await clearWishlistInDb().catch(() => null);
+        showToast("Wishlist cleared", 2200, "warning");
+      },
+    });
   };
 
   return (

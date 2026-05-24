@@ -20,7 +20,7 @@ const InfoModal = () => {
         </div>
         <div className="bg-gray-50 rounded-b-lg p-4 sm:p-6 pt-3 sm:pt-4 flex flex-col items-center">
           <h2 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2 text-center">{title || "Info Title"}</h2>
-          <p className="text-gray-600 mb-4 sm:mb-6 text-center text-sm sm:text-base">{message || "Info Message"}</p>
+          <p className="text-gray-600 mb-4 sm:mb-6 whitespace-pre-line text-center text-sm sm:text-base">{message || "Info Message"}</p>
           <button
           aria-label="Okay"
             className="bg-sky-400 hover:bg-sky-500 text-white px-6 sm:px-8 py-2 rounded-full font-semibold text-base sm:text-lg cursor-pointer"

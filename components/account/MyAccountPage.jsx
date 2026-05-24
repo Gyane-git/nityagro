@@ -9,6 +9,7 @@ import OrderTracking from "@/components/account/OrderTracking";
 import toast from "react-hot-toast";
 import useCartStore from "@/store/cartStore";
 import useWishlistStore from "@/store/wishlistStore";
+import useConfirmModalStore from "@/store/confirmModalStore";
 import { Menu, X } from "lucide-react";
 
 const USER = {
@@ -27,6 +28,7 @@ export default function MyAccountPage() {
   const [user, setUser] = useState(USER);
   const clearCart = useCartStore((state) => state.clearCart);
   const clearWishlist = useWishlistStore((state) => state.clearWishlist);
+  const openConfirm = useConfirmModalStore((state) => state.open);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -94,7 +96,7 @@ export default function MyAccountPage() {
     tracking: <OrderTracking userId={user.userId || USER.userId} userName={user.name || "User"} />,
   };
 
-  const handleLogout = async () => {
+  const performLogout = async () => {
     try {
       await fetch("/api/auth/logout", {
         method: "POST",
@@ -116,6 +118,14 @@ export default function MyAccountPage() {
     setTimeout(() => {
       window.location.href = "/";
     }, 350);
+  };
+
+  const handleLogout = () => {
+    openConfirm({
+      title: "Logout",
+      message: "Are you sure you want to logout from your account?",
+      onConfirm: performLogout,
+    });
   };
 
   return (
@@ -143,7 +153,7 @@ export default function MyAccountPage() {
       <div className="flex gap-5 px-4 sm:px-6 pb-10">
         {/* Desktop Sidebar */}
         <div className="hidden lg:block">
-          <Sidebar activeTab={activeTab} onTabChange={handleTabChange} user={user} />
+          <Sidebar activeTab={activeTab} onTabChange={handleTabChange} user={user} onLogout={handleLogout} />
         </div>
 
         {/* Mobile Sidebar Drawer */}
@@ -154,7 +164,7 @@ export default function MyAccountPage() {
               <X size={22} className="bg-red-500 rounded-md" />
             </button>
 
-            <Sidebar activeTab={activeTab} onTabChange={handleTabChange} user={user} />
+            <Sidebar activeTab={activeTab} onTabChange={handleTabChange} user={user} onLogout={handleLogout} />
           </div>
         </div>
 

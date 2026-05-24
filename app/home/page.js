@@ -4,7 +4,7 @@ import ImageSlider from "@/components/Imageslider";
 import ProductSection from "@/components/Productsection";
 import ComboPackSection from "../../components/ComboPackSection";
 import WhyChooseNityagro from "@/components/Whychoosenityagro";
-import Customerreviews from "@/components/CustomerReviews";
+import Customerreviews from "@/components/Customerreviews";
 import Faq from "@/components/Faq";
 import Shopctabanner from "@/components/Shopctabanner";
 

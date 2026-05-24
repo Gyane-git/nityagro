@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import useCartStore from "@/store/cartStore";
+import useConfirmModalStore from "@/store/confirmModalStore";
 import { clearCartInDb, removeCartFromDb, updateCartQtyInDb } from "@/utils/accountListApi";
 
 // ─── Icons ───────────────────────────────────────────────────────────────────
@@ -131,6 +132,7 @@ export default function CartItems({ checkedIds, setCheckedIds }) {
   const updateQty = useCartStore((state) => state.updateQty);
   const removeItem = useCartStore((state) => state.removeItem);
   const clearCart = useCartStore((state) => state.clearCart);
+  const openConfirm = useConfirmModalStore((state) => state.open);
 
   const validCheckedIds = checkedIds.filter((id) => items.some((item) => item.id === id));
 
@@ -157,9 +159,15 @@ export default function CartItems({ checkedIds, setCheckedIds }) {
   };
 
   const handleClearCart = () => {
-    clearCart();
-    clearCartInDb().catch(() => null);
-    setCheckedIds([]);
+    openConfirm({
+      title: "Clear Cart",
+      message: "Are you sure you want to remove every product from your cart?",
+      onConfirm: () => {
+        clearCart();
+        clearCartInDb().catch(() => null);
+        setCheckedIds([]);
+      },
+    });
   };
 
   return (

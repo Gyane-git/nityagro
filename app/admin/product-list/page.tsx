@@ -92,11 +92,15 @@ export default function ProductListPage() {
     try {
       const response = await apiGetRequest<Products[]>("/products");
       if (response.success) {
-        setLoading(false);
         setProducts(response.data || []);
+      } else {
+        toast.error(response.message || "Failed to fetch products");
       }
     } catch (error) {
-      console.error("Error fetching ledger:", error);
+      console.error("Error fetching products:", error);
+      toast.error("Failed to fetch products");
+    } finally {
+      setLoading(false);
     }
   };
   useEffect(() => {
@@ -106,6 +110,7 @@ export default function ProductListPage() {
 
   // Fetch Products
   const fetchProductVariant = async (productId: string) => {
+    const variantToastId = toast.loading("Loading product variants...");
     setLoading(true);
     try {
       const response = await apiGetRequest<ProductVariant[]>(
@@ -113,10 +118,28 @@ export default function ProductListPage() {
       );
       if (response.success) {
         setOpen(true);
-        setProductsVariant(response.data || []);
+        const variants = response.data || [];
+        setProductsVariant(variants);
+        if (variants.length > 0) {
+          toast.success(`${variants.length} variant${variants.length > 1 ? "s" : ""} loaded`, {
+            id: variantToastId,
+          });
+        } else {
+          toast("No variants found for this product", {
+            id: variantToastId,
+            icon: "ℹ️",
+          });
+        }
+      } else {
+        toast.error(response.message || "Failed to fetch variants", {
+          id: variantToastId,
+        });
       }
     } catch (error) {
-      console.error("Error fetching ledger:", error);
+      console.error("Error fetching variants:", error);
+      toast.error("Failed to fetch variants", { id: variantToastId });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -280,6 +303,7 @@ export default function ProductListPage() {
                     </button>
                     <Link
                       href={`/admin/edit-product/${product.productCode}`}
+                      onClick={() => toast("Opening product editor...")}
                       className="p-1 text-green-600 hover:bg-green-50 rounded-lg transition"
                     >
                       <Edit size={18} />

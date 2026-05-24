@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import useCheckoutStore from "@/store/checkoutStore";
 import toast from "react-hot-toast";
+import useConfirmModalStore from "@/store/confirmModalStore";
 
 const EMPTY_FORM = {
   fullName: "",
@@ -29,6 +30,7 @@ export default function AddressBook({ userId = "1" }) {
   const selectedAddressId = useCheckoutStore((state) => state.selectedAddressId);
   const setSelectedAddress = useCheckoutStore((state) => state.setSelectedAddress);
   const setAddressesFromServer = useCheckoutStore((state) => state.setAddressesFromServer);
+  const openConfirm = useConfirmModalStore((state) => state.open);
 
   const [addresses, setAddresses] = useState([]);
   const [editingId, setEditingId] = useState(null);
@@ -147,23 +149,29 @@ export default function AddressBook({ userId = "1" }) {
   };
 
   const handleDelete = async (id) => {
-    const token = window.localStorage.getItem("token");
-    const response = await fetch("/api/account/addresses", {
-      method: "DELETE",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    openConfirm({
+      title: "Delete Address",
+      message: "Are you sure you want to delete this delivery address?",
+      onConfirm: async () => {
+        const token = window.localStorage.getItem("token");
+        const response = await fetch("/api/account/addresses", {
+          method: "DELETE",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          credentials: "include",
+          body: JSON.stringify({ id }),
+        }).then((res) => res.json());
+        if (!response.success) {
+          toast.error(response.message || "Failed to delete address");
+          return;
+        }
+        toast.success(response.message || "Address deleted");
+        await fetchAddresses();
       },
-      credentials: "include",
-      body: JSON.stringify({ id }),
-    }).then((res) => res.json());
-    if (!response.success) {
-      toast.error(response.message || "Failed to delete address");
-      return;
-    }
-    toast.success(response.message || "Address deleted");
-    await fetchAddresses();
+    });
   };
 
   return (
