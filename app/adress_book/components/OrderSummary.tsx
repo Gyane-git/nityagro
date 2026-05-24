@@ -2,8 +2,6 @@
 import { useRouter } from "next/navigation";
 import useCheckoutStore from "@/store/checkoutStore";
 
-// components/OrderSummary.tsx
-
 type OrderSummaryProps = {
   onProceed?: () => void | Promise<void>;
   processing?: boolean;
@@ -14,11 +12,7 @@ export default function OrderSummary({ onProceed, processing = false }: OrderSum
   const checkoutItems = useCheckoutStore((state) => state.checkoutItems);
   const checkoutItem = useCheckoutStore((state) => state.checkoutItem);
   const sourceItems = checkoutItems.length > 0 ? checkoutItems : checkoutItem ? [checkoutItem] : [];
-  const itemTotal = sourceItems.reduce(
-    (sum: number, item: { total?: number; unitPrice?: number }) =>
-      sum + Number(item.total ?? item.unitPrice ?? 0),
-    0,
-  );
+  const itemTotal = sourceItems.reduce((sum: number, item: { total?: number; unitPrice?: number }) => sum + Number(item.total ?? item.unitPrice ?? 0), 0);
   const discount = 0;
   const deliveryCharge = itemTotal > 0 ? 1 : 0;
   const totalAmount = itemTotal - discount + deliveryCharge;
@@ -42,18 +36,12 @@ export default function OrderSummary({ onProceed, processing = false }: OrderSum
   ];
 
   return (
-    <div
-      className="flex flex-col border border-gray-200 rounded-xl bg-white px-6 py-6"
-      style={{ width: "280px", flexShrink: 0, alignSelf: "flex-start" }}
-    >
+    <div className="flex flex-col border border-gray-200 rounded-xl bg-white px-6 py-6 w-full lg:w-[280px]">
       {/* Header */}
       <h2 className="font-bold text-gray-900 mb-1" style={{ fontSize: "20px" }}>
         Order Summary
       </h2>
-      <div
-        className="mb-5"
-        style={{ height: "2px", background: "#00462C", borderRadius: "2px", width: "100%" }}
-      />
+      <div className="mb-5" style={{ height: "2px", background: "#00462C", borderRadius: "2px", width: "100%" }} />
 
       {/* Line items */}
       <div className="flex flex-col gap-3 mb-5">
@@ -78,7 +66,7 @@ export default function OrderSummary({ onProceed, processing = false }: OrderSum
 
       {/* Proceed to Pay */}
       <button
-        className="w-full flex items-center justify-center text-white font-bold text-sm rounded-lg transition-all hover:opacity-90 active:scale-[0.99]"
+        className="w-full flex items-center justify-center text-white font-bold text-sm rounded-lg transition-all hover:opacity-90 active:scale-[0.99] mt-4"
         style={{
           background: "#00462C",
           height: "48px",

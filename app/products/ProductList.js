@@ -154,12 +154,7 @@ function ProductCard({ product }) {
 
   return (
     <div className="relative flex flex-col bg-white border border-gray-200 overflow-hidden w-full h-full rounded-lg">
-      <button
-        onClick={handleWishlistToggle}
-        className="absolute top-2 right-2 z-20 w-8 h-8 rounded-full bg-white/90 border border-gray-200 flex items-center justify-center"
-        title={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
-        aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
-      >
+      <button onClick={handleWishlistToggle} className="absolute top-2 right-2 z-20 w-8 h-8 rounded-full bg-white/90 border text-gray-500 hover:bg-green-100 border-gray-200 flex items-center justify-center" title={inWishlist ? "Remove from wishlist" : "Add to wishlist"} aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}>
         <HeartIcon filled={inWishlist} />
       </button>
 

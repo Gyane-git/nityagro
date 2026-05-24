@@ -3,8 +3,6 @@
 import { useRouter } from "next/navigation";
 import useCheckoutStore from "@/store/checkoutStore";
 
-// components/ShippingAddressCard.tsx
-
 const UserIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -50,25 +48,19 @@ export default function ShippingAddressCard() {
         <h2 className="font-bold text-gray-900" style={{ fontSize: "20px" }}>
           Shipping Address
         </h2>
-        <button
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-          onClick={() => router.push("/profile?tab=address")}
-        >
+        <button className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors" onClick={() => router.push("/profile?tab=address")}>
           <EditIcon />
           Edit
         </button>
       </div>
 
-      {/* Green underline */}
-      <div
-        className="mb-4"
-        style={{ height: "2px", background: "#00462C", borderRadius: "2px", width: "160px" }}
-      />
+      {/* underline */}
+      <div className="mb-4 w-[120px] sm:w-[160px]" style={{ height: "2px", background: "#00462C", borderRadius: "2px" }} />
 
       {/* Address card */}
       <div className="border border-gray-200 rounded-xl bg-white px-6 py-5 flex flex-col gap-4">
         {/* Row 1: name, phone, email, location */}
-        <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-x-6 gap-y-3">
           <span className="flex items-center gap-2 text-sm text-gray-700">
             <UserIcon />
             {selectedAddress?.fullName || "N/A"}
@@ -90,20 +82,8 @@ export default function ShippingAddressCard() {
         {/* Row 2: full address + label badge */}
         <div className="flex items-center gap-3">
           <MapPinIcon />
-          <span className="text-sm text-gray-700">
-            {[
-              selectedAddress?.building,
-              selectedAddress?.area,
-              selectedAddress?.colony,
-              selectedAddress?.address,
-            ]
-              .filter(Boolean)
-              .join(", ") || "N/A"}
-          </span>
-          <span
-            className="px-3 py-1 rounded-full text-xs font-semibold text-white ml-1"
-            style={{ background: "#00462C" }}
-          >
+          <span className="text-sm text-gray-700">{[selectedAddress?.building, selectedAddress?.area, selectedAddress?.colony, selectedAddress?.address].filter(Boolean).join(", ") || "N/A"}</span>
+          <span className="px-3 py-1 rounded-full text-xs font-semibold text-white ml-1" style={{ background: "#00462C" }}>
             {selectedAddress?.label || "Home"}
           </span>
         </div>
