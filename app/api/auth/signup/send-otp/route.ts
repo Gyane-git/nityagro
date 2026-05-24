@@ -4,11 +4,13 @@ import { generateOtpCode, saveAuthOtp } from "@/lib/authOtp";
 import { sendAuthCodeMail } from "@/lib/authMailer";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_REGEX = /^[+\d\s-]{7,20}$/;
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const name = String(body?.name || "").trim();
+    const phone = String(body?.phone || "").trim();
     const email = String(body?.email || "").trim().toLowerCase();
     const password = String(body?.password || "");
 
@@ -22,6 +24,13 @@ export async function POST(req: Request) {
     if (!EMAIL_REGEX.test(email)) {
       return NextResponse.json(
         { success: false, message: "Valid email is required" },
+        { status: 400 },
+      );
+    }
+
+    if (!PHONE_REGEX.test(phone)) {
+      return NextResponse.json(
+        { success: false, message: "Valid phone number is required" },
         { status: 400 },
       );
     }

@@ -5,6 +5,7 @@ import AuthModal from "./AuthModal";
 import toast from "react-hot-toast";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_REGEX = /^[+\d\s-]{7,20}$/;
 
 const EyeIcon = ({ show }) => (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -35,7 +36,7 @@ const GoogleIcon = () => (
 const inputClass = "w-full border border-gray-200 rounded-lg px-4 text-sm text-gray-700 placeholder-gray-400 outline-none transition-all focus:border-[#266A3F] focus:ring-1 focus:ring-[#266A3F]/20 bg-gray-50";
 
 export default function SignupModal({ isOpen, onClose, onLogin, onOtp }) {
-  const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", password: "", confirm: "" });
   const [showPw, setShowPw] = useState(false);
   const [showCPw, setShowCPw] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -58,6 +59,10 @@ export default function SignupModal({ isOpen, onClose, onLogin, onOtp }) {
       toast.error("Please enter a valid email address");
       return;
     }
+    if (!PHONE_REGEX.test(form.phone.trim())) {
+      toast.error("Please enter a valid phone number");
+      return;
+    }
     if (form.password.length < 8) {
       toast.error("Password must be at least 8 characters");
       return;
@@ -76,6 +81,7 @@ export default function SignupModal({ isOpen, onClose, onLogin, onOtp }) {
         credentials: "include",
         body: JSON.stringify({
           name: form.name.trim(),
+          phone: form.phone.trim(),
           email: form.email.trim().toLowerCase(),
           password: form.password,
         }),
@@ -92,6 +98,7 @@ export default function SignupModal({ isOpen, onClose, onLogin, onOtp }) {
       });
       onOtp?.({
         name: form.name.trim(),
+        phone: form.phone.trim(),
         email: form.email.trim().toLowerCase(),
         password: form.password,
       });
@@ -118,6 +125,22 @@ export default function SignupModal({ isOpen, onClose, onLogin, onOtp }) {
               Full Name <span className="text-red-500">*</span>
             </label>
             <input type="text" placeholder="Enter your full name" value={form.name} onChange={set("name")} className={inputClass} style={{ height: "48px" }} required />
+          </div>
+
+          {/* Email */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-semibold text-gray-800">
+              Phone Number <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="tel"
+              placeholder="Enter your phone number"
+              value={form.phone}
+              onChange={set("phone")}
+              className={inputClass}
+              style={{ height: "48px" }}
+              required
+            />
           </div>
 
           {/* Email */}

@@ -111,6 +111,7 @@ export default function OtpModal({
         isSignup
           ? {
               name: signupData?.name,
+              phone: signupData?.phone,
               email: signupData?.email || resendEmail,
               password: signupData?.password,
             }

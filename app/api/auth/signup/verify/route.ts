@@ -4,11 +4,13 @@ import { verifyAuthOtp } from "@/lib/authOtp";
 import { hashPassword } from "@/lib/password";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_REGEX = /^[+\d\s-]{7,20}$/;
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const name = String(body?.name || "").trim();
+    const phone = String(body?.phone || "").trim();
     const email = String(body?.email || "").trim().toLowerCase();
     const password = String(body?.password || "");
     const otp = String(body?.otp || "").trim();
@@ -23,6 +25,13 @@ export async function POST(req: Request) {
     if (!EMAIL_REGEX.test(email)) {
       return NextResponse.json(
         { success: false, message: "Valid email is required" },
+        { status: 400 },
+      );
+    }
+
+    if (!PHONE_REGEX.test(phone)) {
+      return NextResponse.json(
+        { success: false, message: "Valid phone number is required" },
         { status: 400 },
       );
     }
@@ -65,6 +74,7 @@ export async function POST(req: Request) {
       data: {
         email,
         name,
+        phone,
         password: hashPassword(password),
         role: "customer",
         status: true,
