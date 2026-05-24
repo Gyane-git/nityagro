@@ -109,7 +109,7 @@ export default function ShopCTABanner() {
           </p>
 
           {/* INPUT */}
-          <div className="mt-6 flex items-center bg-white rounded-full overflow-hidden shadow-sm border border-gray-200 max-w-[300px] h-[36px]">
+          <div className="mt-6 flex text-gray-700 items-center bg-white rounded-full overflow-hidden shadow-sm border border-gray-200 max-w-[300px] h-[36px]">
             <input
               type="email"
               placeholder="Your email address"
