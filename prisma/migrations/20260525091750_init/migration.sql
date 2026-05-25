@@ -20,6 +20,21 @@ CREATE TABLE `users` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `authOtp` (
+    `authOtpId` BIGINT NOT NULL AUTO_INCREMENT,
+    `email` VARCHAR(191) NOT NULL,
+    `purpose` VARCHAR(191) NOT NULL,
+    `codeHash` VARCHAR(191) NOT NULL,
+    `expiresAt` DATETIME(3) NOT NULL,
+    `consumed` BOOLEAN NOT NULL DEFAULT false,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    INDEX `authOtp_email_purpose_idx`(`email`, `purpose`),
+    PRIMARY KEY (`authOtpId`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `categories` (
     `categoryId` BIGINT NOT NULL AUTO_INCREMENT,
     `categoryName` VARCHAR(191) NOT NULL,
@@ -33,6 +48,7 @@ CREATE TABLE `categories` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
+    INDEX `categories_userId_fkey`(`userId`),
     PRIMARY KEY (`categoryId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -63,7 +79,28 @@ CREATE TABLE `products` (
     `updatedAt` DATETIME(3) NOT NULL,
 
     UNIQUE INDEX `products_productCode_key`(`productCode`),
+    INDEX `products_userId_fkey`(`userId`),
     PRIMARY KEY (`productId`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `comboProduct` (
+    `comboProductId` BIGINT NOT NULL AUTO_INCREMENT,
+    `comboCode` VARCHAR(191) NOT NULL,
+    `comboName` VARCHAR(191) NOT NULL,
+    `productId` BIGINT NOT NULL,
+    `productCodes` VARCHAR(191) NOT NULL,
+    `productPrices` DOUBLE NOT NULL,
+    `comboPrice` DOUBLE NOT NULL,
+    `discount` DOUBLE NULL,
+    `slug` VARCHAR(191) NULL,
+    `comboDescription` VARCHAR(191) NULL,
+    `comboImage` VARCHAR(191) NULL,
+    `comboStatus` BOOLEAN NOT NULL DEFAULT true,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    PRIMARY KEY (`comboProductId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
@@ -75,6 +112,8 @@ CREATE TABLE `cartList` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
+    INDEX `cartList_productId_fkey`(`productId`),
+    INDEX `cartList_userId_fkey`(`userId`),
     PRIMARY KEY (`cartId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -86,6 +125,8 @@ CREATE TABLE `wishlist` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
+    INDEX `wishlist_productId_fkey`(`productId`),
+    INDEX `wishlist_userId_fkey`(`userId`),
     PRIMARY KEY (`wishId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -100,6 +141,8 @@ CREATE TABLE `orders` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
+    INDEX `orders_productId_fkey`(`productId`),
+    INDEX `orders_userId_fkey`(`userId`),
     PRIMARY KEY (`orderId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -111,6 +154,7 @@ CREATE TABLE `banner` (
     `bannerDescription` VARCHAR(191) NULL,
     `bannerImageforWeb` VARCHAR(191) NULL,
     `bannerImageforMobile` VARCHAR(191) NULL,
+    `cardImage` VARCHAR(191) NULL,
     `bannerStatus` BOOLEAN NOT NULL DEFAULT true,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
@@ -167,6 +211,7 @@ CREATE TABLE `testimonials` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
+    INDEX `testimonials_userId_fkey`(`userId`),
     PRIMARY KEY (`testimonialsId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -212,6 +257,8 @@ CREATE TABLE `productReview` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
+    INDEX `productReview_productId_fkey`(`productId`),
+    INDEX `productReview_userId_fkey`(`userId`),
     PRIMARY KEY (`productReviewId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -227,6 +274,9 @@ CREATE TABLE `orderReturn` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
+    INDEX `orderReturn_orderId_fkey`(`orderId`),
+    INDEX `orderReturn_productId_fkey`(`productId`),
+    INDEX `orderReturn_userId_fkey`(`userId`),
     PRIMARY KEY (`orderReturnId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -243,6 +293,9 @@ CREATE TABLE `orderCancellation` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
+    INDEX `orderCancellation_orderId_fkey`(`orderId`),
+    INDEX `orderCancellation_productId_fkey`(`productId`),
+    INDEX `orderCancellation_userId_fkey`(`userId`),
     PRIMARY KEY (`orderCancellationId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -286,6 +339,8 @@ CREATE TABLE `shippingDetails` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
+    INDEX `shippingDetails_orderId_fkey`(`orderId`),
+    INDEX `shippingDetails_productId_fkey`(`productId`),
     PRIMARY KEY (`shippingDetailsId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -303,6 +358,8 @@ CREATE TABLE `deliveryDetails` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
+    INDEX `deliveryDetails_orderId_fkey`(`orderId`),
+    INDEX `deliveryDetails_shippingDetailsId_fkey`(`shippingDetailsId`),
     PRIMARY KEY (`deliveryDetailsId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -319,6 +376,8 @@ CREATE TABLE `paymentDetails` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
+    INDEX `paymentDetails_orderId_fkey`(`orderId`),
+    INDEX `paymentDetails_userId_fkey`(`userId`),
     PRIMARY KEY (`paymentDetailsId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -345,6 +404,7 @@ CREATE TABLE `productImage` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
+    INDEX `productImage_productId_fkey`(`productId`),
     PRIMARY KEY (`productImageId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -355,6 +415,7 @@ CREATE TABLE `productVariant` (
     `subGroupName` VARCHAR(191) NOT NULL,
     `variationName` VARCHAR(191) NOT NULL,
     `salesRate` DOUBLE NULL,
+    `stockQuantity` BIGINT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
@@ -373,6 +434,7 @@ CREATE TABLE `setShippingCost` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
+    INDEX `setShippingCost_userId_fkey`(`userId`),
     PRIMARY KEY (`setShippingCostId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -388,7 +450,12 @@ CREATE TABLE `address` (
     `zipCode` VARCHAR(191) NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
+    `addType` VARCHAR(191) NOT NULL,
+    `email` VARCHAR(191) NULL,
+    `fullName` VARCHAR(191) NOT NULL,
+    `phone` VARCHAR(191) NOT NULL,
 
+    INDEX `address_userId_fkey`(`userId`),
     PRIMARY KEY (`addressId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -401,6 +468,7 @@ CREATE TABLE `auditLog` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
+    INDEX `auditLog_userId_fkey`(`userId`),
     PRIMARY KEY (`auditLogId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -409,6 +477,9 @@ ALTER TABLE `categories` ADD CONSTRAINT `categories_userId_fkey` FOREIGN KEY (`u
 
 -- AddForeignKey
 ALTER TABLE `products` ADD CONSTRAINT `products_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`userId`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `comboProduct` ADD CONSTRAINT `comboProduct_productId_fkey` FOREIGN KEY (`productId`) REFERENCES `products`(`productId`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `cartList` ADD CONSTRAINT `cartList_productId_fkey` FOREIGN KEY (`productId`) REFERENCES `products`(`productId`) ON DELETE RESTRICT ON UPDATE CASCADE;
