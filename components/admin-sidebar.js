@@ -46,7 +46,7 @@ export default function SideHeaderBar() {
       expandable: true,
       children: [
         { name: "View All", path: "/admin/product-list" },
-        { name: "Add New", path: "/admin/add-product" },
+        
         
       ],
     },
@@ -86,7 +86,7 @@ export default function SideHeaderBar() {
     },
 
     { icon: FileText, label: "Grievances", path: "/admin/grievances" },
-    { icon: BarChart3, label: "Warranties", path: "/admin/warranties" },
+    
     { icon: XCircle, label: "Return List", path: "/admin/returns" },
     { icon: MessageSquare, label: "Testimonials", path: "/admin/testimonials" },
   ];

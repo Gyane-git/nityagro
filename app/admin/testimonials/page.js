@@ -418,73 +418,13 @@ export default function TestimonialsAdmin() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden mt-8">
-          <div className="bg-linear-to-r from-red-600 to-red-700 px-8 py-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-white">YouTube Testimonials</h2>
-            <button
-              onClick={() => {
-                resetYoutubeForm();
-                setShowYoutubeModal(true);
-              }}
-              className="px-4 py-2 bg-white text-red-700 rounded-lg text-sm font-semibold hover:bg-red-50"
-            >
-              + Add Video
-            </button>
-          </div>
-          <div className="p-6">
-            {youtubeItems.length === 0 ? (
-              <p className="text-slate-500">No YouTube testimonials added yet.</p>
-            ) : (
-              <div className="space-y-4">
-                {youtubeItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex flex-col md:flex-row gap-4 p-4 border rounded-xl bg-white"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-lg font-bold text-slate-900">{item.title}</h3>
-                        <span
-                          className={`px-2 py-0.5 text-xs rounded-full font-semibold ${
-                            Number(item.status) === 1
-                              ? "bg-green-100 text-green-700"
-                              : "bg-gray-100 text-gray-700"
-                          }`}
-                        >
-                          {Number(item.status) === 1 ? "Active" : "Inactive"}
-                        </span>
-                      </div>
-                      <p className="text-sm text-slate-600 mt-1 break-all">{item.youtubeLink}</p>
-                      {String(item.description || "").trim() ? (
-                        <p className="text-sm text-slate-700 mt-2">{item.description}</p>
-                      ) : null}
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleYoutubeEdit(item)}
-                        className="p-3 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100"
-                      >
-                        <Edit2 size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleYoutubeDelete(item.id)}
-                        className="p-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-100"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        
       </div>
 
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[92vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[92vh] overflow-y-auto text-gray-600">
             <form onSubmit={handleSubmit} className="p-8 space-y-5">
 
               <input
@@ -498,7 +438,7 @@ export default function TestimonialsAdmin() {
 
               <input
                 name="destination"
-                placeholder="Destination / Role"
+                placeholder="Rating"
                 value={formData.destination}
                 onChange={handleInputChange}
                 className="w-full border px-4 py-3 rounded-lg"
@@ -537,7 +477,7 @@ export default function TestimonialsAdmin() {
 
               <textarea
                 name="message"
-                placeholder="Testimonial message..."
+                placeholder="write your review..."
                 value={formData.message}
                 onChange={handleInputChange}
                 className="w-full border px-4 py-3 rounded-lg min-h-[120px]"
@@ -577,69 +517,7 @@ export default function TestimonialsAdmin() {
         </div>
       )}
 
-      {showYoutubeModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[92vh] overflow-y-auto">
-            <form onSubmit={handleYoutubeSubmit} className="p-8 space-y-5">
-              <input
-                name="title"
-                placeholder="Video Title"
-                value={youtubeForm.title}
-                onChange={(e) =>
-                  setYoutubeForm((prev) => ({ ...prev, title: e.target.value }))
-                }
-                className="w-full border px-4 py-3 rounded-lg"
-                required
-              />
-              <input
-                name="youtubeLink"
-                placeholder="https://www.youtube.com/watch?v=..."
-                value={youtubeForm.youtubeLink}
-                onChange={(e) =>
-                  setYoutubeForm((prev) => ({ ...prev, youtubeLink: e.target.value }))
-                }
-                className="w-full border px-4 py-3 rounded-lg"
-                required
-              />
-              <textarea
-                name="description"
-                placeholder="Video description..."
-                value={youtubeForm.description}
-                onChange={(e) =>
-                  setYoutubeForm((prev) => ({ ...prev, description: e.target.value }))
-                }
-                className="w-full border px-4 py-3 rounded-lg min-h-[100px]"
-              />
-              <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-lg">
-                <input
-                  type="checkbox"
-                  checked={youtubeForm.isActive}
-                  onChange={(e) =>
-                    setYoutubeForm((prev) => ({ ...prev, isActive: e.target.checked }))
-                  }
-                  className="w-5 h-5"
-                />
-                <span>Set as active</span>
-              </div>
-              <div className="flex gap-4 pt-2">
-                <button
-                  type="button"
-                  onClick={resetYoutubeForm}
-                  className="flex-1 border py-3 rounded-lg"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-red-600 text-white py-3 rounded-lg"
-                >
-                  {editingYoutubeItem ? "Update Video" : "Create Video"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      
     </div>
   );
 }
