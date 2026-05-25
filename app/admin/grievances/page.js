@@ -97,7 +97,7 @@ export default function GrievancesPage() {
   }, [inquiries, search]);
 
   return (
-    <div className="p-4 md:p-6 space-y-4">
+    <div className="p-4 md:p-6 space-y-4 text-gray-700">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Grievances</h1>
@@ -106,7 +106,7 @@ export default function GrievancesPage() {
         <div className="text-sm text-gray-600">Total: {filtered.length}</div>
       </div>
 
-      <div className="bg-white border rounded-xl p-3 md:p-4 flex flex-col md:flex-row gap-3">
+      <div className="bg-white  p-3 md:p-4 flex flex-col md:flex-row gap-3 text-gray-600">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -137,7 +137,7 @@ export default function GrievancesPage() {
                 <tr className="text-left">
                   <th className="px-4 py-3">Name</th>
                   <th className="px-4 py-3">Email</th>
-                  <th className="px-4 py-3">Type</th>
+                  <th className="px-4 py-3">Phone</th>
                   <th className="px-4 py-3">Message</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Date</th>
@@ -149,7 +149,7 @@ export default function GrievancesPage() {
                   <tr key={item.id} className="border-b last:border-0">
                     <td className="px-4 py-3 font-medium">{item.name}</td>
                     <td className="px-4 py-3">{item.email}</td>
-                    <td className="px-4 py-3">{item.inquiryType}</td>
+                    <td className="px-4 py-3">{item.phone}</td>
                     <td className="px-4 py-3 max-w-[360px]">
                       <div className="truncate" title={item.message}>
                         {item.message}
@@ -210,8 +210,8 @@ export default function GrievancesPage() {
                 <div className="font-semibold">{selected.email}</div>
               </div>
               <div className="rounded-lg border p-3">
-                <div className="text-gray-500">Inquiry Type</div>
-                <div className="font-semibold">{selected.inquiryType}</div>
+                <div className="text-gray-500">Phone</div>
+                <div className="font-semibold">{selected.phone}</div>
               </div>
               <div className="rounded-lg border p-3">
                 <div className="text-gray-500">Status</div>
