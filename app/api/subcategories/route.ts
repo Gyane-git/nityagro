@@ -126,6 +126,7 @@ export async function POST(req: Request) {
           subGroupName: row.subGroupName,
           variationName: row.variationName,
           salesRate: row.salesRate,
+          stockQuantity: BigInt(row.stockQuantity ?? 0),
         },
       });
       updatedCount += updated.count;

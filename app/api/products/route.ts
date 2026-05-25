@@ -46,6 +46,19 @@ function toOptionalTrimmedStringOrUndefined(value: unknown) {
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
+function normalizeText(value: unknown) {
+  return String(value ?? "").trim();
+}
+
+function nullableBigInt(value: unknown) {
+  if (value === undefined || value === null || value === "") return null;
+  return BigInt(Number(value));
+}
+
+function sameBigIntValue(left: bigint | null | undefined, right: bigint | null) {
+  return String(left ?? "") === String(right ?? "");
+}
+
 const ALLOWED_IMAGE_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -248,18 +261,48 @@ export async function POST(req: Request) {
 
     let insertedCount = 0;
     let updatedCount = 0;
+    let deactivatedSubGroupCount = 0;
+    const deactivatedSubGroups = new Set<string>();
 
     for (const item of product) {
+      const nextCategoryId = normalizeText(item.categoryId);
+      const nextProductName = normalizeText(item.productName);
+      const nextSubGroupName = normalizeText(item.subGroupName) || null;
+      const nextActualPrice = Number(item.actualPrice ?? 0);
+      const nextSellingPrice = Number(item.sellingPrice ?? 0);
+      const nextDeliveryTargetDays =
+        item.deliveryTargetDays !== undefined && item.deliveryTargetDays !== null
+          ? nullableBigInt(item.deliveryTargetDays)
+          : null;
+      const nextStockQuantity =
+        item.stockQuantity !== undefined && item.stockQuantity !== null
+          ? nullableBigInt(item.stockQuantity)
+          : null;
+      const nextAvailableQuantity =
+        item.availableQuantity !== undefined && item.availableQuantity !== null
+          ? nullableBigInt(item.availableQuantity)
+          : null;
+
       const existing = await prisma.products.findUnique({
         where: { productCode: item.productCode },
-        select: { productCode: true },
+        select: {
+          productCode: true,
+          categoryId: true,
+          productName: true,
+          subGroupName: true,
+          actualPrice: true,
+          sellingPrice: true,
+          deliveryTargetDays: true,
+          stockQuantity: true,
+          availableQuantity: true,
+        },
       });
 
       const createPayload = {
-        categoryId: item.categoryId,
+        categoryId: nextCategoryId,
         userId: BigInt(item.userId),
-        productName: item.productName,
-        subGroupName: item.subGroupName ?? null,
+        productName: nextProductName,
+        subGroupName: nextSubGroupName,
         slug: item.slug ?? null,
         productVariation: item.productVariation ?? null,
         productDescription: item.productDescription ?? null,
@@ -269,48 +312,25 @@ export async function POST(req: Request) {
         pImage: item.pImage ?? null,
         productStatus:
           typeof item.productStatus === "boolean" ? item.productStatus : false,
-        actualPrice: Number(item.actualPrice ?? 0),
-        sellingPrice: Number(item.sellingPrice ?? 0),
-        deliveryTargetDays:
-          item.deliveryTargetDays !== undefined && item.deliveryTargetDays !== null
-            ? BigInt(item.deliveryTargetDays)
-            : null,
-        stockQuantity:
-          item.stockQuantity !== undefined && item.stockQuantity !== null
-            ? BigInt(item.stockQuantity)
-            : null,
-        availableQuantity:
-          item.availableQuantity !== undefined && item.availableQuantity !== null
-            ? BigInt(item.availableQuantity)
-            : null,
+        actualPrice: nextActualPrice,
+        sellingPrice: nextSellingPrice,
+        deliveryTargetDays: nextDeliveryTargetDays,
+        stockQuantity: nextStockQuantity,
+        availableQuantity: nextAvailableQuantity,
         flashSale: Boolean(item.flashSale),
         specialOffer: Boolean(item.specialOffer),
       };
 
       const updatePayload = {
-        categoryId: item.categoryId,
+        categoryId: nextCategoryId,
         userId: BigInt(item.userId),
-        productName: item.productName,
-        productStatus:
-          typeof item.productStatus === "boolean" ? item.productStatus : false,
-        actualPrice: Number(item.actualPrice ?? 0),
-        sellingPrice: Number(item.sellingPrice ?? 0),
-        deliveryTargetDays:
-          item.deliveryTargetDays !== undefined && item.deliveryTargetDays !== null
-            ? BigInt(item.deliveryTargetDays)
-            : undefined,
-        stockQuantity:
-          item.stockQuantity !== undefined && item.stockQuantity !== null
-            ? BigInt(item.stockQuantity)
-            : undefined,
-        availableQuantity:
-          item.availableQuantity !== undefined && item.availableQuantity !== null
-            ? BigInt(item.availableQuantity)
-            : undefined,
-        flashSale: Boolean(item.flashSale),
-        specialOffer: Boolean(item.specialOffer),
-        subGroupName:
-          toOptionalTrimmedStringOrUndefined(item.subGroupName) ?? undefined,
+        productName: nextProductName,
+        actualPrice: nextActualPrice,
+        sellingPrice: nextSellingPrice,
+        deliveryTargetDays: nextDeliveryTargetDays ?? undefined,
+        stockQuantity: nextStockQuantity ?? undefined,
+        availableQuantity: nextAvailableQuantity ?? undefined,
+        subGroupName: nextSubGroupName ?? undefined,
         slug: toOptionalTrimmedStringOrUndefined(item.slug),
         productVariation: toOptionalTrimmedStringOrUndefined(item.productVariation),
         productDescription: toOptionalTrimmedStringOrUndefined(item.productDescription),
@@ -321,11 +341,38 @@ export async function POST(req: Request) {
       };
 
       if (existing) {
+        const omsChanged =
+          normalizeText(existing.categoryId) !== nextCategoryId ||
+          normalizeText(existing.productName) !== nextProductName ||
+          normalizeText(existing.subGroupName) !== normalizeText(nextSubGroupName) ||
+          Number(existing.actualPrice ?? 0) !== nextActualPrice ||
+          Number(existing.sellingPrice ?? 0) !== nextSellingPrice ||
+          !sameBigIntValue(existing.stockQuantity, nextStockQuantity) ||
+          !sameBigIntValue(existing.availableQuantity, nextAvailableQuantity);
+
         await prisma.products.update({
           where: { productCode: item.productCode },
           data: updatePayload,
         });
         updatedCount += 1;
+
+        if (omsChanged) {
+          const affectedSubGroup = nextSubGroupName || existing.subGroupName || "";
+          if (affectedSubGroup) {
+            const result = await prisma.products.updateMany({
+              where: { subGroupName: affectedSubGroup },
+              data: { productStatus: false },
+            });
+            deactivatedSubGroups.add(affectedSubGroup);
+            deactivatedSubGroupCount += result.count;
+          } else {
+            await prisma.products.update({
+              where: { productCode: item.productCode },
+              data: { productStatus: false },
+            });
+            deactivatedSubGroupCount += 1;
+          }
+        }
       } else {
         await prisma.products.create({
           data: {
@@ -342,6 +389,8 @@ export async function POST(req: Request) {
         success: true,
         insertedCount,
         updatedCount,
+        deactivatedSubGroupCount,
+        deactivatedSubGroups: Array.from(deactivatedSubGroups),
         message: "Products synced successfully",
       },
       { status: 200, headers: corsHeaders },
@@ -512,14 +561,21 @@ export async function PUT(req: Request) {
       ]);
     }
 
+    const safeProduct = JSON.parse(
+      JSON.stringify(
+        {
+          ...product,
+          galleryCount: galleryImageFiles.length,
+        },
+        (_, value) => (typeof value === "bigint" ? value.toString() : value),
+      ),
+    );
+
     return NextResponse.json(
       {
         success: true,
         message: "Product updated successfully",
-        data: {
-          ...product,
-          galleryCount: galleryImageFiles.length,
-        },
+        data: safeProduct,
       },
       {
         status: 200,

@@ -24,6 +24,11 @@ type CategoryDTO = {
   categoryStatus?: boolean;
 };
 
+type OmsProductCategoryDTO = {
+  productCode: string;
+  categoryName: string;
+};
+
 const normalizeName = (value: string) => value.trim().toLowerCase();
 // ✅ Preflight handler
 export async function OPTIONS() {
@@ -60,7 +65,11 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     // ✅ Read body only once
-    const { categories }: { categories: CategoryDTO[] } = await req.json();
+    const {
+      categories,
+      products = [],
+    }: { categories: CategoryDTO[]; products?: OmsProductCategoryDTO[] } =
+      await req.json();
 
     // ✅ Validation
     if (!categories || categories.length === 0) {
@@ -173,36 +182,116 @@ export async function POST(req: Request) {
     let insertedCount = 0;
     let renamedCount = 0;
     let matchedCount = 0;
+    let deactivatedCount = 0;
 
-    // OMS strict mode: mirror incoming names for OMS-managed rows.
+    // OMS strict mode: sync names without damaging existing reviewed data.
+    // Only categories connected to changed OMS products are made inactive again.
     if (isOmsSyncPayload) {
-      const incomingNameSet = new Set(incomingRows.map((row) => normalizeName(row.categoryName)));
-      const managedRows = renamePool;
+      const incomingNameSet = new Set(
+        incomingRows.map((row) => normalizeName(row.categoryName)),
+      );
+      const incomingByName = new Map(
+        incomingRows.map((row) => [normalizeName(row.categoryName), row]),
+      );
+      const omsProducts = Array.isArray(products)
+        ? products
+            .map((row) => ({
+              productCode: String(row?.productCode || "").trim(),
+              categoryName: String(row?.categoryName || "").trim(),
+            }))
+            .filter((row) => row.productCode && row.categoryName)
+        : [];
 
-      const toDeleteIds = managedRows
-        .filter((row) => !incomingNameSet.has(normalizeName(row.categoryName)))
-        .map((row) => row.categoryId);
+      const existingProducts =
+        omsProducts.length > 0
+          ? await prisma.products.findMany({
+              where: {
+                productCode: {
+                  in: omsProducts.map((row) => row.productCode),
+                },
+              },
+              select: {
+                productCode: true,
+                categoryId: true,
+              },
+            })
+          : [];
 
-      if (toDeleteIds.length > 0) {
-        await prisma.categories.deleteMany({
-          where: {
-            categoryId: { in: toDeleteIds },
-          },
-        });
+      const omsCategoryByProductCode = new Map(
+        omsProducts.map((row) => [row.productCode, row.categoryName]),
+      );
+      const changedCategoryPairs = existingProducts
+        .map((row) => {
+          const nextName = omsCategoryByProductCode.get(row.productCode) || "";
+          const previousName = String(row.categoryId || "").trim();
+          if (!nextName || normalizeName(previousName) === normalizeName(nextName)) {
+            return null;
+          }
+          return { previousName, nextName };
+        })
+        .filter(Boolean) as Array<{ previousName: string; nextName: string }>;
+
+      const changedToNameSet = new Set(
+        changedCategoryPairs.map((row) => normalizeName(row.nextName)),
+      );
+      const changedFromByTo = new Map<string, string>();
+      for (const pair of changedCategoryPairs) {
+        if (!changedFromByTo.has(normalizeName(pair.nextName))) {
+          changedFromByTo.set(normalizeName(pair.nextName), pair.previousName);
+        }
       }
 
-      const remainingManaged = managedRows.filter(
-        (row) => !toDeleteIds.some((id) => id === row.categoryId),
-      );
-      const remainingByName = new Set(remainingManaged.map((row) => normalizeName(row.categoryName)));
+      const syncedNameSet = new Set(existingByNormalizedName.keys());
 
-      const toCreate = incomingRows.filter(
-        (row) => !remainingByName.has(normalizeName(row.categoryName)),
-      );
+      for (const row of incomingRows) {
+        const normalized = normalizeName(row.categoryName);
+        const exactMatch = existingByNormalizedName.get(normalized);
 
-      if (toCreate.length > 0) {
-        const details = await prisma.categories.createMany({
-          data: toCreate.map((row) => ({
+        if (exactMatch) {
+          matchedCount += 1;
+          if (changedToNameSet.has(normalized) && exactMatch.categoryStatus) {
+            await prisma.categories.update({
+              where: { categoryId: exactMatch.categoryId },
+              data: { categoryStatus: false },
+            });
+            deactivatedCount += 1;
+          }
+          syncedNameSet.add(normalized);
+          continue;
+        }
+
+        const previousName = changedFromByTo.get(normalized);
+        const previousCategory = previousName
+          ? existingByNormalizedName.get(normalizeName(previousName))
+          : null;
+        const previousStillExistsInOms = previousName
+          ? incomingNameSet.has(normalizeName(previousName))
+          : false;
+
+        if (previousName && previousCategory && !previousStillExistsInOms) {
+          await prisma.categories.update({
+            where: { categoryId: previousCategory.categoryId },
+            data: {
+              categoryName: row.categoryName,
+              categoryStatus: false,
+            },
+          });
+          existingByNormalizedName.delete(normalizeName(previousName));
+          existingByNormalizedName.set(normalized, {
+            ...previousCategory,
+            categoryName: row.categoryName,
+            categoryStatus: false,
+          });
+          syncedNameSet.add(normalized);
+          renamedCount += 1;
+          if (previousCategory.categoryStatus) {
+            deactivatedCount += 1;
+          }
+          continue;
+        }
+
+        await prisma.categories.create({
+          data: {
             categoryName: row.categoryName,
             slug: null,
             categoryDescription: null,
@@ -211,20 +300,20 @@ export async function POST(req: Request) {
             categoryBanner: null,
             userId: BigInt(row.userId),
             categoryStatus: false,
-          })),
-          skipDuplicates: true,
+          },
         });
-        insertedCount += details.count;
+        syncedNameSet.add(normalized);
+        insertedCount += 1;
       }
 
-      matchedCount = incomingRows.length - insertedCount;
       return NextResponse.json(
         {
           success: true,
           insertedCount,
-          renamedCount: 0,
+          renamedCount,
           matchedCount,
-          deletedCount: toDeleteIds.length,
+          deactivatedCount,
+          deletedCount: 0,
           message: "Category sync completed successfully",
         },
         {

@@ -255,6 +255,10 @@ export default function CategoriesListPage() {
           userId: "1",
           categoryStatus: false,
         })),
+        products: product.map((item) => ({
+          productCode: item.productCode,
+          categoryName: item.categoryId,
+        })),
       };
 
       const requestDataProduct = {

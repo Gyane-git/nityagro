@@ -25,7 +25,7 @@ interface Products {
   cookingInstruction: null;
   storageInstruction: null;
   pImage: null;
-  productStatus: true;
+  productStatus: boolean;
   actualPrice: number;
   sellingPrice: 0;
   deliveryTargetDays: null;
@@ -212,9 +212,8 @@ export default function ProductListPage() {
               <th className="p-2 text-center text-xs border">Category</th>
 
               <th className="p-2 text-center text-xs border">Price</th>
-              <th className="p-2 text-center text-xs border">Stock</th>
-
-              <th className="p-2 text-center text-xs border">Status</th>
+              <th className="p-2 text-center text-xs border">Subgroup Status</th>
+              <th className="p-2 text-center text-xs border">Inventory</th>
               <th className="p-2 text-center text-xs border">Actions</th>
             </tr>
           </thead>
@@ -269,14 +268,20 @@ export default function ProductListPage() {
                   </div>
                 </td>
 
-                {/* Stock */}
+                {/* Subgroup Status */}
                 <td className="p-1 text-center">
-                  <span className="text-sm font-medium text-gray-900">
-                    {product.availableQuantity || 0}
+                  <span
+                    className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${
+                      product.productStatus
+                        ? "bg-green-100 text-green-700"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {product.productStatus ? "Active" : "Inactive"}
                   </span>
                 </td>
 
-                {/* Status */}
+                {/* Inventory */}
                 <td className="p-1 text-center">
                   {Number(product.availableQuantity) > 0 ? (
                     <span className="inline-flex px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
