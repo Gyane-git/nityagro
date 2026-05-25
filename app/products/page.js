@@ -29,21 +29,12 @@ function ProductsPageContent() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [productResponse, categoryResponse] = await Promise.all([
-          apiGetRequest("/products"),
-          apiGetRequest("/categories"),
-        ]);
+        const [productResponse, categoryResponse] = await Promise.all([apiGetRequest("/products"), apiGetRequest("/categories")]);
 
-        const productRows = Array.isArray(productResponse?.data)
-          ? productResponse.data
-          : [];
-        const categoryRows = Array.isArray(categoryResponse?.data)
-          ? categoryResponse.data
-          : [];
+        const productRows = Array.isArray(productResponse?.data) ? productResponse.data : [];
+        const categoryRows = Array.isArray(categoryResponse?.data) ? categoryResponse.data : [];
 
-        const activeCategories = categoryRows.filter(
-          (category) => category.categoryStatus !== false,
-        );
+        const activeCategories = categoryRows.filter((category) => category.categoryStatus !== false);
 
         const mapped = productRows
           .filter((item) => item.productStatus !== false)
@@ -56,13 +47,7 @@ function ProductsPageContent() {
             rating: 4,
             reviews: 0,
             badge: item.specialOffer ? "Special Offer" : null,
-            discount:
-              item.actualPrice > item.sellingPrice
-                ? `SAVE\n${Math.round(
-                    ((item.actualPrice - item.sellingPrice) / item.actualPrice) *
-                      100,
-                  )}%`
-                : null,
+            discount: item.actualPrice > item.sellingPrice ? `SAVE\n${Math.round(((item.actualPrice - item.sellingPrice) / item.actualPrice) * 100)}%` : null,
           }));
 
         setProducts(mapped);
@@ -86,11 +71,7 @@ function ProductsPageContent() {
 
   const totalItems = useMemo(() => filteredProducts.length, [filteredProducts]);
 
-  const applyFilters = ({
-    categories = selectedCategories,
-    ratings = selectedRatings,
-    price = priceRange,
-  }) => {
+  const applyFilters = ({ categories = selectedCategories, ratings = selectedRatings, price = priceRange }) => {
     let result = products;
 
     if (categories.length) {
@@ -110,21 +91,14 @@ function ProductsPageContent() {
     if (selectedCategories.length !== 1) {
       return null;
     }
-    return (
-      categories.find(
-        (category) => category.categoryName === selectedCategories[0],
-      ) || null
-    );
+    return categories.find((category) => category.categoryName === selectedCategories[0]) || null;
   }, [categories, selectedCategories]);
 
   return (
     <main className="min-h-screen bg-white">
       <div className="max-w-360 mx-auto px-4 sm:px-6 py-4">
         {/* Banner */}
-        <Banner
-          image={selectedCategoryDetail?.categoryBanner || "/banner1.jpg"}
-          title={selectedCategoryDetail?.categoryName || "All Products"}
-        />
+        <Banner image={selectedCategoryDetail?.categoryBanner || "/banner1.jpg"} title={selectedCategoryDetail?.categoryName || "All Products"} />
 
         {/* Title row (mobile like screenshot) */}
         <div className="mt-5 flex items-center justify-between">
@@ -134,10 +108,7 @@ function ProductsPageContent() {
           </div>
 
           {/* FILTER BUTTON (mobile only) */}
-          <button
-            onClick={() => setFilterOpen(true)}
-            className="lg:hidden flex items-center gap-2 border px-3 py-2 rounded-md text-sm text-[#00462C] border-[#00462C]"
-          >
+          <button onClick={() => setFilterOpen(true)} className="lg:hidden flex items-center gap-2 border px-3 py-2 rounded-md text-sm text-[#00462C] border-[#00462C]">
             <FilterIcon />
             Filter
           </button>
@@ -171,27 +142,14 @@ function ProductsPageContent() {
           </div>
 
           {/* PRODUCTS */}
-          <div className="flex-1">
-            {loading ? (
-              <p className="text-sm text-gray-500">Loading products...</p>
-            ) : (
-              <ProductList products={filteredProducts} />
-            )}
-          </div>
+          <div className="flex-1">{loading ? <p className="text-sm text-gray-500">Loading products...</p> : <ProductList products={filteredProducts} />}</div>
         </div>
       </div>
 
       {/* ───────── MOBILE FILTER DRAWER ───────── */}
-      <div
-        className={`fixed inset-0 z-50 bg-black/40 transition-opacity duration-300 ${
-          filterOpen ? "opacity-100 visible" : "opacity-0 invisible"
-        }`}
-      >
+      <div className={`fixed inset-0 z-50 bg-black/40 transition-opacity duration-300 ${filterOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}>
         {/* overlay */}
-        <div
-          className="absolute inset-0"
-          onClick={() => setFilterOpen(false)}
-        />
+        <div className="absolute inset-0" onClick={() => setFilterOpen(false)} />
 
         {/* drawer */}
         <div
@@ -203,10 +161,7 @@ function ProductsPageContent() {
           <div className="flex items-center justify-between px-4 py-3 border-b">
             <h2 className="font-bold text-[#00462C] text-lg">Filters</h2>
 
-            <button
-              onClick={() => setFilterOpen(false)}
-              className="text-gray-600 hover:text-black text-xl"
-            >
+            <button onClick={() => setFilterOpen(false)} className="text-gray-600 hover:text-black text-xl">
               ✕
             </button>
           </div>
