@@ -1,12 +1,3 @@
-/**
- * invoiceGenerator.ts
- * Beautiful invoice PDF generator for NITYAGRO.
- * Pure TypeScript — no Python, no external server.
- *
- * Dependency:  npm install pdf-lib
- * Optional:    npm install @pdf-lib/fontkit   (for custom fonts)
- */
-
 import {
   PDFDocument,
   PDFFont,
@@ -157,8 +148,7 @@ function decoratePage(
   // ── Forest green header band ──────────────────────────────────────────────
   fillRect(page, 0, HEADER_TOP, PAGE_W, HEADER_H - AMBER_BAR_H, C.forest);
 
-  // ── Sage left strip ───────────────────────────────────────────────────────
-  fillRect(page, 0, 0, L_STRIP, PAGE_H, C.sage);
+ 
 
   // ── Brand name ────────────────────────────────────────────────────────────
   drawText(page, "NITYAGRO", CONTENT_X, PAGE_H - 24 * mm, {
