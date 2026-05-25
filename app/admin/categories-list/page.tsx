@@ -479,8 +479,7 @@ export default function CategoriesListPage() {
               <tr>
                 <th className="p-2 text-center text-xs border">ID</th>
                 <th className="p-2 text-center text-xs border">Name</th>
-                <th className="p-2 text-center text-xs border">Slug</th>
-                <th className="p-2 text-center text-xs border">Description</th>
+                
                 <th className="p-2 text-center text-xs border">
                   Category Image
                 </th>
@@ -510,12 +509,7 @@ export default function CategoriesListPage() {
                   >
                     <td className="p-1 text-center">{category.categoryId}</td>
                     <td className="p-1 text-center">{category.categoryName}</td>
-                    <td className="p-1 text-center">
-                      {category.slug ?? "N/A"}
-                    </td>
-                    <td className="p-1 text-center">
-                      {category.categoryDescription ?? "N/A"}
-                    </td>
+                    
                     <td className="p-1 text-center">
                       {category.categoryImage ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -710,35 +704,9 @@ export default function CategoriesListPage() {
                 </p>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Slug
-                </label>
-                <input
-                  value={editForm.slug}
-                  onChange={(e) =>
-                    setEditForm((prev) => ({ ...prev, slug: e.target.value }))
-                  }
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-black outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+             
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Description
-                </label>
-                <textarea
-                  value={editForm.categoryDescription}
-                  onChange={(e) =>
-                    setEditForm((prev) => ({
-                      ...prev,
-                      categoryDescription: e.target.value,
-                    }))
-                  }
-                  rows={4}
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-black outline-none resize-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+             
 
               <div>
                 <h3 className="text-sm font-semibold text-gray-700 mb-3">
