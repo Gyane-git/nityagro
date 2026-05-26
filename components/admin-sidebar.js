@@ -52,6 +52,16 @@ export default function SideHeaderBar() {
     },
 
     {
+      icon: Package,
+      label: "Combo Products",
+      expandable: true,
+      children: [
+        { name: "View All", path: "/admin/combo-list" },
+        { name: "Add New", path: "/admin/combopack" },
+      ],
+    },
+
+    {
       icon: FolderTree,
       label: "Categories",
       expandable: true,
