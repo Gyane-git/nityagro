@@ -104,29 +104,28 @@ model Products {
   user               Users               @relation(fields: [userId], references: [userId])
   shippingDetails    ShippingDetails[]
   wishlists          Wishlist[]
-  comboProduct          ComboProduct[]
+  comboProduct       ComboProduct[]
 
   @@index([userId], map: "products_userId_fkey")
   @@map("products")
 }
 
 model ComboProduct {
-  comboProductId   BigInt   @id @default(autoincrement())
-  comboCode        String  
+  comboProductId   BigInt         @id @default(autoincrement())
+  comboCode        String
   comboName        String
-  productId      BigInt
-  productCodes      String
-  productPrices   Float
+  productId        BigInt
+  productCodes     String
+  productPrices    Float
   comboPrice       Float
   discount         Float?
   slug             String?
   comboDescription String?
-  comboImage       String?
-  comboStatus      Boolean  @default(true)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  product   Products @relation(fields: [productId], references: [productId])
+  comboStatus      Boolean        @default(true)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  product          Products       @relation(fields: [productId], references: [productId])
+  productImages    ProductImage[]
 
   @@map("comboProduct")
 }
@@ -432,15 +431,18 @@ model Inquiry {
 }
 
 model ProductImage {
-  productImageId BigInt   @id @default(autoincrement())
-  productId      BigInt
+  productImageId BigInt        @id @default(autoincrement())
+  productId      BigInt?
+  comboProductId BigInt?
   imageUrl       String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  products       Products @relation(fields: [productId], references: [productId])
+  isMain         Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  products       Products?     @relation(fields: [productId], references: [productId])
+  comboProduct   ComboProduct? @relation(fields: [comboProductId], references: [comboProductId])
 
-  @@index([productId], map: "productImage_productId_fkey")
-  @@map("productImage")
+  @@index([productId])
+  @@index([comboProductId])
 }
 
 model ProductVariant {
