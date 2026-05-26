@@ -21,12 +21,15 @@ const useCheckoutStore = create(
     (set, get) => ({
       checkoutItem: null,
       checkoutItems: [],
+      deliveryCharge: 0,
       addresses: [INITIAL_ADDRESS],
       selectedAddressId: INITIAL_ADDRESS.id,
 
       setCheckoutItem: (item) => set({ checkoutItem: item, checkoutItems: item ? [item] : [] }),
       setCheckoutItems: (items) => set({ checkoutItems: items, checkoutItem: items?.[0] ?? null }),
       clearCheckoutItem: () => set({ checkoutItem: null, checkoutItems: [] }),
+      setDeliveryCharge: (deliveryCharge) =>
+        set({ deliveryCharge: Number(deliveryCharge || 0) }),
 
       setSelectedAddress: (id) => set({ selectedAddressId: id }),
       setAddressesFromServer: (addresses) =>

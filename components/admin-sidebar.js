@@ -27,7 +27,7 @@ export default function SideHeaderBar() {
     Products: false,
     Categories: false,
     Banners: false,
-    "Manage Address": false,
+    
   });
 
   const toggleExpand = (label) => {
@@ -82,17 +82,21 @@ export default function SideHeaderBar() {
     },
 
     { icon: Tag, label: "Popup Ads", path: "/admin/popup-ads" },
-    { icon: ShoppingCart, label: "Manage Orders", path: "/admin/ordermanagement" },
+    { icon: ShoppingCart,
+      label: "Manage Orders",
+      expandable: true,
+      children: [
+        { name: "Orders", path: "/admin/ordermanagement" },
+        { name: "Combo Orders", path: "/admin/combo-orders" }
+      ],
+      path: "/admin/ordermanagement" },
+
     { icon: Users, label: "Customers", path: "/admin/customers" },
 
     {
       icon: MapPin,
-      label: "Manage Address",
-      expandable: true,
-      children: [
-        { name: "Set Address & Shipping", path: "/admin/shipping" },
-        { name: "Manage Address & Shipping", path: "/admin/shipping/manage" },
-      ],
+      label: "Set Shipping charges",
+      path: "/admin/shipping",
     },
 
     { icon: FileText, label: "Grievances", path: "/admin/grievances" },

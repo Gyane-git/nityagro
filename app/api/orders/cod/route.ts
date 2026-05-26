@@ -37,6 +37,7 @@ export async function POST(req: Request) {
     const items: CheckoutItemInput[] = Array.isArray(body?.items) ? body.items : [];
     const address: AddressInput | null = body?.address ?? null;
     const userId = Number(body?.userId ?? 1);
+    const deliveryCharge = Math.max(0, Number(body?.deliveryCharge || 0));
 
     if (!items.length) {
       return NextResponse.json(
@@ -203,16 +204,18 @@ export async function POST(req: Request) {
         totalAmount: number;
       }[] = [];
 
-      for (const row of resolvedItems) {
+      for (const [index, row] of resolvedItems.entries()) {
         const product = resolvedProductMap.get(String(row.productId));
         const unitPrice = row.unitPrice > 0 ? row.unitPrice : Number(product?.sellingPrice ?? 0);
         const lineTotal = Number((unitPrice * row.qty).toFixed(2));
+        const lineDeliveryCharge = index === 0 ? deliveryCharge : 0;
+        const lineGrandTotal = Number((lineTotal + lineDeliveryCharge).toFixed(2));
 
         const order = await tx.orders.create({
           data: {
             userId: BigInt(userId),
             productId: BigInt(row.productId),
-            totalAmount: lineTotal,
+            totalAmount: lineGrandTotal,
             orderStatus: "PLACED",
             paymentStatus: "PENDING",
           },
@@ -223,7 +226,7 @@ export async function POST(req: Request) {
             orderId: order.orderId,
             userId: BigInt(userId),
             paymentMode: "COD",
-            paymentAmount: lineTotal,
+            paymentAmount: lineGrandTotal,
             paymentDate: now,
             transactionId: txCode,
             paymentStatus: "PENDING",

@@ -29,6 +29,7 @@ export default function CheckoutPaymentPage() {
   const checkoutItem = useCheckoutStore((state) => state.checkoutItem);
   const clearCheckoutItem = useCheckoutStore((state) => state.clearCheckoutItem);
   const getSelectedAddress = useCheckoutStore((state) => state.getSelectedAddress);
+  const deliveryCharge = useCheckoutStore((state) => state.deliveryCharge || 0);
   const removeItems = useCartStore((state) => state.removeItems);
 
   useEffect(() => {
@@ -39,7 +40,6 @@ export default function CheckoutPaymentPage() {
 
   const getTotalAmount = (sourceItems: CheckoutSourceItem[]) => {
     const itemTotal = sourceItems.reduce((sum, item) => sum + Number(item.total ?? item.unitPrice ?? 0), 0);
-    const deliveryCharge = itemTotal > 0 ? 200 : 0;
     return Number((itemTotal + deliveryCharge).toFixed(2));
   };
 
@@ -76,6 +76,7 @@ export default function CheckoutPaymentPage() {
           name: item.name,
         })),
         address: selectedAddress ?? null,
+        deliveryCharge,
         userId: Number.isFinite(parsedUserId) && parsedUserId > 0 ? parsedUserId : 1,
       };
 

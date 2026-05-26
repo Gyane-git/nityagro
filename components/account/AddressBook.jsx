@@ -8,9 +8,12 @@ import useConfirmModalStore from "@/store/confirmModalStore";
 
 const EMPTY_FORM = {
   fullName: "",
+  provinceId: "",
   province: "",
+  districtId: "",
   district: "",
   phone: "",
+  cityId: "",
   city: "",
   ward: "",
   locality: "",
@@ -21,6 +24,8 @@ const EMPTY_FORM = {
 
 const PHONE_REGEX = /^[+\d\s-]{7,20}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const normalizeOptionName = (value) => String(value || "").trim().toLowerCase();
 
 export default function AddressBook({ userId = "1" }) {
   const router = useRouter();
@@ -37,6 +42,14 @@ export default function AddressBook({ userId = "1" }) {
   const selectedAddress = useMemo(() => addresses.find((address) => address.id === editingId), [addresses, editingId]);
   const [form, setForm] = useState(EMPTY_FORM);
   const [loading, setLoading] = useState(false);
+  const [provinces, setProvinces] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [locationLoading, setLocationLoading] = useState({
+    provinces: false,
+    districts: false,
+    cities: false,
+  });
 
   const fetchAddresses = useCallback(async () => {
     setLoading(true);
@@ -66,6 +79,119 @@ export default function AddressBook({ userId = "1" }) {
     fetchAddresses();
   }, [fetchAddresses]);
 
+  useEffect(() => {
+    const fetchProvinces = async () => {
+      setLocationLoading((prev) => ({ ...prev, provinces: true }));
+      try {
+        const response = await fetch("/api/location/provinces", {
+          cache: "no-store",
+        }).then((res) => res.json());
+        if (!response.success) {
+          toast.error(response.message || "Failed to fetch provinces");
+          return;
+        }
+        setProvinces(Array.isArray(response.data) ? response.data : []);
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to fetch provinces");
+      } finally {
+        setLocationLoading((prev) => ({ ...prev, provinces: false }));
+      }
+    };
+
+    fetchProvinces();
+  }, []);
+
+  useEffect(() => {
+    if (!form.provinceId) {
+      setDistricts([]);
+      return;
+    }
+
+    const fetchDistricts = async () => {
+      setLocationLoading((prev) => ({ ...prev, districts: true }));
+      try {
+        const response = await fetch(
+          `/api/location/districts?province=${encodeURIComponent(form.provinceId)}`,
+          { cache: "no-store" },
+        ).then((res) => res.json());
+        if (!response.success) {
+          toast.error(response.message || "Failed to fetch districts");
+          return;
+        }
+        setDistricts(Array.isArray(response.data) ? response.data : []);
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to fetch districts");
+      } finally {
+        setLocationLoading((prev) => ({ ...prev, districts: false }));
+      }
+    };
+
+    fetchDistricts();
+  }, [form.provinceId]);
+
+  useEffect(() => {
+    if (!form.districtId) {
+      setCities([]);
+      return;
+    }
+
+    const fetchCities = async () => {
+      setLocationLoading((prev) => ({ ...prev, cities: true }));
+      try {
+        const response = await fetch(
+          `/api/location/municipalities?district=${encodeURIComponent(form.districtId)}`,
+          { cache: "no-store" },
+        ).then((res) => res.json());
+        if (!response.success) {
+          toast.error(response.message || "Failed to fetch cities");
+          return;
+        }
+        setCities(Array.isArray(response.data) ? response.data : []);
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to fetch cities");
+      } finally {
+        setLocationLoading((prev) => ({ ...prev, cities: false }));
+      }
+    };
+
+    fetchCities();
+  }, [form.districtId]);
+
+  useEffect(() => {
+    if (form.provinceId || !form.province || provinces.length === 0) return;
+    const matched = provinces.find(
+      (province) =>
+        normalizeOptionName(province.name) === normalizeOptionName(form.province),
+    );
+    if (matched) {
+      setForm((prev) => ({ ...prev, provinceId: String(matched.id) }));
+    }
+  }, [form.province, form.provinceId, provinces]);
+
+  useEffect(() => {
+    if (form.districtId || !form.district || districts.length === 0) return;
+    const matched = districts.find(
+      (district) =>
+        normalizeOptionName(district.name) === normalizeOptionName(form.district),
+    );
+    if (matched) {
+      setForm((prev) => ({ ...prev, districtId: String(matched.id) }));
+    }
+  }, [form.district, form.districtId, districts]);
+
+  useEffect(() => {
+    if (form.cityId || !form.city || cities.length === 0) return;
+    const matched = cities.find(
+      (city) => normalizeOptionName(city.name) === normalizeOptionName(form.city),
+    );
+    if (matched) {
+      setForm((prev) => ({ ...prev, cityId: String(matched.id) }));
+    }
+  }, [form.city, form.cityId, cities]);
+
   const openAdd = () => {
     setEditingId(null);
     setForm(EMPTY_FORM);
@@ -75,9 +201,12 @@ export default function AddressBook({ userId = "1" }) {
     setEditingId(address.id);
     setForm({
       fullName: address.fullName || "",
+      provinceId: "",
       province: address.region || "",
+      districtId: "",
       district: address.district || "",
       phone: address.phone || "",
+      cityId: "",
       city: address.city || "",
       ward: address.colony || "",
       locality: address.area || "",
@@ -85,6 +214,43 @@ export default function AddressBook({ userId = "1" }) {
       zipCode: address.zipCode || "",
       addType: address.addType || address.label || "Home",
     });
+  };
+
+  const handleProvinceChange = (event) => {
+    const province = provinces.find(
+      (item) => String(item.id) === String(event.target.value),
+    );
+    setForm((prev) => ({
+      ...prev,
+      provinceId: province ? String(province.id) : "",
+      province: province?.name || "",
+      districtId: "",
+      district: "",
+      cityId: "",
+      city: "",
+    }));
+  };
+
+  const handleDistrictChange = (event) => {
+    const district = districts.find(
+      (item) => String(item.id) === String(event.target.value),
+    );
+    setForm((prev) => ({
+      ...prev,
+      districtId: district ? String(district.id) : "",
+      district: district?.name || "",
+      cityId: "",
+      city: "",
+    }));
+  };
+
+  const handleCityChange = (event) => {
+    const city = cities.find((item) => String(item.id) === String(event.target.value));
+    setForm((prev) => ({
+      ...prev,
+      cityId: city ? String(city.id) : "",
+      city: city?.name || "",
+    }));
   };
 
   const validate = () => {
@@ -228,15 +394,56 @@ export default function AddressBook({ userId = "1" }) {
             ["fullName", "Full Name"],
             ["phone", "Phone"],
             ["email", "Email"],
-            ["province", "Province"],
-            ["district", "District"],
-            ["city", "City"],
             ["ward", "Ward"],
             ["locality", "Locality"],
             ["zipCode", "Zip Code"],
           ].map(([key, label]) => (
             <input key={key} value={form[key] || ""} onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))} placeholder={label} className="rounded border border-gray-300 px-3 py-2 text-sm" />
           ))}
+          <select
+            value={form.provinceId}
+            onChange={handleProvinceChange}
+            className="rounded border border-gray-300 px-3 py-2 text-sm"
+          >
+            <option value="">
+              {locationLoading.provinces ? "Loading provinces..." : "Select Province"}
+            </option>
+            {provinces.map((province) => (
+              <option key={province.id} value={province.id}>
+                {province.name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={form.districtId}
+            onChange={handleDistrictChange}
+            disabled={!form.provinceId || locationLoading.districts}
+            className="rounded border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-100 disabled:text-gray-400"
+          >
+            <option value="">
+              {locationLoading.districts ? "Loading districts..." : "Select District"}
+            </option>
+            {districts.map((district) => (
+              <option key={district.id} value={district.id}>
+                {district.name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={form.cityId}
+            onChange={handleCityChange}
+            disabled={!form.districtId || locationLoading.cities}
+            className="rounded border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-100 disabled:text-gray-400"
+          >
+            <option value="">
+              {locationLoading.cities ? "Loading cities..." : "Select City"}
+            </option>
+            {cities.map((city) => (
+              <option key={city.id} value={city.id}>
+                {city.name}
+              </option>
+            ))}
+          </select>
           <select value={form.addType} onChange={(e) => setForm((prev) => ({ ...prev, addType: e.target.value }))} className="rounded border border-gray-300 px-3 py-2 text-sm">
             <option value="Home">Home</option>
             <option value="Office">Office</option>

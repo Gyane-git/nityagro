@@ -1,5 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import useCheckoutStore from "@/store/checkoutStore";
 
 type OrderSummaryProps = {
@@ -11,11 +12,48 @@ export default function OrderSummary({ onProceed, processing = false }: OrderSum
   const router = useRouter();
   const checkoutItems = useCheckoutStore((state) => state.checkoutItems);
   const checkoutItem = useCheckoutStore((state) => state.checkoutItem);
+  const selectedAddress = useCheckoutStore((state) => state.getSelectedAddress());
+  const deliveryCharge = useCheckoutStore((state) => state.deliveryCharge || 0);
+  const setDeliveryCharge = useCheckoutStore((state) => state.setDeliveryCharge);
+  const [loadingDelivery, setLoadingDelivery] = useState(false);
   const sourceItems = checkoutItems.length > 0 ? checkoutItems : checkoutItem ? [checkoutItem] : [];
   const itemTotal = sourceItems.reduce((sum: number, item: { total?: number; unitPrice?: number }) => sum + Number(item.total ?? item.unitPrice ?? 0), 0);
   const discount = 0;
-  const deliveryCharge = itemTotal > 0 ? 1 : 0;
   const totalAmount = itemTotal - discount + deliveryCharge;
+  const chargeKey = useMemo(
+    () => `${selectedAddress?.city || ""}|${selectedAddress?.district || ""}|${selectedAddress?.region || ""}|${itemTotal}`,
+    [selectedAddress, itemTotal],
+  );
+
+  useEffect(() => {
+    if (!itemTotal || !selectedAddress) {
+      setDeliveryCharge(0);
+      return;
+    }
+
+    let ignore = false;
+    setLoadingDelivery(true);
+    fetch("/api/shipping-charge", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ address: selectedAddress }),
+    })
+      .then((res) => res.json())
+      .then((payload) => {
+        if (ignore) return;
+        setDeliveryCharge(payload?.data?.deliveryCharge || 0);
+      })
+      .catch(() => {
+        if (!ignore) setDeliveryCharge(0);
+      })
+      .finally(() => {
+        if (!ignore) setLoadingDelivery(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [chargeKey, itemTotal, selectedAddress, setDeliveryCharge]);
 
   const items = [
     {
@@ -30,7 +68,7 @@ export default function OrderSummary({ onProceed, processing = false }: OrderSum
     },
     {
       label: "Delivery Charge",
-      value: `NPR ${deliveryCharge.toFixed(2)}`,
+      value: loadingDelivery ? "Calculating..." : `NPR ${deliveryCharge.toFixed(2)}`,
       color: "text-gray-800",
     },
   ];

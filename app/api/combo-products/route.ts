@@ -111,7 +111,6 @@ export async function POST(req: Request) {
         discount,
         slug: String(body?.slug || "").trim() || null,
         comboDescription: String(body?.comboDescription || "").trim() || null,
-        comboImage: String(body?.comboImage || "").trim() || null,
         comboStatus:
           typeof body?.comboStatus === "boolean" ? body.comboStatus : true,
       },
