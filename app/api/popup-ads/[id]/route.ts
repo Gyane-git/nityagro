@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getPublicUploadDir } from "@/lib/uploadPaths";
 import { NextResponse } from "next/server";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -64,7 +65,7 @@ async function savePopupImage(file: File) {
   const fileName = `popup-${base}-${Date.now()}-${Math.random()
     .toString(36)
     .slice(2, 8)}${ext}`;
-  const uploadDir = path.join(process.cwd(), "public", "popup");
+  const uploadDir = getPublicUploadDir("popup");
 
   await mkdir(uploadDir, { recursive: true });
   await writeFile(path.join(uploadDir, fileName), buffer);
@@ -276,4 +277,3 @@ export async function DELETE(
     );
   }
 }
-

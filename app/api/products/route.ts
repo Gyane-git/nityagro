@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getPublicUploadDir } from "@/lib/uploadPaths";
 import { NextResponse } from "next/server";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -125,7 +126,7 @@ async function saveProductImage(file: File, type: "main" | "gallery") {
   const fileName = `${type}-${base}-${Date.now()}-${Math.random()
     .toString(36)
     .slice(2, 8)}${ext}`;
-  const uploadDir = path.join(process.cwd(), "public", "uploads", "products");
+  const uploadDir = getPublicUploadDir("uploads", "products");
 
   await mkdir(uploadDir, { recursive: true });
   await writeFile(path.join(uploadDir, fileName), buffer);

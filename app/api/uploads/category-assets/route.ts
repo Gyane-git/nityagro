@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
+import { getPublicUploadDir } from "@/lib/uploadPaths";
 
 export const runtime = "nodejs";
 
@@ -63,7 +64,7 @@ async function persistImage(file: File, variant: string) {
     .toString(36)
     .slice(2, 8)}${ext}`;
 
-  const uploadDir = path.join(process.cwd(), "public", "categories");
+  const uploadDir = getPublicUploadDir("categories");
   await mkdir(uploadDir, { recursive: true });
   await writeFile(path.join(uploadDir, uniqueName), buffer);
 
