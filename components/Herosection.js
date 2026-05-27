@@ -58,6 +58,7 @@ export default function HeroSection({
           style={{ objectPosition }}
           priority
           quality={95}
+          unoptimized={resolvedImage.startsWith("/banners/")}
         />
       </section>
     </>

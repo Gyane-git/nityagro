@@ -76,6 +76,7 @@ export default function ImageSlider({ slides = DEFAULT_SLIDES, gap = 16 }) {
                 className="object-contain"
                 sizes="(max-width: 768px) 100vw, 33vw"
                 priority={i < 3}
+                unoptimized={slide.src?.startsWith("/banners/")}
               />
             </div>
           ))}
