@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { resolveComboItems } from "@/lib/comboItems";
 import { NextResponse } from "next/server";
 
 const corsHeaders = {
@@ -26,7 +27,11 @@ function getMainImage(combo: any) {
 
 function mapComboOrder(order: any) {
   const combo = order.comboProduct || {};
+  const comboItems = Array.isArray(combo.comboItems) ? combo.comboItems : [];
   const paymentStatus = normalizePaymentStatus(order.paymentStatus);
+  const comboDisplayName = comboItems.length
+    ? comboItems.map((item: any) => item.name).join(", ")
+    : combo.comboName || "Combo Product";
   return {
     id: order.comboOrderId.toString(),
     orderNumber: `NC-${order.comboOrderId.toString()}`,
@@ -41,7 +46,7 @@ function mapComboOrder(order: any) {
     paymentMethod: "COD",
     transactionId: "",
     payments: [{ paymentMode: "COD", transactionId: "", paymentStatus, amount: Number(order.totalAmount || 0), paidAt: null }],
-    items: [{ id: `${order.comboOrderId}-combo`, productCode: combo.comboCode || "", quantity: 1, subtotal: Number(order.totalAmount || 0), product: { name: combo.comboName || "Combo Product", image: getMainImage(combo) } }],
+    items: [{ id: `${order.comboOrderId}-combo`, productCode: combo.comboCode || "", quantity: 1, subtotal: Number(order.totalAmount || 0), product: { name: comboDisplayName, comboName: combo.comboName || "Combo Product", image: comboItems[0]?.image || getMainImage(combo), comboItems } }],
     updateLogs: [],
     availableSerialNumbers: [],
     serialSelectionRequired: false,
@@ -49,10 +54,18 @@ function mapComboOrder(order: any) {
 }
 
 async function getComboOrder(id: string) {
-  return prisma.comboOrders.findUnique({
+  const order = await prisma.comboOrders.findUnique({
     where: { comboOrderId: BigInt(id) },
     include: { users: { select: { name: true, email: true, phone: true } }, comboProduct: { include: { productImages: { orderBy: [{ isMain: "desc" }, { createdAt: "asc" }] } } } },
   });
+  if (!order?.comboProduct) return order;
+  return {
+    ...order,
+    comboProduct: {
+      ...order.comboProduct,
+      comboItems: await resolveComboItems(prisma, order.comboProduct.productCodes),
+    },
+  };
 }
 
 export async function OPTIONS() {

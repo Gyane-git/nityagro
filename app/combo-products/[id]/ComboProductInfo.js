@@ -41,6 +41,7 @@ export default function ComboProductInfo({ combo }) {
   const setCheckoutItem = useCheckoutStore((state) => state.setCheckoutItem);
   const showToast = useToastStore((state) => state.showToast);
   const productCodes = splitCodes(combo.productCodes);
+  const comboItems = Array.isArray(combo.comboItems) ? combo.comboItems : [];
   const savedAmount = Math.max(0, Number(combo.productPrices || 0) - Number(combo.comboPrice || 0));
 
   const handleAdd = () => {
@@ -110,7 +111,9 @@ export default function ComboProductInfo({ combo }) {
       <div className="flex flex-col gap-2">
         <p className="text-sm font-semibold text-gray-700">Included Products</p>
         <div className="flex flex-wrap gap-2">
-          {productCodes.length > 0 ? productCodes.map((code) => (
+          {comboItems.length > 0 ? comboItems.map((item) => (
+            <span key={item.code} className="text-xs font-semibold px-3 py-1 rounded-full bg-gray-50 text-gray-700 border border-gray-200">{item.name}</span>
+          )) : productCodes.length > 0 ? productCodes.map((code) => (
             <span key={code} className="text-xs font-semibold px-3 py-1 rounded-full bg-gray-50 text-gray-600 border border-gray-200">{code}</span>
           )) : <span className="text-sm text-gray-400">Combo items configured by admin</span>}
         </div>

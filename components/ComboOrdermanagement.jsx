@@ -36,6 +36,13 @@ function getFirstProduct(order) {
   return item?.product?.name || item?.productCode || "N/A";
 }
 
+function getComboItemCount(order) {
+  const comboItems = order?.items?.[0]?.product?.comboItems;
+  return Array.isArray(comboItems) && comboItems.length > 0
+    ? comboItems.length
+    : order?.items?.length || 0;
+}
+
 function getAllowedPaymentStatuses(currentStatus) {
   const normalized = String(currentStatus || "")
     .toLowerCase()
@@ -568,7 +575,7 @@ export default function ComboOrdermanagement() {
                           {getFirstProduct(order)}
                         </div>
                         <div className="text-xs text-gray-500">
-                          Items: {order.items?.length || 0}
+                          Items: {getComboItemCount(order)}
                         </div>
                       </td>
                       <td className="px-4 py-3 font-semibold">
@@ -748,25 +755,50 @@ export default function ComboOrdermanagement() {
               )}
 
             <div>
-              <div className="text-sm font-semibold mb-2">Items</div>
+              <div className="text-sm font-semibold mb-2">Combo Items</div>
               <div className="space-y-2">
                 {(selectedOrder.items || []).map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between rounded-md border p-2 text-sm"
+                    className="rounded-md border p-3 text-sm space-y-3"
                   >
-                    <div>
-                      <div className="font-medium">
-                        {item.product?.name || item.productCode || "N/A"}
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="font-medium">
+                          {item.product?.comboName || item.product?.name || item.productCode || "N/A"}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Combo Code: {item.productCode || "-"} · Items: {item.product?.comboItems?.length || 0}
+                        </div>
                       </div>
-                      <div className="text-xs text-gray-500">
-                        Qty: {Number(item.quantity || 0)}
+                      <div className="font-semibold">
+                        {formatMoney(item.subtotal)}
                       </div>
-                      
                     </div>
-                    <div className="font-semibold">
-                      {formatMoney(item.subtotal)}
-                    </div>
+
+                    {Array.isArray(item.product?.comboItems) && item.product.comboItems.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {item.product.comboItems.map((comboItem) => (
+                          <div key={comboItem.code} className="flex items-center gap-3 rounded-lg bg-gray-50 border border-gray-100 p-2">
+                            <div className="h-12 w-12 rounded-md bg-white border border-gray-100 overflow-hidden flex-shrink-0">
+                              <img
+                                src={comboItem.image || "/no-image.png"}
+                                alt={comboItem.name || comboItem.code}
+                                className="h-full w-full object-contain p-1"
+                                onError={(event) => { event.currentTarget.src = "/no-image.png"; }}
+                              />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-medium text-gray-800 truncate" title={comboItem.name}>{comboItem.name}</div>
+                              <div className="text-xs text-gray-500">PCode: {comboItem.code}</div>
+                              <div className="text-xs text-gray-500">Price: {formatMoney(comboItem.price)}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-xs text-gray-500">No combo item details available.</div>
+                    )}
                   </div>
                 ))}
               </div>

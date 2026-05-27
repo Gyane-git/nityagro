@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
+import { resolveComboItems } from "@/lib/comboItems";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,6 +34,10 @@ function mapComboOrder(order: any) {
     : [];
   const mainImage = images.find((image: any) => image.isMain)?.imageUrl || images[0]?.imageUrl || "/no-image.png";
 
+  const comboItems = Array.isArray(order.comboProduct?.comboItems)
+    ? order.comboProduct.comboItems
+    : [];
+
   return {
     id: order.comboOrderId.toString(),
     orderNumber: `NC-${order.comboOrderId.toString()}`,
@@ -48,6 +53,7 @@ function mapComboOrder(order: any) {
       description: order.comboProduct?.comboDescription || "",
       image: mainImage,
       productCodes: order.comboProduct?.productCodes || "",
+      items: comboItems,
       comboPrice: Number(order.comboProduct?.comboPrice || order.totalAmount || 0),
     },
   };
@@ -74,8 +80,23 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
     });
 
+    const ordersWithItems = await Promise.all(
+      orders.map(async (order) => ({
+        ...order,
+        comboProduct: order.comboProduct
+          ? {
+              ...order.comboProduct,
+              comboItems: await resolveComboItems(
+                prisma,
+                order.comboProduct.productCodes,
+              ),
+            }
+          : order.comboProduct,
+      })),
+    );
+
     return NextResponse.json(
-      { success: true, data: serialize(orders.map(mapComboOrder)) },
+      { success: true, data: serialize(ordersWithItems.map(mapComboOrder)) },
       { status: 200, headers: corsHeaders },
     );
   } catch {
@@ -140,7 +161,13 @@ export async function POST(req: Request) {
       {
         success: true,
         message: "Combo order placed successfully",
-        data: serialize(mapComboOrder(order)),
+        data: serialize(mapComboOrder({
+          ...order,
+          comboProduct: {
+            ...order.comboProduct,
+            comboItems: await resolveComboItems(prisma, order.comboProduct.productCodes),
+          },
+        })),
       },
       { status: 201, headers: corsHeaders },
     );

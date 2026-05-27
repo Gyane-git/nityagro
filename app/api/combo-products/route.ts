@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getPublicUploadDir } from "@/lib/uploadPaths";
+import { attachComboItems, attachComboItemsMany } from "@/lib/comboItems";
 import { NextResponse } from "next/server";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -118,7 +119,7 @@ export async function GET(req: Request) {
       }
 
       return NextResponse.json(
-        { success: true, data: serialize(combo) },
+        { success: true, data: serialize(await attachComboItems(prisma, combo)) },
         { status: 200, headers: corsHeaders },
       );
     }
@@ -142,7 +143,7 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json(
-      { success: true, data: serialize(combos) },
+      { success: true, data: serialize(await attachComboItemsMany(prisma, combos)) },
       { status: 200, headers: corsHeaders },
     );
   } catch (error) {
@@ -271,7 +272,7 @@ export async function PUT(req: Request) {
       {
         success: true,
         message: "Combo product updated successfully",
-        data: serialize(comboWithImages),
+        data: serialize(await attachComboItems(prisma, comboWithImages)),
       },
       { status: 200, headers: corsHeaders },
     );
@@ -414,7 +415,7 @@ export async function POST(req: Request) {
       {
         success: true,
         message: "Combo product created successfully",
-        data: serialize(comboWithImages),
+        data: serialize(await attachComboItems(prisma, comboWithImages)),
       },
       { status: 200, headers: corsHeaders },
     );
