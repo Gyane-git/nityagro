@@ -138,7 +138,8 @@ export const apiUploadRequest = async <T = unknown>(
   url: string,
   formData: FormData,
   tokenReq: boolean = false,
-  withCredentials: boolean = false
+  withCredentials: boolean = false,
+  method: "POST" | "PUT" = "POST"
 ): Promise<ApiResponse<T>> => {
   const fullUrl = resolveUrl(url);
   const token =
@@ -153,7 +154,7 @@ export const apiUploadRequest = async <T = unknown>(
 
   try {
     const response = await fetch(fullUrl, {
-      method: "POST",
+      method,
       body: formData,
       headers,
       credentials: withCredentials ? "include" : "same-origin",
