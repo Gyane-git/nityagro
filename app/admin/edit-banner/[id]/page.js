@@ -37,6 +37,21 @@ export default function EditBannerPage() {
     return imageUrl.startsWith("/") ? imageUrl : `/${imageUrl}`;
   };
 
+  const readApiResponse = async (res) => {
+    const contentType = res.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      return res.json();
+    }
+    const text = await res.text();
+    return {
+      success: false,
+      message:
+        res.status === 413
+          ? "Image is too large. Please upload a smaller image or increase server upload limit."
+          : text || `Request failed with status ${res.status}`,
+    };
+  };
+
   useEffect(() => {
     if (!bannerId) return;
 
@@ -112,7 +127,7 @@ export default function EditBannerPage() {
         body: formData,
       });
 
-      const data = await res.json();
+      const data = await readApiResponse(res);
       if (!data.success) throw new Error(data.message || "Failed to update banner");
 
       toast.success("Banner updated successfully");

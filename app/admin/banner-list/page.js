@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import toast from "react-hot-toast";
 import useConfirmModalStore from "@/store/confirmModalStore";
 import useInfoModalStore from "@/store/infoModalStore";
@@ -119,33 +118,27 @@ export default function BannerList() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="w-24 h-14">
-                        <Image
+                        <img
                           src={resolveImageUrl(banner.bannerImageforWeb || banner.imageUrl)}
                           alt={banner.bannerName || "Banner Web"}
-                          width={96}
-                          height={56}
                           className="w-full h-full object-cover rounded border border-gray-200"
                         />
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       <div className="w-24 h-14">
-                        <Image
+                        <img
                           src={resolveImageUrl(banner.bannerImageforMobile || banner.imageUrl)}
                           alt={banner.bannerName || "Banner Mobile"}
-                          width={96}
-                          height={56}
                           className="w-full h-full object-cover rounded border border-gray-200"
                         />
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       <div className="w-24 h-14">
-                        <Image
+                        <img
                           src={resolveImageUrl(banner.cardImage || banner.imageUrl)}
                           alt={banner.bannerName || "Banner Card"}
-                          width={96}
-                          height={56}
                           className="w-full h-full object-cover rounded border border-gray-200"
                         />
                       </div>
