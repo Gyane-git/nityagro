@@ -26,6 +26,7 @@ model Users {
   auditLog           AuditLog[]
   cartListers        CartList[]
   categories         Categories[]
+  comboOrders        ComboOrders[]
   orderCancellations OrderCancellation[]
   orderReturns       OrderReturn[]
   orders             Orders[]
@@ -125,6 +126,7 @@ model ComboProduct {
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   product          Products       @relation(fields: [productId], references: [productId])
+  comboOrders      ComboOrders[]
   productImages    ProductImage[]
 
   @@map("comboProduct")
@@ -179,6 +181,23 @@ model Orders {
   @@index([productId], map: "orders_productId_fkey")
   @@index([userId], map: "orders_userId_fkey")
   @@map("orders")
+}
+
+model ComboOrders {
+  comboOrderId   BigInt       @id @default(autoincrement())
+  userId         BigInt
+  comboProductId BigInt
+  totalAmount    Float
+  orderStatus    String?
+  paymentStatus  String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  comboProduct   ComboProduct @relation(fields: [comboProductId], references: [comboProductId])
+  users          Users        @relation(fields: [userId], references: [userId])
+
+  @@index([comboProductId], map: "comboOrders_comboProductId_fkey")
+  @@index([userId], map: "comboOrders_userId_fkey")
+  @@map("comboOrders")
 }
 
 model Banner {

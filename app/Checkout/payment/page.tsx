@@ -12,6 +12,8 @@ import { requireLoginForAction } from "@/utils/clientAuthGuard";
 
 type CheckoutSourceItem = {
   id: number;
+  type?: string;
+  comboProductId?: number;
   qty?: number;
   unitPrice?: number;
   total?: number;
@@ -23,6 +25,7 @@ export default function CheckoutPaymentPage() {
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirmedOrderId, setConfirmedOrderId] = useState("");
+  const [confirmedOrderType, setConfirmedOrderType] = useState("product");
   const [placedAt, setPlacedAt] = useState("");
   const [processing, setProcessing] = useState(false);
   const checkoutItems = useCheckoutStore((state) => state.checkoutItems);
@@ -70,6 +73,8 @@ export default function CheckoutPaymentPage() {
         paymentMethod: "COD",
         items: sourceItems.map((item: CheckoutSourceItem) => ({
           id: item.id,
+          type: item.type,
+          comboProductId: item.comboProductId,
           qty: item.qty,
           unitPrice: item.unitPrice,
           total: item.total,
@@ -98,6 +103,7 @@ export default function CheckoutPaymentPage() {
       clearCheckoutItem();
 
       setConfirmedOrderId(data?.data?.orderIds?.[0] || "");
+      setConfirmedOrderType(data?.data?.orderType || "product");
       setPlacedAt(new Date().toLocaleString());
       setShowConfirmation(true);
       toast.success("Order placed successfully");
@@ -134,6 +140,8 @@ export default function CheckoutPaymentPage() {
 
       const normalizedItems = sourceItems.map((item) => ({
         id: Number(item.id),
+        type: item.type,
+        comboProductId: Number(item.comboProductId || item.id),
         qty: Math.max(1, Number(item.qty ?? 1)),
         unitPrice: Number(item.unitPrice ?? item.total ?? 0),
         total: Number(item.total ?? item.unitPrice ?? 0),
@@ -212,6 +220,10 @@ export default function CheckoutPaymentPage() {
 
   const handleContinue = () => {
     setShowConfirmation(false);
+    if (confirmedOrderType === "combo") {
+      router.push("/combo-orders");
+      return;
+    }
     router.push("/products");
   };
 

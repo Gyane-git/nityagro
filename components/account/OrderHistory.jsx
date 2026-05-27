@@ -62,15 +62,20 @@ function OrderCard({ order }) {
   const firstItem = order?.items?.[0];
   const qty = Number(firstItem?.qty || 1);
   const unitPrice = Number(firstItem?.unitPrice ?? order?.totalAmount ?? 0);
+  const isCombo = order?.orderType === "combo";
+  const imageSrc = firstItem?.image || "/products/mustard-oil.png";
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 px-5 py-4 flex items-center gap-4">
       <div className="w-16 h-16 rounded-md bg-amber-50 border border-amber-100 shrink-0 flex items-center justify-center overflow-hidden relative">
-        <Image src={firstItem?.image || "/products/mustard-oil.png"} alt={firstItem?.name || "Product"} fill className="object-contain p-1" />
+        <Image src={imageSrc} alt={firstItem?.name || "Product"} fill className="object-contain p-1" unoptimized={imageSrc.startsWith("/uploads/")} />
       </div>
 
       <div className="w-55 shrink-0">
-        <p className="text-[13.5px] font-semibold text-gray-800 leading-snug">{firstItem?.name || "N/A"}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-[13.5px] font-semibold text-gray-800 leading-snug">{firstItem?.name || "N/A"}</p>
+          {isCombo ? <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-[#2e5e2e] text-[10px] font-bold border border-emerald-100">Combo</span> : null}
+        </div>
         <p className="text-[12px] text-gray-400 mt-0.5">Code: {firstItem?.productCode || "-"}</p>
         <div className="flex items-center gap-1 mt-1.5 text-gray-400">
           <CalendarIcon />
@@ -103,13 +108,47 @@ export default function OrderHistory({ userId = "1" }) {
   useEffect(() => {
     const fetchOrders = async () => {
       setLoading(true);
-      const response = await apiGetRequest(`/orders?userId=${userId}&status=all`, false);
-      if (!response.success) {
-        toast.error(response.message || "Failed to fetch order history");
+      const [orderResponse, comboResponse] = await Promise.all([
+        apiGetRequest(`/orders?userId=${userId}&status=all`, false),
+        apiGetRequest("/combo-orders", true),
+      ]);
+
+      if (!orderResponse.success) {
+        toast.error(orderResponse.message || "Failed to fetch order history");
         setLoading(false);
         return;
       }
-      setOrders(Array.isArray(response.data) ? response.data : []);
+
+      const normalOrders = Array.isArray(orderResponse.data) ? orderResponse.data : [];
+      const comboOrders = comboResponse.success && Array.isArray(comboResponse.data)
+        ? comboResponse.data.map((order) => ({
+            id: `combo-${order.id}`,
+            rawId: order.id,
+            orderNumber: order.orderNumber,
+            orderType: "combo",
+            orderStatus: order.orderStatus,
+            paymentStatus: order.paymentStatus,
+            totalAmount: Number(order.totalAmount || 0),
+            createdAt: order.createdAt,
+            items: [
+              {
+                id: `${order.id}-combo`,
+                productCode: order.combo?.code || order.combo?.productCodes || "COMBO",
+                name: order.combo?.name || "Combo Product",
+                image: order.combo?.image || "/no-image.png",
+                qty: 1,
+                unitPrice: Number(order.combo?.comboPrice || order.totalAmount || 0),
+                subtotal: Number(order.totalAmount || 0),
+              },
+            ],
+          }))
+        : [];
+
+      setOrders(
+        [...normalOrders, ...comboOrders].sort(
+          (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime(),
+        ),
+      );
       setLoading(false);
     };
     fetchOrders();

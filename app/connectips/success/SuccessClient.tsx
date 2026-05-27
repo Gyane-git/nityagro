@@ -123,6 +123,7 @@ export default function SuccessClient() {
             addressId: intent.addressId,
             address: intent.address,
             userId: intent.userId,
+            totalAmount: intent.amount,
             items: intent.items,
           }),
         });

@@ -22,6 +22,7 @@ export default function OrderItemsList() {
   const checkoutItem = useCheckoutStore((state) => state.checkoutItem);
   type CheckoutSourceItem = {
     id: number;
+    type?: string;
     name: string;
     weight?: string;
     unitPrice?: number;
@@ -33,7 +34,7 @@ export default function OrderItemsList() {
   const items: OrderItem[] = sourceItems.map((item: CheckoutSourceItem) => ({
     id: item.id,
     name: item.name,
-    weight: item.weight ?? "100 gm",
+    weight: item.weight ?? (item.type === "combo" ? "Combo Pack" : "100 gm"),
     unitPrice: Number(item.unitPrice ?? 0),
     qty: Number(item.qty ?? 1),
     total: Number(item.total ?? item.unitPrice ?? 0),

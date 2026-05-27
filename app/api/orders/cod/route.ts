@@ -12,6 +12,8 @@ const corsHeaders = {
 
 type CheckoutItemInput = {
   id: number | string;
+  type?: string;
+  comboProductId?: number | string;
   qty?: number;
   unitPrice?: number;
   total?: number;
@@ -43,6 +45,179 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { success: false, message: "No checkout items provided" },
         { status: 400, headers: corsHeaders },
+      );
+    }
+
+    const isComboCheckout = items.every(
+      (item) =>
+        String(item?.type || "").toLowerCase() === "combo" ||
+        Number(item?.comboProductId || 0) > 0,
+    );
+
+    if (isComboCheckout) {
+      const normalizedComboItems = items
+        .map((item) => ({
+          comboProductId: Number(item.comboProductId || item.id),
+          qty: Math.max(1, Number(item.qty ?? 1)),
+          unitPrice: Number(item.unitPrice ?? item.total ?? 0),
+        }))
+        .filter(
+          (item) =>
+            Number.isFinite(item.comboProductId) && item.comboProductId > 0,
+        );
+
+      if (normalizedComboItems.length !== items.length) {
+        return NextResponse.json(
+          { success: false, message: "Invalid combo checkout item ids" },
+          { status: 400, headers: corsHeaders },
+        );
+      }
+
+      const combos = await prisma.comboProduct.findMany({
+        where: {
+          comboProductId: {
+            in: normalizedComboItems.map((item) => BigInt(item.comboProductId)),
+          },
+          comboStatus: true,
+        },
+        select: {
+          comboProductId: true,
+          comboName: true,
+          comboPrice: true,
+        },
+      });
+      const comboMap = new Map(
+        combos.map((combo) => [combo.comboProductId.toString(), combo]),
+      );
+
+      if (combos.length !== normalizedComboItems.length) {
+        return NextResponse.json(
+          { success: false, message: "Some combo products are not available" },
+          { status: 400, headers: corsHeaders },
+        );
+      }
+
+      const txCode = `COD-COMBO-${Date.now()}`;
+      const created = await prisma.$transaction(async (tx) => {
+        const createdOrders: {
+          comboOrderId: bigint;
+          comboProductId: bigint;
+          totalAmount: number;
+        }[] = [];
+
+        for (const [index, row] of normalizedComboItems.entries()) {
+          const combo = comboMap.get(String(row.comboProductId));
+          const unitPrice =
+            row.unitPrice > 0 ? row.unitPrice : Number(combo?.comboPrice || 0);
+          const lineTotal = Number((unitPrice * row.qty).toFixed(2));
+          const lineDeliveryCharge = index === 0 ? deliveryCharge : 0;
+          const lineGrandTotal = Number(
+            (lineTotal + lineDeliveryCharge).toFixed(2),
+          );
+
+          const order = await tx.comboOrders.create({
+            data: {
+              userId: BigInt(userId),
+              comboProductId: BigInt(row.comboProductId),
+              totalAmount: lineGrandTotal,
+              orderStatus: "PLACED",
+              paymentStatus: "PENDING",
+            },
+          });
+
+          createdOrders.push({
+            comboOrderId: order.comboOrderId,
+            comboProductId: order.comboProductId,
+            totalAmount: order.totalAmount,
+          });
+        }
+
+        return createdOrders;
+      });
+
+      const grandTotal = created.reduce(
+        (sum, order) => sum + Number(order.totalAmount),
+        0,
+      );
+
+      try {
+        const user = await prisma.users.findUnique({
+          where: { userId: BigInt(userId) },
+          select: { name: true, email: true },
+        });
+
+        if (user?.email) {
+          const lines = created.map((row) => {
+            const combo = comboMap.get(String(row.comboProductId));
+            return {
+              orderId: `NC-${row.comboOrderId.toString()}`,
+              productName: combo?.comboName || "Combo Product",
+              qty: 1,
+              amount: Number(row.totalAmount || 0),
+            };
+          });
+          const addressText = address
+            ? [
+                address.fullName,
+                address.phone,
+                address.address,
+                address.city,
+                address.region,
+                address.area,
+              ]
+                .filter(Boolean)
+                .join(", ")
+            : "";
+          const emailContent = buildOrderPlacedEmail({
+            customerName: user.name || "Customer",
+            transactionId: txCode,
+            items: lines.map((line) => ({
+              name: line.productName,
+              qty: line.qty,
+              amount: line.amount,
+            })),
+            totalAmount: grandTotal,
+            addressText,
+          });
+          const invoicePdf = await generateInvoicePdf({
+            customerName: user.name || "Customer",
+            transactionId: txCode,
+            lines,
+            totalAmount: grandTotal,
+            addressText,
+          });
+
+          await sendMail({
+            to: user.email,
+            subject: emailContent.subject,
+            html: emailContent.html,
+            text: emailContent.text,
+            attachments: [
+              {
+                filename: `invoice-${txCode}.pdf`,
+                content: invoicePdf,
+                contentType: "application/pdf",
+              },
+            ],
+          });
+        }
+      } catch (mailError) {
+        console.error("Combo order email send failed:", mailError);
+      }
+
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Combo order placed successfully (Cash on Delivery)",
+          data: {
+            orderIds: created.map((order) => order.comboOrderId.toString()),
+            transactionId: txCode,
+            itemCount: created.length,
+            grandTotal,
+            orderType: "combo",
+          },
+        },
+        { status: 200, headers: corsHeaders },
       );
     }
 

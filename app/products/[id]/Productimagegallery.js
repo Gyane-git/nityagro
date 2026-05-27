@@ -134,7 +134,7 @@ export default function ProductImageGallery({ images = [] }) {
               background: "#F9FAFB",
             }}
           >
-            <Image src={src} alt={`Thumbnail ${i + 1}`} fill className="object-contain p-2" sizes="90px" />
+            <Image src={src} alt={`Thumbnail ${i + 1}`} fill className="object-contain p-2" sizes="90px" unoptimized={String(src).startsWith("/uploads/")} />
             {i === 1 && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                 <PlayIcon />
@@ -160,7 +160,7 @@ export default function ProductImageGallery({ images = [] }) {
           });
         }}
       >
-        <Image src={selectedImageUrl} alt="Product main" fill className={`object-contain p-6 transition-transform duration-500 ${zoomActive ? "scale-110" : "scale-100"}`} sizes="310px" priority />
+        <Image src={selectedImageUrl} alt="Product main" fill className={`object-contain p-6 transition-transform duration-500 ${zoomActive ? "scale-110" : "scale-100"}`} sizes="310px" priority unoptimized={String(selectedImageUrl).startsWith("/uploads/")} />
 
         {zoomActive && (
           <div

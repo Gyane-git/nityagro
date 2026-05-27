@@ -1,0 +1,86 @@
+import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, PATCH, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
+function normalizeOrderStatus(value: string | null | undefined) {
+  const status = String(value || "").toLowerCase().trim();
+  if (!status || status === "placed" || status === "pending") return "processing";
+  return status;
+}
+
+function normalizePaymentStatus(value: string | null | undefined) {
+  const status = String(value || "").toLowerCase().trim();
+  if (!status || status === "pending") return "unpaid";
+  return status;
+}
+
+function getMainImage(combo: any) {
+  const images = Array.isArray(combo?.productImages) ? combo.productImages : [];
+  return images.find((image: any) => image.isMain)?.imageUrl || images[0]?.imageUrl || "/no-image.png";
+}
+
+function mapComboOrder(order: any) {
+  const combo = order.comboProduct || {};
+  const paymentStatus = normalizePaymentStatus(order.paymentStatus);
+  return {
+    id: order.comboOrderId.toString(),
+    orderNumber: `NC-${order.comboOrderId.toString()}`,
+    orderStatus: normalizeOrderStatus(order.orderStatus),
+    paymentStatus,
+    totalAmount: Number(order.totalAmount || 0),
+    subtotal: Number(order.totalAmount || 0),
+    shippingCost: 0,
+    tax: 0,
+    createdAt: order.createdAt,
+    user: { fullName: order.users?.name || "N/A", email: order.users?.email || "", phone: order.users?.phone || "" },
+    paymentMethod: "COD",
+    transactionId: "",
+    payments: [{ paymentMode: "COD", transactionId: "", paymentStatus, amount: Number(order.totalAmount || 0), paidAt: null }],
+    items: [{ id: `${order.comboOrderId}-combo`, productCode: combo.comboCode || "", quantity: 1, subtotal: Number(order.totalAmount || 0), product: { name: combo.comboName || "Combo Product", image: getMainImage(combo) } }],
+    updateLogs: [],
+    availableSerialNumbers: [],
+    serialSelectionRequired: false,
+  };
+}
+
+async function getComboOrder(id: string) {
+  return prisma.comboOrders.findUnique({
+    where: { comboOrderId: BigInt(id) },
+    include: { users: { select: { name: true, email: true, phone: true } }, comboProduct: { include: { productImages: { orderBy: [{ isMain: "desc" }, { createdAt: "asc" }] } } } },
+  });
+}
+
+export async function OPTIONS() {
+  return new Response(null, { status: 200, headers: corsHeaders });
+}
+
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params;
+    const order = await getComboOrder(id);
+    if (!order) return NextResponse.json({ success: false, message: "Combo order not found" }, { status: 404, headers: corsHeaders });
+    return NextResponse.json({ success: true, data: mapComboOrder(order) }, { status: 200, headers: corsHeaders });
+  } catch (error) {
+    return NextResponse.json({ success: false, message: error instanceof Error ? error.message : "Failed to load combo order" }, { status: 500, headers: corsHeaders });
+  }
+}
+
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params;
+    const body = await req.json();
+    const data: { orderStatus?: string; paymentStatus?: string } = {};
+    if (body?.orderStatus) data.orderStatus = String(body.orderStatus).toUpperCase();
+    if (body?.paymentStatus) data.paymentStatus = String(body.paymentStatus).toUpperCase();
+    await prisma.comboOrders.update({ where: { comboOrderId: BigInt(id) }, data });
+    const updated = await getComboOrder(id);
+    return NextResponse.json({ success: true, message: "Combo order updated successfully", data: mapComboOrder(updated) }, { status: 200, headers: corsHeaders });
+  } catch (error) {
+    return NextResponse.json({ success: false, message: error instanceof Error ? error.message : "Failed to update combo order" }, { status: 500, headers: corsHeaders });
+  }
+}
