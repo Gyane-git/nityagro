@@ -163,10 +163,9 @@ export default function CategoriesListPage() {
     const syncToastId = toast.loading("Syncing categories, products and variants from OMS...");
     setSyncingOms(true);
     try {
-      const omsResponse = await fetch(
-        "http://bkgroupapi.globaltech.com.np:802/api/MasterList/ProductListCustomer?DbName=NITYAM8201",
-        { cache: "no-store" },
-      );
+      const omsResponse = await fetch("/api/oms/products", {
+        cache: "no-store",
+      });
 
       if (!omsResponse.ok) {
         toast.error("Failed to fetch OMS categories", { id: syncToastId });
