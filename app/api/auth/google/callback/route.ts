@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { signToken } from "@/lib/jwt";
 import { hashPassword } from "@/lib/password";
+import { getAuthBaseUrl, getGoogleRedirectUri, makeAuthRedirectUrl } from "@/lib/authUrl";
 
 const STATE_COOKIE = "google_oauth_state";
 const NEXT_COOKIE = "google_oauth_next";
@@ -32,30 +33,19 @@ function isAdminRole(role: string | null | undefined) {
   return ADMIN_ROLES.has(normalized) || normalized.includes("ADMIN");
 }
 
-function getBaseUrl(req: NextRequest) {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL ||
-    process.env.NEXT_PUBLIC_HOSTNAME ||
-    req.nextUrl.origin
-  ).replace(/\/$/, "");
-}
-
 function safeRedirectPath(value: string | undefined | null) {
   if (!value || !value.startsWith("/") || value.startsWith("//")) return "/";
   return value;
 }
 
 function redirectWithStatus(req: NextRequest, path: string, key: string) {
-  const url = new URL(path, req.nextUrl.origin);
+  const url = makeAuthRedirectUrl(req, path);
   url.searchParams.set(key, "1");
   return NextResponse.redirect(url);
 }
 
 async function exchangeCodeForToken(req: NextRequest, code: string) {
-  const baseUrl = getBaseUrl(req);
-  const redirectUri =
-    process.env.GOOGLE_REDIRECT_URI ||
-    `${baseUrl}/api/auth/google/callback`;
+  const redirectUri = getGoogleRedirectUri(req);
 
   const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
@@ -148,7 +138,7 @@ export async function GET(req: NextRequest) {
     });
 
     const targetPath = admin ? "/admin/dashboard" : nextPath;
-    const url = new URL(targetPath, req.nextUrl.origin);
+    const url = new URL(targetPath, getAuthBaseUrl(req));
     url.searchParams.set("google_login", "1");
 
     const response = NextResponse.redirect(url);
