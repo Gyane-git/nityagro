@@ -3,8 +3,7 @@ export function getCurrentAuthUser() {
 
   try {
     const raw = window.localStorage.getItem("auth_user");
-    const token = window.localStorage.getItem("token");
-    if (!raw || !token) return null;
+    if (!raw) return null;
 
     const user = JSON.parse(raw);
     return user?.userId ? user : null;
@@ -18,6 +17,9 @@ export function requireLoginForAction(message = "Please login to continue") {
   if (user) return true;
 
   if (typeof window !== "undefined") {
+    // Google login uses an httpOnly cookie, so a missing localStorage token does
+    // not always mean the user is logged out. Only clear client state when no
+    // hydrated auth user exists.
     window.localStorage.removeItem("token");
     window.localStorage.removeItem("auth_user");
     window.localStorage.removeItem("userId");

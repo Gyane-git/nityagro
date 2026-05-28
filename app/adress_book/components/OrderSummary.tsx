@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import useCheckoutStore from "@/store/checkoutStore";
+import toast from "react-hot-toast";
 
 type OrderSummaryProps = {
   onProceed?: () => void | Promise<void>;
@@ -73,6 +74,21 @@ export default function OrderSummary({ onProceed, processing = false }: OrderSum
     },
   ];
 
+  const handleProceed = () => {
+    if (!selectedAddress) {
+      toast.error("Please set shipping address before placing order");
+      router.push("/profile?tab=address&next=/Checkout");
+      return;
+    }
+
+    if (onProceed) {
+      onProceed();
+      return;
+    }
+
+    router.push("/Checkout/payment");
+  };
+
   return (
     <div className="flex flex-col border border-gray-200 rounded-xl bg-white px-6 py-6 w-full lg:w-[280px]">
       {/* Header */}
@@ -113,7 +129,7 @@ export default function OrderSummary({ onProceed, processing = false }: OrderSum
           cursor: processing || sourceItems.length === 0 ? "not-allowed" : "pointer",
         }}
         disabled={processing || sourceItems.length === 0}
-        onClick={onProceed ?? (() => router.push("/Checkout/payment"))}
+        onClick={handleProceed}
       >
         {processing ? "Placing Order..." : "Proceed to Pay"}
       </button>

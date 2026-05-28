@@ -28,11 +28,22 @@ function normalizeAmount(amount: number) {
   return Number.isInteger(fixed) ? String(Math.trunc(fixed)) : String(fixed);
 }
 
+function hasShippingAddress(address: any) {
+  if (!address) return false;
+  return Boolean(
+    String(address.fullName || "").trim() &&
+      String(address.phone || "").trim() &&
+      String(address.city || "").trim() &&
+      String(address.region || "").trim(),
+  );
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const amount = Number(body?.amount || 0);
     const items = Array.isArray(body?.items) ? body.items : [];
+    const address = body?.address || null;
 
     if (!Number.isFinite(amount) || amount <= 0) {
       return NextResponse.json(
@@ -43,6 +54,12 @@ export async function POST(req: Request) {
     if (items.length === 0) {
       return NextResponse.json(
         { success: false, message: "No checkout items provided" },
+        { status: 400 },
+      );
+    }
+    if (!hasShippingAddress(address)) {
+      return NextResponse.json(
+        { success: false, message: "Please set shipping address before placing order" },
         { status: 400 },
       );
     }

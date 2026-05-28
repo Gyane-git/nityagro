@@ -32,14 +32,34 @@ export default function CheckoutPaymentPage() {
   const checkoutItem = useCheckoutStore((state) => state.checkoutItem);
   const clearCheckoutItem = useCheckoutStore((state) => state.clearCheckoutItem);
   const getSelectedAddress = useCheckoutStore((state) => state.getSelectedAddress);
+  const setAddressesFromServer = useCheckoutStore((state) => state.setAddressesFromServer);
   const deliveryCharge = useCheckoutStore((state) => state.deliveryCharge || 0);
   const removeItems = useCartStore((state) => state.removeItems);
 
   useEffect(() => {
     if (!requireLoginForAction()) {
       toast.error("Please login to continue payment");
+      return;
     }
-  }, []);
+
+    let ignore = false;
+    fetch("/api/account/addresses", {
+      headers: { Accept: "application/json" },
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((payload) => {
+        if (ignore) return;
+        setAddressesFromServer(Array.isArray(payload?.data) ? payload.data : []);
+      })
+      .catch(() => {
+        if (!ignore) setAddressesFromServer([]);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [setAddressesFromServer]);
 
   const getTotalAmount = (sourceItems: CheckoutSourceItem[]) => {
     const itemTotal = sourceItems.reduce((sum, item) => sum + Number(item.total ?? item.unitPrice ?? 0), 0);
@@ -59,7 +79,7 @@ export default function CheckoutPaymentPage() {
     try {
       const selectedAddress = getSelectedAddress?.();
       if (!selectedAddress) {
-        toast.error("Please select delivery address first");
+        toast.error("Please set shipping address before placing order");
         router.push("/profile?tab=address&next=/Checkout/payment");
         return;
       }
@@ -128,7 +148,7 @@ export default function CheckoutPaymentPage() {
     try {
       const selectedAddress = getSelectedAddress?.();
       if (!selectedAddress) {
-        toast.error("Please select delivery address first");
+        toast.error("Please set shipping address before placing order");
         router.push("/profile?tab=address&next=/Checkout/payment");
         return;
       }

@@ -7,13 +7,35 @@ import OrderSummary from "@/app/adress_book/components/OrderSummary";
 import { useEffect } from "react";
 import toast from "react-hot-toast";
 import { requireLoginForAction } from "@/utils/clientAuthGuard";
+import useCheckoutStore from "@/store/checkoutStore";
 
 export default function CheckoutReviewPage() {
+  const setAddressesFromServer = useCheckoutStore((state) => state.setAddressesFromServer);
+
   useEffect(() => {
     if (!requireLoginForAction()) {
       toast.error("Please login to continue checkout");
+      return;
     }
-  }, []);
+
+    let ignore = false;
+    fetch("/api/account/addresses", {
+      headers: { Accept: "application/json" },
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((payload) => {
+        if (ignore) return;
+        setAddressesFromServer(Array.isArray(payload?.data) ? payload.data : []);
+      })
+      .catch(() => {
+        if (!ignore) setAddressesFromServer([]);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [setAddressesFromServer]);
 
   return (
     <div className="min-h-screen bg-white">

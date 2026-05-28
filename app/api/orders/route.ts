@@ -177,6 +177,16 @@ type AddressInput = {
   address?: string;
 };
 
+function hasShippingAddress(address: AddressInput | null) {
+  if (!address) return false;
+  return Boolean(
+    String(address.fullName || "").trim() &&
+      String(address.phone || "").trim() &&
+      String(address.city || "").trim() &&
+      String(address.region || "").trim(),
+  );
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -202,6 +212,13 @@ export async function POST(req: Request) {
     if (!items.length) {
       return NextResponse.json(
         { success: false, message: "No checkout items provided" },
+        { status: 400, headers: corsHeaders },
+      );
+    }
+
+    if (!hasShippingAddress(address)) {
+      return NextResponse.json(
+        { success: false, message: "Please set shipping address before placing order" },
         { status: 400, headers: corsHeaders },
       );
     }

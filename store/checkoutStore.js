@@ -1,20 +1,22 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-const INITIAL_ADDRESS = {
-  id: 1,
-  fullName: "Archie Rai",
-  phone: "+977 9860487514",
-  email: "archie@example.com",
-  region: "Bagmati",
-  city: "Kathmandu",
-  area: "Satdobato",
-  building: "Main Road",
-  colony: "Ward 22",
-  address: "Satdobato, Lalitpur - Main Road",
-  label: "Home",
-  isDefault: true,
-};
+function isLegacyDemoAddress(address) {
+  return (
+    Number(address?.id) === 1 &&
+    String(address?.fullName || "").toLowerCase() === "archie rai"
+  );
+}
+
+function normalizeAddressList(addresses = []) {
+  return addresses
+    .filter((address) => address && !isLegacyDemoAddress(address))
+    .map((address, index) => ({
+      ...address,
+      id: Number(address.id),
+      isDefault: index === 0,
+    }));
+}
 
 const useCheckoutStore = create(
   persist(
@@ -22,8 +24,8 @@ const useCheckoutStore = create(
       checkoutItem: null,
       checkoutItems: [],
       deliveryCharge: 0,
-      addresses: [INITIAL_ADDRESS],
-      selectedAddressId: INITIAL_ADDRESS.id,
+      addresses: [],
+      selectedAddressId: null,
 
       setCheckoutItem: (item) => set({ checkoutItem: item, checkoutItems: item ? [item] : [] }),
       setCheckoutItems: (items) => set({ checkoutItems: items, checkoutItem: items?.[0] ?? null }),
@@ -36,16 +38,16 @@ const useCheckoutStore = create(
         set((state) => {
           if (!Array.isArray(addresses) || addresses.length === 0) {
             return {
-              addresses: [INITIAL_ADDRESS],
-              selectedAddressId: INITIAL_ADDRESS.id,
+              addresses: [],
+              selectedAddressId: null,
             };
           }
 
-          const normalized = addresses.map((address, index) => ({
-            ...address,
-            id: Number(address.id),
-            isDefault: index === 0,
-          }));
+          const normalized = normalizeAddressList(addresses);
+
+          if (normalized.length === 0) {
+            return { addresses: [], selectedAddressId: null };
+          }
 
           const selectedExists = normalized.some(
             (address) => address.id === state.selectedAddressId,
@@ -87,8 +89,8 @@ const useCheckoutStore = create(
           const remaining = state.addresses.filter((address) => address.id !== id);
           if (remaining.length === 0) {
             return {
-              addresses: [INITIAL_ADDRESS],
-              selectedAddressId: INITIAL_ADDRESS.id,
+              addresses: [],
+              selectedAddressId: null,
             };
           }
 
@@ -104,15 +106,23 @@ const useCheckoutStore = create(
 
       getSelectedAddress: () => {
         const state = get();
-        return (
+        const selected =
           state.addresses.find((address) => address.id === state.selectedAddressId) ??
           state.addresses[0] ??
-          INITIAL_ADDRESS
-        );
+          null;
+
+        if (!selected || isLegacyDemoAddress(selected)) return null;
+        return selected;
       },
     }),
     {
       name: "nityagro-checkout",
+      version: 2,
+      migrate: (state) => ({
+        ...state,
+        addresses: normalizeAddressList(state?.addresses || []),
+        selectedAddressId: normalizeAddressList(state?.addresses || [])[0]?.id ?? null,
+      }),
     },
   ),
 );
