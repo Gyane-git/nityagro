@@ -200,6 +200,23 @@ model ComboOrders {
   @@map("comboOrders")
 }
 
+model OmsOrderSyncLog {
+  omsOrderSyncLogId BigInt   @id @default(autoincrement())
+  orderType         String
+  localOrderIds     String?
+  status            String   @default("PENDING")
+  attempts          Int      @default(0)
+  payload           Json
+  response          Json?
+  errorMessage      String?  @db.Text
+  lastTriedAt       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([status])
+  @@map("omsOrderSyncLog")
+}
+
 model Banner {
   bannerId             BigInt   @id @default(autoincrement())
   bannerName           String

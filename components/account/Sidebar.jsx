@@ -59,6 +59,20 @@ export default function Sidebar({ activeTab, onTabChange, user, onLogout }) {
           </div>
         ))}
         <button
+          onClick={() => onTabChange("password")}
+          className="mt-1 flex items-center gap-3 w-full rounded-md border border-red-100 bg-red-50 px-3 py-2.5 text-left text-[13.5px] font-semibold text-red-600 transition-colors hover:bg-red-100"
+        >
+
+          <LogOut size={16} />
+          Change Password
+        </button>
+        
+
+
+
+
+
+        <button
           onClick={onLogout}
           className="mt-1 flex items-center gap-3 w-full rounded-md border border-red-100 bg-red-50 px-3 py-2.5 text-left text-[13.5px] font-semibold text-red-600 transition-colors hover:bg-red-100"
         >

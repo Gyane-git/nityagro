@@ -87,7 +87,8 @@ export default function SideHeaderBar() {
       expandable: true,
       children: [
         { name: "Orders", path: "/admin/ordermanagement" },
-        { name: "Combo Orders", path: "/admin/combo-orders" }
+        { name: "Combo Orders", path: "/admin/combo-orders" },
+        { name: "OMS Sync", path: "/admin/oms-order-syncs" }
       ],
       path: "/admin/ordermanagement" },
 

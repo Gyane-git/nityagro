@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { sendMail } from "@/lib/mailer";
 import { buildOrderPlacedEmail } from "@/lib/orderEmail";
 import { generateInvoicePdf } from "@/lib/invoicePdf";
+import { syncOmsOrderSafely } from "@/lib/omsOrderSync";
+import { resolveComboItems } from "@/lib/comboItems";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -101,6 +103,7 @@ export async function POST(req: Request) {
           comboProductId: true,
           comboName: true,
           comboPrice: true,
+          productCodes: true,
         },
       });
       const comboMap = new Map(
@@ -156,6 +159,26 @@ export async function POST(req: Request) {
         (sum, order) => sum + Number(order.totalAmount),
         0,
       );
+
+      await syncOmsOrderSafely({
+        prisma,
+        orderType: "COMBO_ORDER",
+        localOrderIds: created.map((order) => order.comboOrderId),
+        items: (
+          await Promise.all(
+            normalizedComboItems.map(async (row) => {
+              const combo = comboMap.get(String(row.comboProductId));
+              const comboItems = await resolveComboItems(prisma, combo?.productCodes || "");
+              return comboItems.map((item) => ({
+                itemCode: item.code,
+                qty: row.qty,
+                rate: Number(item.price || 0),
+                totalAmt: Number(item.price || 0) * row.qty,
+              }));
+            }),
+          )
+        ).flat(),
+      }).catch((error) => console.error("OMS combo COD sync log failed:", error));
 
       try {
         const user = await prisma.users.findUnique({
@@ -367,6 +390,7 @@ export async function POST(req: Request) {
       where: { productId: { in: resolvedProductIds } },
       select: {
         productId: true,
+        productCode: true,
         sellingPrice: true,
         productStatus: true,
       },
@@ -466,6 +490,22 @@ export async function POST(req: Request) {
     });
 
     const grandTotal = created.reduce((sum, o) => sum + Number(o.totalAmount), 0);
+
+    await syncOmsOrderSafely({
+      prisma,
+      orderType: "ORDER",
+      localOrderIds: created.map((order) => order.orderId),
+      items: resolvedItems.map((row) => {
+        const product = resolvedProductMap.get(String(row.productId));
+        const unitPrice = row.unitPrice > 0 ? row.unitPrice : Number(product?.sellingPrice ?? 0);
+        return {
+          itemCode: product?.productCode || String(row.productId),
+          qty: row.qty,
+          rate: unitPrice,
+          totalAmt: unitPrice * row.qty,
+        };
+      }),
+    }).catch((error) => console.error("OMS COD sync log failed:", error));
 
     // Send invoice email without breaking order placement on mail failure.
     try {
