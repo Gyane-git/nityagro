@@ -81,6 +81,14 @@ export default function ProductInfo({ product }) {
           price: String(item.pCode || "") === String(p.productCode || "") ? Number(p.price ?? item.salesRate ?? 0) : Number(item.salesRate ?? p.price ?? 0),
           actualPrice: String(item.pCode || "") === String(p.productCode || "") ? Number(p.actualPrice ?? p.price ?? item.salesRate ?? 0) : Number(item.salesRate ?? p.price ?? 0),
           image: p.image || p.images?.[0] || "/products/mustard-oil.png",
+          stockQuantity: Math.max(
+            Number(item.stockQuantity ?? 0),
+            String(item.pCode || "") === String(p.productCode || "") ? Number(p.stockQuantity ?? 0) : 0,
+          ),
+          availableQuantity: Math.max(
+            Number(item.stockQuantity ?? 0),
+            String(item.pCode || "") === String(p.productCode || "") ? Number(p.availableQuantity ?? 0) : 0,
+          ),
         }));
 
         setVariantsFromApi(mapped);
@@ -109,11 +117,15 @@ export default function ProductInfo({ product }) {
           price: p.price,
           actualPrice: p.actualPrice || p.price,
           image: p.image || p.images?.[0] || "/products/mustard-oil.png",
+          stockQuantity: Number(p.stockQuantity ?? p.availableQuantity ?? 0),
+          availableQuantity: Number(p.availableQuantity ?? p.stockQuantity ?? 0),
         },
       ];
   const selectedVariant = variants.find((v) => Number(v.id) === Number(selectedVariantId)) || variants[0];
   const currentPrice = Number(selectedVariant?.price ?? p.price ?? 0);
   const currentActualPrice = Number(selectedVariant?.actualPrice ?? p.actualPrice ?? currentPrice);
+  const currentStock = Number(selectedVariant?.availableQuantity ?? selectedVariant?.stockQuantity ?? p.availableQuantity ?? p.stockQuantity ?? 0);
+  const isOutOfStock = currentStock <= 0;
   const selectedLabel = selectedVariant?.label || p.label || p.name;
   const displayName = `${p.name} - ${selectedLabel}`;
 
@@ -130,6 +142,8 @@ export default function ProductInfo({ product }) {
       image: selectedVariant?.image || p.image || p.images?.[0] || "/products/mustard-oil.png",
       qty,
       weight: selectedLabel,
+      availableQuantity: currentStock,
+      stockQuantity: currentStock,
     };
     addToCart(item);
     await addCartToDb(item).catch(() => null);
@@ -143,6 +157,10 @@ export default function ProductInfo({ product }) {
       showToast("Please login to buy this product");
       return;
     }
+    if (isOutOfStock) {
+      showToast("This product is out of stock");
+      return;
+    }
 
     setCheckoutItem({
       id: selectedVariant?.id || p.id,
@@ -152,6 +170,7 @@ export default function ProductInfo({ product }) {
       qty,
       unitPrice: currentPrice,
       total: currentPrice * qty,
+      availableQuantity: currentStock,
     });
     router.push("/Checkout");
   };
@@ -231,7 +250,10 @@ export default function ProductInfo({ product }) {
             return (
               <button
                 key={variant.id}
-                onClick={() => setSelectedVariantId(Number(variant.id))}
+                onClick={() => {
+                  setSelectedVariantId(Number(variant.id));
+                  setQty(1);
+                }}
                 className="px-4 py-2 text-sm font-medium border rounded-md transition-all duration-150"
                 style={{
                   borderColor: isActive ? "#00462C" : "#D1D5DB",
@@ -250,6 +272,11 @@ export default function ProductInfo({ product }) {
       {/* ── Quantity ── */}
       <div className="flex flex-col gap-2">
         <p className="text-sm font-semibold text-gray-700">Quantity</p>
+        {isOutOfStock ? (
+          <p className="text-xs font-semibold text-red-600">Out of stock. You can add it to cart, but checkout is disabled until stock is available.</p>
+        ) : (
+          <p className="text-xs text-gray-500">Available: {currentStock}</p>
+        )}
         <div className="flex items-center border border-gray-300 rounded-md overflow-hidden" style={{ width: "110px", height: "40px" }}>
           <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="flex items-center justify-center flex-1 h-full hover:bg-gray-100 transition-colors text-gray-600">
             <MinusIcon />
@@ -257,7 +284,7 @@ export default function ProductInfo({ product }) {
           <span className="flex items-center justify-center font-semibold text-sm text-gray-800 border-x border-gray-300 h-full" style={{ width: "36px" }}>
             {qty}
           </span>
-          <button onClick={() => setQty((q) => q + 1)} className="flex items-center justify-center flex-1 h-full hover:bg-gray-100 transition-colors text-gray-600">
+          <button onClick={() => setQty((q) => (isOutOfStock ? q : Math.min(currentStock, q + 1)))} className="flex items-center justify-center flex-1 h-full hover:bg-gray-100 transition-colors text-gray-600">
             <PlusIcon />
           </button>
         </div>
@@ -286,7 +313,10 @@ export default function ProductInfo({ product }) {
             color: "#00462C",
             height: "44px",
             width: "clamp(140px, 40%, 220px)",
+            opacity: isOutOfStock ? 0.5 : 1,
+            cursor: isOutOfStock ? "not-allowed" : "pointer",
           }}
+          disabled={isOutOfStock}
           onClick={handleBuyNow}
         >
           Buy Now

@@ -47,6 +47,8 @@ const useCartStore = create(
               image: product.image,
               weight: product.weight ?? "100 gm",
               qty: product.qty ?? 1,
+              availableQuantity: product.availableQuantity,
+              stockQuantity: product.stockQuantity,
             },
           ];
 

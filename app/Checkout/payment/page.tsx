@@ -9,6 +9,7 @@ import useCheckoutStore from "@/store/checkoutStore";
 import useCartStore from "@/store/cartStore";
 import toast from "react-hot-toast";
 import { requireLoginForAction } from "@/utils/clientAuthGuard";
+import { removeCartFromDb } from "@/utils/accountListApi";
 
 type CheckoutSourceItem = {
   id: number;
@@ -120,6 +121,7 @@ export default function CheckoutPaymentPage() {
 
       const orderedIds = sourceItems.map((item) => item.id);
       removeItems(orderedIds);
+      await Promise.all(orderedIds.map((id) => removeCartFromDb(id).catch(() => null)));
       clearCheckoutItem();
 
       setConfirmedOrderId(data?.data?.orderIds?.[0] || "");

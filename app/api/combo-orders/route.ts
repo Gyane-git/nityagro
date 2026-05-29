@@ -43,6 +43,7 @@ function mapComboOrder(order: any) {
     orderNumber: `NC-${order.comboOrderId.toString()}`,
     comboProductId: order.comboProductId.toString(),
     totalAmount: Number(order.totalAmount || 0),
+    quantity: Number(order.quantity || 1),
     orderStatus: normalizeOrderStatus(order.orderStatus),
     paymentStatus: normalizePaymentStatus(order.paymentStatus),
     createdAt: order.createdAt,
@@ -142,6 +143,7 @@ export async function POST(req: Request) {
       data: {
         userId: BigInt(auth.sub),
         comboProductId: combo.comboProductId,
+        quantity: BigInt(qty),
         totalAmount,
         orderStatus: "PLACED",
         paymentStatus: "PENDING",

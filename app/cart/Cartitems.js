@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import useCartStore from "@/store/cartStore";
 import useConfirmModalStore from "@/store/confirmModalStore";
+import useToastStore from "@/store/toastStore";
 import { clearCartInDb, removeCartFromDb, updateCartQtyInDb } from "@/utils/accountListApi";
 
 // ─── Icons ───────────────────────────────────────────────────────────────────
@@ -29,12 +30,14 @@ const ChevronDownIcon = () => (
 );
 
 // ─── Qty spinner ──────────────────────────────────────────────────────────────
-function QtySpinner({ value, onChange }) {
+function QtySpinner({ value, max, onChange }) {
+  const safeMax = Number(max || 0);
+  const canIncrease = safeMax <= 0 || value < safeMax;
   return (
     <div className="flex items-center border border-gray-200 rounded-md overflow-hidden bg-gray-50" style={{ width: "64px", height: "38px" }}>
       <span className="flex-1 text-center text-sm font-semibold text-gray-800 select-none">{value}</span>
       <div className="flex flex-col border-l border-gray-200 h-full">
-        <button onClick={() => onChange(value + 1)} className="flex-1 flex items-center justify-center hover:bg-gray-100 text-gray-900 transition-colors px-1.5">
+        <button disabled={!canIncrease} onClick={() => onChange(safeMax > 0 ? Math.min(safeMax, value + 1) : value + 1)} className="flex-1 flex items-center justify-center hover:bg-gray-100 text-gray-900 transition-colors px-1.5 disabled:opacity-30 disabled:cursor-not-allowed">
           <ChevronUpIcon />
         </button>
         <button onClick={() => onChange(Math.max(1, value - 1))} className="flex-1 flex items-center justify-center hover:bg-gray-100 text-gray-900 transition-colors px-1.5 border-t border-gray-200">
@@ -46,13 +49,18 @@ function QtySpinner({ value, onChange }) {
 }
 
 // ─── Desktop cart row (md+) ───────────────────────────────────────────────────
+function isOutOfStock(item) {
+  return Number(item.availableQuantity ?? item.stockQuantity ?? 0) <= 0;
+}
+
 function CartRowDesktop({ item, checked, onCheck, onQtyChange, onRemove }) {
   const subtotal = item.price * item.qty;
+  const outOfStock = isOutOfStock(item);
 
   return (
     <>
-      <div className="hidden md:flex items-center gap-5 py-5">
-        <input type="checkbox" checked={checked} onChange={onCheck} className="w-4 h-4 rounded border-gray-300 flex-shrink-0 cursor-pointer" style={{ accentColor: "#00462C" }} />
+      <div className={`hidden md:flex items-center gap-5 py-5 ${outOfStock ? "opacity-70" : ""}`}>
+        <input type="checkbox" checked={checked} disabled={outOfStock} onChange={onCheck} className="w-4 h-4 rounded border-gray-300 flex-shrink-0 cursor-pointer disabled:cursor-not-allowed" style={{ accentColor: "#00462C" }} />
 
         <div className="relative flex-shrink-0 bg-gray-50 rounded-md border border-gray-100" style={{ width: "80px", height: "80px" }}>
           <Image src={item.image} alt={item.name} fill className="object-contain p-2" sizes="80px" />
@@ -61,6 +69,7 @@ function CartRowDesktop({ item, checked, onCheck, onQtyChange, onRemove }) {
         <div className="flex flex-col gap-0.5 flex-1 min-w-0">
           <p className="text-sm font-semibold text-gray-800 truncate">{item.name}</p>
           <p className="text-xs text-gray-500">Weight: {item.weight}</p>
+          {outOfStock ? <p className="text-xs font-semibold text-red-600">Out of stock. Cannot select for checkout.</p> : null}
         </div>
 
         <div className="w-28 text-center flex-shrink-0">
@@ -68,7 +77,7 @@ function CartRowDesktop({ item, checked, onCheck, onQtyChange, onRemove }) {
         </div>
 
         <div className="w-20 flex justify-center flex-shrink-0">
-          <QtySpinner value={item.qty} onChange={(v) => onQtyChange(item.id, v)} />
+          <QtySpinner value={item.qty} max={Number(item.availableQuantity ?? item.stockQuantity ?? 0)} onChange={(v) => onQtyChange(item.id, v)} />
         </div>
 
         <div className="w-32 text-right flex-shrink-0">
@@ -91,12 +100,13 @@ function CartRowDesktop({ item, checked, onCheck, onQtyChange, onRemove }) {
 // ─── Mobile cart card (< md) ──────────────────────────────────────────────────
 function CartRowMobile({ item, checked, onCheck, onQtyChange, onRemove }) {
   const subtotal = item.price * item.qty;
+  const outOfStock = isOutOfStock(item);
 
   return (
-    <div className="md:hidden py-4 border-b border-gray-100">
+    <div className={`md:hidden py-4 border-b border-gray-100 ${outOfStock ? "opacity-70" : ""}`}>
       <div className="flex gap-3">
         {/* Checkbox */}
-        <input type="checkbox" checked={checked} onChange={onCheck} className="w-4 h-4 mt-1 rounded border-gray-300 cursor-pointer flex-shrink-0" style={{ accentColor: "#00462C" }} />
+        <input type="checkbox" checked={checked} disabled={outOfStock} onChange={onCheck} className="w-4 h-4 mt-1 rounded border-gray-300 cursor-pointer disabled:cursor-not-allowed flex-shrink-0" style={{ accentColor: "#00462C" }} />
 
         {/* Image */}
         <div className="relative flex-shrink-0 bg-gray-50 rounded-md border border-gray-100" style={{ width: "72px", height: "72px" }}>
@@ -113,9 +123,10 @@ function CartRowMobile({ item, checked, onCheck, onQtyChange, onRemove }) {
           </div>
 
           <p className="text-xs text-gray-500">Weight: {item.weight}</p>
+          {outOfStock ? <p className="text-xs font-semibold text-red-600">Out of stock. Cannot select for checkout.</p> : null}
 
           <div className="flex items-center justify-between mt-2">
-            <QtySpinner value={item.qty} onChange={(v) => onQtyChange(item.id, v)} />
+            <QtySpinner value={item.qty} max={Number(item.availableQuantity ?? item.stockQuantity ?? 0)} onChange={(v) => onQtyChange(item.id, v)} />
             <p className="font-bold text-sm" style={{ color: "#00462C" }}>
               NPR {(subtotal * 10).toLocaleString("en-NP", { minimumFractionDigits: 2 })}
             </p>
@@ -133,17 +144,24 @@ export default function CartItems({ checkedIds, setCheckedIds }) {
   const removeItem = useCartStore((state) => state.removeItem);
   const clearCart = useCartStore((state) => state.clearCart);
   const openConfirm = useConfirmModalStore((state) => state.open);
+  const showToast = useToastStore((state) => state.showToast);
 
-  const validCheckedIds = checkedIds.filter((id) => items.some((item) => item.id === id));
+  const validCheckedIds = checkedIds.filter((id) => items.some((item) => item.id === id && !isOutOfStock(item)));
+  const selectableItems = items.filter((item) => !isOutOfStock(item));
 
-  const allChecked = items.length > 0 && validCheckedIds.length === items.length;
+  const allChecked = selectableItems.length > 0 && validCheckedIds.length === selectableItems.length;
 
   const toggleSelectAll = () => {
     if (allChecked) setCheckedIds([]);
-    else setCheckedIds(items.map((i) => i.id));
+    else setCheckedIds(selectableItems.map((i) => i.id));
   };
 
   const toggleCheck = (id) => {
+    const item = items.find((row) => row.id === id);
+    if (item && isOutOfStock(item)) {
+      showToast("Out of stock product cannot be selected for checkout");
+      return;
+    }
     setCheckedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 

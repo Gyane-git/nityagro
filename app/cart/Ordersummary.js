@@ -31,7 +31,11 @@ export default function OrderSummary({ checkedIds = [] }) {
   const showToast = useToastStore((state) => state.showToast);
   const setCheckoutItems = useCheckoutStore((state) => state.setCheckoutItems);
   const cartItems = useCartStore((state) => state.items);
-  const selectedItems = cartItems.filter((item) => checkedIds.includes(item.id));
+  const selectedItems = cartItems.filter((item) => {
+    const inSelection = checkedIds.includes(item.id);
+    const inStock = Number(item.availableQuantity ?? item.stockQuantity ?? 0) > 0;
+    return inSelection && inStock;
+  });
 
   const itemsTotal = selectedItems.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.qty || 1), 0);
   const discount = 0;
@@ -52,6 +56,10 @@ export default function OrderSummary({ checkedIds = [] }) {
   const moveToCheckout = (path) => {
     if (!requireLoginForAction("Please login to continue checkout")) {
       showToast("Please login to continue checkout");
+      return;
+    }
+    if (selectedItems.length === 0) {
+      showToast("Please select an in-stock product to checkout");
       return;
     }
 

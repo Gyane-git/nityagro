@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
+import useCartStore from "@/store/cartStore";
+import { removeCartFromDb } from "@/utils/accountListApi";
 
 type ValidationResponse = {
   status?: string;
@@ -26,6 +28,7 @@ export default function SuccessClient() {
     status: "loading" | "success" | "error";
     message?: string;
   }>({ status: "loading" });
+  const removeItems = useCartStore((state) => state.removeItems);
 
   useEffect(() => {
     const run = async () => {
@@ -133,6 +136,13 @@ export default function SuccessClient() {
         }
 
         sessionStorage.setItem(finalizedKey, "1");
+        const orderedIds = Array.isArray(intent.items)
+          ? intent.items.map((item: { id: number | string }) => item.id)
+          : [];
+        if (orderedIds.length) {
+          removeItems(orderedIds);
+          await Promise.all(orderedIds.map((id: number | string) => removeCartFromDb(id).catch(() => null)));
+        }
         sessionStorage.removeItem(`connectips_intent_${referenceId}`);
         if (sessionStorage.getItem("connectips_last_reference") === referenceId) {
           sessionStorage.removeItem("connectips_last_reference");

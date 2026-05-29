@@ -87,6 +87,8 @@ export default async function ProductDetailPage({ params }) {
     storageInstruction: safeProduct.storageInstruction || "",
     deliveryTargetDays: safeProduct.deliveryTargetDays || "",
     subGroupName: safeProduct.subGroupName || "",
+    stockQuantity: Number(safeProduct.stockQuantity ?? safeProduct.availableQuantity ?? 0),
+    availableQuantity: Number(safeProduct.availableQuantity ?? safeProduct.stockQuantity ?? 0),
   };
 
   return (

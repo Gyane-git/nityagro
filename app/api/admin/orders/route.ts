@@ -119,7 +119,7 @@ export async function GET(req: Request) {
           {
             id: `${order.orderId}-1`,
             productCode: order.product?.productCode || "",
-            quantity: 1,
+            quantity: Number(order.quantity || 1),
             subtotal: Number(order.totalAmount || 0),
             serialNumber: null,
             product: {

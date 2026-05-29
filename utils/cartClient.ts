@@ -20,5 +20,6 @@ export function addCartItem(item: CartItemInput) {
     price: item.price,
     qty: item.quantity ?? 1,
     weight: item.weight ?? "100 gm",
+    availableQuantity: item.availableQuantity,
   });
 }

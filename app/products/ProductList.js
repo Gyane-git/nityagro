@@ -144,6 +144,8 @@ function ProductCard({ product }) {
       image: product.image,
       qty: 1,
       weight: "100 gm",
+      availableQuantity: Number(product.availableQuantity ?? product.stockQuantity ?? 0),
+      stockQuantity: Number(product.stockQuantity ?? product.availableQuantity ?? 0),
     };
     addToCart(item);
     await addCartToDb(item).catch(() => null);

@@ -122,6 +122,7 @@ export async function POST(req: Request) {
         const createdOrders: {
           comboOrderId: bigint;
           comboProductId: bigint;
+          quantity: bigint;
           totalAmount: number;
         }[] = [];
 
@@ -139,6 +140,7 @@ export async function POST(req: Request) {
             data: {
               userId: BigInt(userId),
               comboProductId: BigInt(row.comboProductId),
+              quantity: BigInt(row.qty),
               totalAmount: lineGrandTotal,
               orderStatus: "PLACED",
               paymentStatus: "PENDING",
@@ -148,6 +150,7 @@ export async function POST(req: Request) {
           createdOrders.push({
             comboOrderId: order.comboOrderId,
             comboProductId: order.comboProductId,
+            quantity: order.quantity,
             totalAmount: order.totalAmount,
           });
         }
@@ -192,7 +195,7 @@ export async function POST(req: Request) {
             return {
               orderId: `NC-${row.comboOrderId.toString()}`,
               productName: combo?.comboName || "Combo Product",
-              qty: 1,
+              qty: Number(row.quantity || 1),
               amount: Number(row.totalAmount || 0),
             };
           });
@@ -286,6 +289,8 @@ export async function POST(req: Request) {
         sellingPrice: true,
         actualPrice: true,
         productStatus: true,
+        stockQuantity: true,
+        availableQuantity: true,
       },
     });
 
@@ -337,6 +342,8 @@ export async function POST(req: Request) {
               sellingPrice: true,
               actualPrice: true,
               productStatus: true,
+              stockQuantity: true,
+              availableQuantity: true,
             },
           })
         : [];
@@ -393,11 +400,33 @@ export async function POST(req: Request) {
         productCode: true,
         sellingPrice: true,
         productStatus: true,
+        stockQuantity: true,
+        availableQuantity: true,
       },
     });
     const resolvedProductMap = new Map(
       resolvedProducts.map((product) => [product.productId.toString(), product]),
     );
+    const variantStocks = await prisma.productVariant.findMany({
+      where: {
+        pCode: {
+          in: resolvedProducts.map((product) => product.productCode),
+        },
+      },
+      select: {
+        pCode: true,
+        stockQuantity: true,
+      },
+    });
+    const variantStockByCode = new Map(
+      variantStocks.map((variant) => [variant.pCode, variant.stockQuantity]),
+    );
+    const getAvailableStock = (product: (typeof resolvedProducts)[number] | undefined) =>
+      Math.max(
+        Number(product?.productCode ? variantStockByCode.get(product.productCode) ?? 0 : 0),
+        Number(product?.availableQuantity ?? 0),
+        Number(product?.stockQuantity ?? 0),
+      );
 
     const inactive = resolvedItems.filter((item) => {
       const p = resolvedProductMap.get(String(item.productId));
@@ -410,6 +439,18 @@ export async function POST(req: Request) {
       );
     }
 
+    const insufficientStock = resolvedItems.find((item) => {
+      const product = resolvedProductMap.get(String(item.productId));
+      const available = getAvailableStock(product);
+      return available <= 0 || item.qty > available;
+    });
+    if (insufficientStock) {
+      return NextResponse.json(
+        { success: false, message: "Selected quantity is not available in stock" },
+        { status: 400, headers: corsHeaders },
+      );
+    }
+
     const txCode = `COD-${Date.now()}`;
     const now = new Date();
 
@@ -417,21 +458,25 @@ export async function POST(req: Request) {
       const createdOrders: {
         orderId: bigint;
         productId: bigint;
+        quantity: bigint;
         totalAmount: number;
       }[] = [];
 
       for (const [index, row] of resolvedItems.entries()) {
         const product = resolvedProductMap.get(String(row.productId));
         const unitPrice = row.unitPrice > 0 ? row.unitPrice : Number(product?.sellingPrice ?? 0);
+        const available = getAvailableStock(product);
+        const remainingStock = Math.max(0, available - row.qty);
         const lineTotal = Number((unitPrice * row.qty).toFixed(2));
         const lineDeliveryCharge = index === 0 ? deliveryCharge : 0;
         const lineGrandTotal = Number((lineTotal + lineDeliveryCharge).toFixed(2));
 
         const order = await tx.orders.create({
           data: {
-            userId: BigInt(userId),
-            productId: BigInt(row.productId),
-            totalAmount: lineGrandTotal,
+              userId: BigInt(userId),
+              productId: BigInt(row.productId),
+              quantity: BigInt(row.qty),
+              totalAmount: lineGrandTotal,
             orderStatus: "PLACED",
             paymentStatus: "PENDING",
           },
@@ -479,9 +524,25 @@ export async function POST(req: Request) {
           },
         });
 
+        await tx.products.update({
+          where: { productId: BigInt(row.productId) },
+          data: {
+            stockQuantity: BigInt(remainingStock),
+            availableQuantity: BigInt(remainingStock),
+          },
+        });
+
+        if (product?.productCode) {
+          await tx.productVariant.updateMany({
+            where: { pCode: product.productCode },
+            data: { stockQuantity: BigInt(remainingStock) },
+          });
+        }
+
         createdOrders.push({
           orderId: order.orderId,
           productId: order.productId,
+          quantity: order.quantity,
           totalAmount: order.totalAmount,
         });
       }
@@ -526,7 +587,7 @@ export async function POST(req: Request) {
           orderId: row.orderId.toString(),
           productName:
             row.product?.subGroupName || row.product?.productName || "Product",
-          qty: 1,
+          qty: Number(row.quantity || 1),
           amount: Number(row.totalAmount || 0),
         }));
 

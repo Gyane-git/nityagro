@@ -14,14 +14,24 @@ function mapCart(row: {
   quantity: bigint;
   product?: {
     productId: bigint;
+    productCode: string;
     productName: string;
     subGroupName: string | null;
     sellingPrice: number;
     pImage: string | null;
+    stockQuantity: bigint | null;
+    availableQuantity: bigint | null;
+  productStatus: boolean;
+  variantStockQuantity?: bigint | null;
   } | null;
 }) {
   const product = row.product;
   const name = product?.subGroupName || product?.productName || "Product";
+  const availableStock = Math.max(
+    Number(product?.variantStockQuantity ?? 0),
+    Number(product?.availableQuantity ?? 0),
+    Number(product?.stockQuantity ?? 0),
+  );
 
   return {
     cartId: row.cartId.toString(),
@@ -32,6 +42,9 @@ function mapCart(row: {
     image: product?.pImage || "/products/mustard-oil.png",
     qty: Number(row.quantity || 1),
     weight: product?.productName || "1 item",
+    stockQuantity: availableStock,
+    availableQuantity: availableStock,
+    productStatus: product?.productStatus !== false,
   };
 }
 
@@ -59,6 +72,56 @@ async function resolveProductId(input: unknown) {
   return product?.productId || null;
 }
 
+async function getAvailableStock(productId: bigint) {
+  const product = await prisma.products.findUnique({
+    where: { productId },
+    select: {
+      productCode: true,
+      stockQuantity: true,
+      availableQuantity: true,
+    },
+  });
+  if (!product) return 0;
+
+  const variant = await prisma.productVariant.findFirst({
+    where: { pCode: product.productCode },
+    select: { stockQuantity: true },
+  });
+
+  return Math.max(
+    Number(variant?.stockQuantity ?? 0),
+    Number(product.availableQuantity ?? 0),
+    Number(product.stockQuantity ?? 0),
+  );
+}
+
+async function mapCartRows(rows: Array<Parameters<typeof mapCart>[0]>) {
+  const codes = rows
+    .map((row) => row.product?.productCode)
+    .filter((code): code is string => Boolean(code));
+  const variants = codes.length
+    ? await prisma.productVariant.findMany({
+        where: { pCode: { in: codes } },
+        select: { pCode: true, stockQuantity: true },
+      })
+    : [];
+  const stockByCode = new Map(
+    variants.map((variant) => [variant.pCode, variant.stockQuantity]),
+  );
+
+  return rows.map((row) =>
+    mapCart({
+      ...row,
+      product: row.product
+        ? {
+            ...row.product,
+            variantStockQuantity: stockByCode.get(row.product.productCode),
+          }
+        : row.product,
+    }),
+  );
+}
+
 export async function OPTIONS() {
   return new Response(null, { status: 200, headers: corsHeaders });
 }
@@ -72,10 +135,14 @@ export async function GET() {
         product: {
           select: {
             productId: true,
+            productCode: true,
             productName: true,
             subGroupName: true,
             sellingPrice: true,
             pImage: true,
+            stockQuantity: true,
+            availableQuantity: true,
+            productStatus: true,
           },
         },
       },
@@ -83,7 +150,7 @@ export async function GET() {
     });
 
     return NextResponse.json(
-      { success: true, data: rows.map(mapCart) },
+      { success: true, data: await mapCartRows(rows) },
       { status: 200, headers: corsHeaders },
     );
   } catch {
@@ -99,7 +166,7 @@ export async function POST(req: Request) {
     const auth = await requireAuth();
     const body = await req.json();
     const productId = await resolveProductId(body?.productId ?? body?.id);
-    const quantity = Math.max(1, Number(body?.quantity ?? body?.qty ?? 1));
+    const requestedQuantity = Math.max(1, Number(body?.quantity ?? body?.qty ?? 1));
 
     if (!productId) {
       return NextResponse.json(
@@ -109,44 +176,57 @@ export async function POST(req: Request) {
     }
 
     const userId = BigInt(auth.sub);
+    const availableStock = await getAvailableStock(productId);
     const existing = await prisma.cartList.findFirst({
       where: { userId, productId },
       select: { cartId: true, quantity: true },
     });
+    const nextQuantity =
+      availableStock > 0
+        ? Math.min(Number(existing?.quantity || 0) + requestedQuantity, availableStock)
+        : Number(existing?.quantity || 0) + requestedQuantity;
 
     const row = existing
       ? await prisma.cartList.update({
           where: { cartId: existing.cartId },
-          data: { quantity: existing.quantity + BigInt(quantity) },
+          data: { quantity: BigInt(nextQuantity) },
           include: {
             product: {
               select: {
                 productId: true,
+                productCode: true,
                 productName: true,
                 subGroupName: true,
                 sellingPrice: true,
                 pImage: true,
+                stockQuantity: true,
+                availableQuantity: true,
+                productStatus: true,
               },
             },
           },
         })
       : await prisma.cartList.create({
-          data: { userId, productId, quantity: BigInt(quantity) },
+          data: { userId, productId, quantity: BigInt(availableStock > 0 ? Math.min(requestedQuantity, availableStock) : requestedQuantity) },
           include: {
             product: {
               select: {
                 productId: true,
+                productCode: true,
                 productName: true,
                 subGroupName: true,
                 sellingPrice: true,
                 pImage: true,
+                stockQuantity: true,
+                availableQuantity: true,
+                productStatus: true,
               },
             },
           },
         });
 
     return NextResponse.json(
-      { success: true, message: "Cart updated", data: mapCart(row) },
+      { success: true, message: "Cart updated", data: (await mapCartRows([row]))[0] },
       { status: 200, headers: corsHeaders },
     );
   } catch (error) {
@@ -165,7 +245,7 @@ export async function PUT(req: Request) {
     const auth = await requireAuth();
     const body = await req.json();
     const productId = await resolveProductId(body?.productId ?? body?.id);
-    const quantity = Math.max(1, Number(body?.quantity ?? body?.qty ?? 1));
+    const requestedQuantity = Math.max(1, Number(body?.quantity ?? body?.qty ?? 1));
 
     if (!productId) {
       return NextResponse.json(
@@ -185,6 +265,10 @@ export async function PUT(req: Request) {
         { status: 404, headers: corsHeaders },
       );
     }
+
+    const availableStock = await getAvailableStock(productId);
+    const quantity =
+      availableStock > 0 ? Math.min(requestedQuantity, availableStock) : requestedQuantity;
 
     await prisma.cartList.update({
       where: { cartId: existing.cartId },

@@ -48,6 +48,8 @@ function ProductsPageContent() {
             reviews: 0,
             badge: item.specialOffer ? "Special Offer" : null,
             discount: item.actualPrice > item.sellingPrice ? `SAVE\n${Math.round(((item.actualPrice - item.sellingPrice) / item.actualPrice) * 100)}%` : null,
+            stockQuantity: Number(item.stockQuantity ?? item.availableQuantity ?? 0),
+            availableQuantity: Number(item.availableQuantity ?? item.stockQuantity ?? 0),
           }));
 
         setProducts(mapped);

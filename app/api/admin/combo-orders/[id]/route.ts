@@ -46,7 +46,7 @@ function mapComboOrder(order: any) {
     paymentMethod: "COD",
     transactionId: "",
     payments: [{ paymentMode: "COD", transactionId: "", paymentStatus, amount: Number(order.totalAmount || 0), paidAt: null }],
-    items: [{ id: `${order.comboOrderId}-combo`, productCode: combo.comboCode || "", quantity: 1, subtotal: Number(order.totalAmount || 0), product: { name: comboDisplayName, comboName: combo.comboName || "Combo Product", image: comboItems[0]?.image || getMainImage(combo), comboItems } }],
+    items: [{ id: `${order.comboOrderId}-combo`, productCode: combo.comboCode || "", quantity: Number(order.quantity || 1), subtotal: Number(order.totalAmount || 0), product: { name: comboDisplayName, comboName: combo.comboName || "Combo Product", image: comboItems[0]?.image || getMainImage(combo), comboItems } }],
     updateLogs: [],
     availableSerialNumbers: [],
     serialSelectionRequired: false,

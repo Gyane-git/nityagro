@@ -165,6 +165,7 @@ model Orders {
   orderId           BigInt              @id @default(autoincrement())
   userId            BigInt
   productId         BigInt
+  quantity          BigInt              @default(1)
   totalAmount       Float
   orderStatus       String?
   paymentStatus     String?
@@ -187,6 +188,7 @@ model ComboOrders {
   comboOrderId   BigInt       @id @default(autoincrement())
   userId         BigInt
   comboProductId BigInt
+  quantity       BigInt       @default(1)
   totalAmount    Float
   orderStatus    String?
   paymentStatus  String?

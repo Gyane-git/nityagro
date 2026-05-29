@@ -116,8 +116,8 @@ export async function GET(req: Request) {
             productCode: order.product?.productCode || "",
             name: getProductDisplayName(order.product || {}),
             image: order.product?.pImage || "/products/mustard-oil.png",
-            qty: 1,
-            unitPrice: Number(order.totalAmount || 0),
+            qty: Number(order.quantity || 1),
+            unitPrice: Number(order.totalAmount || 0) / Math.max(1, Number(order.quantity || 1)),
             subtotal: Number(order.totalAmount || 0),
           },
         ],
@@ -290,6 +290,7 @@ export async function POST(req: Request) {
         const createdOrders: {
           comboOrderId: bigint;
           comboProductId: bigint;
+          quantity: bigint;
           totalAmount: number;
         }[] = [];
 
@@ -306,6 +307,7 @@ export async function POST(req: Request) {
             data: {
               userId: BigInt(userId),
               comboProductId: BigInt(row.comboProductId),
+              quantity: BigInt(row.qty),
               totalAmount: lineGrandTotal,
               orderStatus: "PLACED",
               paymentStatus: "PAID",
@@ -315,6 +317,7 @@ export async function POST(req: Request) {
           createdOrders.push({
             comboOrderId: order.comboOrderId,
             comboProductId: order.comboProductId,
+            quantity: order.quantity,
             totalAmount: order.totalAmount,
           });
         }
@@ -359,7 +362,7 @@ export async function POST(req: Request) {
             return {
               orderId: `NC-${row.comboOrderId.toString()}`,
               productName: combo?.comboName || "Combo Product",
-              qty: 1,
+              qty: Number(row.quantity || 1),
               amount: Number(row.totalAmount || 0),
             };
           });
@@ -443,7 +446,87 @@ export async function POST(req: Request) {
       );
     }
 
-    const productIds = normalizedItems.map((row) => BigInt(row.productId));
+    const requestedProductIds = normalizedItems.map((row) => BigInt(row.productId));
+    const directProducts = await prisma.products.findMany({
+      where: { productId: { in: requestedProductIds } },
+      select: {
+        productId: true,
+        productCode: true,
+        productName: true,
+        subGroupName: true,
+        sellingPrice: true,
+        productStatus: true,
+        stockQuantity: true,
+        availableQuantity: true,
+      },
+    });
+    const directProductMap = new Map(directProducts.map((p) => [p.productId.toString(), p]));
+    const unresolved = normalizedItems.filter(
+      (item) => !directProductMap.has(String(item.productId)),
+    );
+    const variantRows =
+      unresolved.length > 0
+        ? await prisma.productVariant.findMany({
+            where: {
+              variantId: {
+                in: unresolved.map((item) => BigInt(item.productId)),
+              },
+            },
+            select: {
+              variantId: true,
+              pCode: true,
+            },
+          })
+        : [];
+    const variantCodeByVariantId = new Map(
+      variantRows.map((row) => [row.variantId.toString(), row.pCode]),
+    );
+    const fallbackProductCodes = Array.from(
+      new Set(
+        unresolved
+          .map((item) => variantCodeByVariantId.get(String(item.productId)))
+          .filter((code): code is string => Boolean(code)),
+      ),
+    );
+    const fallbackProducts =
+      fallbackProductCodes.length > 0
+        ? await prisma.products.findMany({
+            where: { productCode: { in: fallbackProductCodes } },
+            select: {
+              productId: true,
+              productCode: true,
+              productName: true,
+              subGroupName: true,
+              sellingPrice: true,
+              productStatus: true,
+              stockQuantity: true,
+              availableQuantity: true,
+            },
+          })
+        : [];
+    const fallbackProductByCode = new Map(
+      fallbackProducts.map((product) => [product.productCode, product]),
+    );
+    const resolvedItems = normalizedItems
+      .map((item) => {
+        const direct = directProductMap.get(String(item.productId));
+        if (direct) return { ...item, productId: Number(direct.productId) };
+
+        const productCode = variantCodeByVariantId.get(String(item.productId));
+        const fallbackProduct = productCode ? fallbackProductByCode.get(productCode) : null;
+        if (!fallbackProduct) return null;
+        return { ...item, productId: Number(fallbackProduct.productId) };
+      })
+      .filter(Boolean) as Array<{ productId: number; qty: number; unitPrice: number }>;
+
+    if (resolvedItems.length !== normalizedItems.length) {
+      return NextResponse.json(
+        { success: false, message: "Some products/variants no longer exist" },
+        { status: 400, headers: corsHeaders },
+      );
+    }
+
+    const productIds = resolvedItems.map((row) => BigInt(row.productId));
     const products = await prisma.products.findMany({
       where: { productId: { in: productIds } },
       select: {
@@ -453,17 +536,26 @@ export async function POST(req: Request) {
         subGroupName: true,
         sellingPrice: true,
         productStatus: true,
+        stockQuantity: true,
+        availableQuantity: true,
       },
     });
     const productMap = new Map(products.map((p) => [p.productId.toString(), p]));
-    if (products.length !== normalizedItems.length) {
-      return NextResponse.json(
-        { success: false, message: "Some products no longer exist" },
-        { status: 400, headers: corsHeaders },
+    const variantStocks = await prisma.productVariant.findMany({
+      where: { pCode: { in: products.map((product) => product.productCode) } },
+      select: { pCode: true, stockQuantity: true },
+    });
+    const variantStockByCode = new Map(
+      variantStocks.map((variant) => [variant.pCode, variant.stockQuantity]),
+    );
+    const getAvailableStock = (product: (typeof products)[number] | undefined) =>
+      Math.max(
+        Number(product?.productCode ? variantStockByCode.get(product.productCode) ?? 0 : 0),
+        Number(product?.availableQuantity ?? 0),
+        Number(product?.stockQuantity ?? 0),
       );
-    }
 
-    const inactive = normalizedItems.filter((item) => {
+    const inactive = resolvedItems.filter((item) => {
       const p = productMap.get(String(item.productId));
       return !p?.productStatus;
     });
@@ -474,18 +566,33 @@ export async function POST(req: Request) {
       );
     }
 
+    const insufficientStock = resolvedItems.find((item) => {
+      const product = productMap.get(String(item.productId));
+      const available = getAvailableStock(product);
+      return available <= 0 || item.qty > available;
+    });
+    if (insufficientStock) {
+      return NextResponse.json(
+        { success: false, message: "Selected quantity is not available in stock" },
+        { status: 400, headers: corsHeaders },
+      );
+    }
+
     const now = new Date();
     const created = await prisma.$transaction(async (tx) => {
-      const createdOrders: { orderId: bigint; productId: bigint; totalAmount: number }[] = [];
-      for (const row of normalizedItems) {
+      const createdOrders: { orderId: bigint; productId: bigint; quantity: bigint; totalAmount: number }[] = [];
+      for (const row of resolvedItems) {
         const product = productMap.get(String(row.productId));
         const unitPrice = row.unitPrice > 0 ? row.unitPrice : Number(product?.sellingPrice || 0);
+        const available = getAvailableStock(product);
+        const remainingStock = Math.max(0, available - row.qty);
         const lineTotal = Number((unitPrice * row.qty).toFixed(2));
 
         const order = await tx.orders.create({
           data: {
             userId: BigInt(userId),
             productId: BigInt(row.productId),
+            quantity: BigInt(row.qty),
             totalAmount: lineTotal,
             orderStatus: "PLACED",
             paymentStatus: "PAID",
@@ -535,9 +642,25 @@ export async function POST(req: Request) {
           },
         });
 
+        await tx.products.update({
+          where: { productId: BigInt(row.productId) },
+          data: {
+            stockQuantity: BigInt(remainingStock),
+            availableQuantity: BigInt(remainingStock),
+          },
+        });
+
+        if (product?.productCode) {
+          await tx.productVariant.updateMany({
+            where: { pCode: product.productCode },
+            data: { stockQuantity: BigInt(remainingStock) },
+          });
+        }
+
         createdOrders.push({
           orderId: order.orderId,
           productId: order.productId,
+          quantity: order.quantity,
           totalAmount: order.totalAmount,
         });
       }
@@ -550,7 +673,7 @@ export async function POST(req: Request) {
       prisma,
       orderType: "ORDER",
       localOrderIds: created.map((order) => order.orderId),
-      items: normalizedItems.map((row) => {
+      items: resolvedItems.map((row) => {
         const product = productMap.get(String(row.productId));
         const unitPrice = row.unitPrice > 0 ? row.unitPrice : Number(product?.sellingPrice || 0);
         return {
@@ -577,7 +700,7 @@ export async function POST(req: Request) {
         const lines = orderRows.map((row) => ({
           orderId: row.orderId.toString(),
           productName: row.product?.subGroupName || row.product?.productName || "Product",
-          qty: 1,
+          qty: Number(row.quantity || 1),
           amount: Number(row.totalAmount || 0),
         }));
 
