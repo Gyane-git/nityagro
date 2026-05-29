@@ -250,7 +250,7 @@ export default function OrderSummary({
           </span>
         </div>
 
-        <div className="flex items-center justify-between">
+        {/* <div className="flex items-center justify-between">
           <span className="text-sm text-gray-500">
             Delivery Charge
           </span>
@@ -260,7 +260,7 @@ export default function OrderSummary({
               ? "Calculating..."
               : `NPR ${deliveryCharge.toLocaleString()}.00`}
           </span>
-        </div>
+        </div> */}
       </div>
 
       {/* Divider */}
