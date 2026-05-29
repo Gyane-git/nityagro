@@ -82,7 +82,7 @@ function CartRowDesktop({ item, checked, onCheck, onQtyChange, onRemove }) {
 
         <div className="w-32 text-right flex-shrink-0">
           <p className="font-bold" style={{ color: "#00462C", fontSize: "15px" }}>
-            NPR {(subtotal * 10).toLocaleString("en-NP", { minimumFractionDigits: 2 })}
+            NPR {(subtotal).toLocaleString("en-NP", { minimumFractionDigits: 2 })}
           </p>
         </div>
 

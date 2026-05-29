@@ -9,7 +9,11 @@ export type EmailOrderItem = {
 export type OrderPlacedEmailInput = {
   customerName: string;
   transactionId: string;
+  referenceLabel?: string;
   items: EmailOrderItem[];
+  subtotalAmount?: number;
+  discountAmount?: number;
+  deliveryCharge?: number;
   totalAmount: number;
   addressText?: string;
 };
@@ -403,6 +407,14 @@ export function buildOrderPlacedEmail(input: OrderPlacedEmailInput): {
   html: string;
   text: string;
 } {
+  const referenceLabel = input.referenceLabel || "Transaction ID";
+  const subtotalAmount =
+    typeof input.subtotalAmount === "number"
+      ? input.subtotalAmount
+      : input.items.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const discountAmount = Number(input.discountAmount || 0);
+  const deliveryCharge = Number(input.deliveryCharge || 0);
+
   // ── Item rows ──────────────────────────────────────────────────────────────
   const itemsHtml = input.items
     .map(
@@ -489,7 +501,7 @@ export function buildOrderPlacedEmail(input: OrderPlacedEmailInput): {
                 ${iconBadge(ICON.txn, "#1B5E35")}
               </td>
               <td valign="middle">
-                ${rowLabel("Transaction ID")}
+                ${rowLabel(referenceLabel)}
                 <div style="font-size:14px;font-weight:bold;color:#1F2937;
                             font-family:Courier,monospace;letter-spacing:0.5px;">
                   ${input.transactionId}
@@ -547,10 +559,36 @@ export function buildOrderPlacedEmail(input: OrderPlacedEmailInput): {
                 ${iconBadge(ICON.rupee, "#1B5E35")}
               </td>
               <td valign="middle">
-                ${rowLabel("Total Amount")}
-                <div style="font-size:22px;font-weight:bold;color:#1B5E35;">
-                  ${currency(input.totalAmount)}
-                </div>
+                ${rowLabel("Payment Summary")}
+                <table cellpadding="0" cellspacing="0" border="0" width="100%"
+                  style="font-size:14px;color:#374151;">
+                  <tr>
+                    <td style="padding:3px 0;">Subtotal</td>
+                    <td style="padding:3px 0;text-align:right;font-weight:600;">
+                      ${currency(subtotalAmount)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:3px 0;">Discount Amount</td>
+                    <td style="padding:3px 0;text-align:right;font-weight:600;color:#B45309;">
+                      -${currency(discountAmount)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:3px 0;">Delivery Charge</td>
+                    <td style="padding:3px 0;text-align:right;font-weight:600;">
+                      ${currency(deliveryCharge)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:8px 0 0;border-top:1px solid #E5E7EB;font-weight:700;color:#1B5E35;">
+                      Total Amount
+                    </td>
+                    <td style="padding:8px 0 0;border-top:1px solid #E5E7EB;text-align:right;font-size:20px;font-weight:bold;color:#1B5E35;">
+                      ${currency(input.totalAmount)}
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
           </table>
@@ -564,7 +602,7 @@ export function buildOrderPlacedEmail(input: OrderPlacedEmailInput): {
   return {
     subject: `Order Confirmed – ${input.transactionId}`,
     html:    baseEmail(body),
-    text:    `Order confirmed. Transaction: ${input.transactionId}. Total: ${currency(input.totalAmount)}`,
+    text:    `Order confirmed. ${referenceLabel}: ${input.transactionId}. Subtotal: ${currency(subtotalAmount)}. Discount: ${currency(discountAmount)}. Delivery: ${currency(deliveryCharge)}. Total: ${currency(input.totalAmount)}`,
   };
 }
 

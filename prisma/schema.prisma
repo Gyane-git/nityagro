@@ -166,6 +166,9 @@ model Orders {
   userId            BigInt
   productId         BigInt
   quantity          BigInt              @default(1)
+  unitPrice         Float               @default(0)
+  productTotal      Float               @default(0)
+  deliveryCharge    Float               @default(0)
   totalAmount       Float
   orderStatus       String?
   paymentStatus     String?
@@ -189,6 +192,9 @@ model ComboOrders {
   userId         BigInt
   comboProductId BigInt
   quantity       BigInt       @default(1)
+  unitPrice       Float        @default(0)
+  productTotal    Float        @default(0)
+  deliveryCharge  Float        @default(0)
   totalAmount    Float
   orderStatus    String?
   paymentStatus  String?

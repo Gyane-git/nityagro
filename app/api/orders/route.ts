@@ -40,6 +40,37 @@ function getProductDisplayName(product: {
   return group || variant || "N/A";
 }
 
+function getOrderAmounts(order: {
+  quantity?: bigint | number | null;
+  unitPrice?: number | null;
+  productTotal?: number | null;
+  deliveryCharge?: number | null;
+  totalAmount?: number | null;
+  product?: { sellingPrice?: number | null } | null;
+}) {
+  const qty = Math.max(1, Number(order.quantity || 1));
+  const unitPrice =
+    Number(order.unitPrice || 0) > 0
+      ? Number(order.unitPrice)
+      : Number(order.product?.sellingPrice || 0) > 0
+        ? Number(order.product?.sellingPrice)
+        : Number(order.totalAmount || 0) / qty;
+  const productTotal =
+    Number(order.productTotal || 0) > 0
+      ? Number(order.productTotal)
+      : Number((unitPrice * qty).toFixed(2));
+  const deliveryCharge =
+    Number(order.deliveryCharge || 0) > 0
+      ? Number(order.deliveryCharge)
+      : Math.max(0, Number(order.totalAmount || 0) - productTotal);
+  const totalAmount =
+    Number(order.totalAmount || 0) > 0
+      ? Number(order.totalAmount)
+      : Number((productTotal + deliveryCharge).toFixed(2));
+
+  return { qty, unitPrice, productTotal, deliveryCharge, totalAmount };
+}
+
 export async function OPTIONS() {
   return new Response(null, { status: 200, headers: corsHeaders });
 }
@@ -62,6 +93,7 @@ export async function GET(req: Request) {
             productName: true,
             subGroupName: true,
             pImage: true,
+            sellingPrice: true,
           },
         },
         paymentDetails: {
@@ -94,12 +126,15 @@ export async function GET(req: Request) {
       const orderStatus = normalizeOrderStatus(order.orderStatus);
       const payment = order.paymentDetails?.[0] || null;
       const shipping = order.shippingDetails?.[0] || null;
+      const amounts = getOrderAmounts(order);
       return {
         id: order.orderId.toString(),
         orderNumber: `NG-${order.orderId.toString()}`,
         orderStatus,
         paymentStatus: normalizePaymentStatus(order.paymentStatus),
-        totalAmount: Number(order.totalAmount || 0),
+        totalAmount: amounts.totalAmount,
+        subtotal: amounts.productTotal,
+        shippingCost: amounts.deliveryCharge,
         createdAt: order.createdAt,
         paymentMethod: payment?.paymentMode || "COD",
         transactionId: payment?.transactionId || "",
@@ -116,9 +151,9 @@ export async function GET(req: Request) {
             productCode: order.product?.productCode || "",
             name: getProductDisplayName(order.product || {}),
             image: order.product?.pImage || "/products/mustard-oil.png",
-            qty: Number(order.quantity || 1),
-            unitPrice: Number(order.totalAmount || 0) / Math.max(1, Number(order.quantity || 1)),
-            subtotal: Number(order.totalAmount || 0),
+            qty: amounts.qty,
+            unitPrice: amounts.unitPrice,
+            subtotal: amounts.productTotal,
           },
         ],
       };
@@ -291,6 +326,8 @@ export async function POST(req: Request) {
           comboOrderId: bigint;
           comboProductId: bigint;
           quantity: bigint;
+          productTotal: number;
+          deliveryCharge: number;
           totalAmount: number;
         }[] = [];
 
@@ -299,8 +336,9 @@ export async function POST(req: Request) {
           const unitPrice =
             row.unitPrice > 0 ? row.unitPrice : Number(combo?.comboPrice || 0);
           const lineTotal = Number((unitPrice * row.qty).toFixed(2));
+          const lineDeliveryCharge = index === 0 ? deliveryDifference : 0;
           const lineGrandTotal = Number(
-            (lineTotal + (index === 0 ? deliveryDifference : 0)).toFixed(2),
+            (lineTotal + lineDeliveryCharge).toFixed(2),
           );
 
           const order = await tx.comboOrders.create({
@@ -308,6 +346,9 @@ export async function POST(req: Request) {
               userId: BigInt(userId),
               comboProductId: BigInt(row.comboProductId),
               quantity: BigInt(row.qty),
+              unitPrice,
+              productTotal: lineTotal,
+              deliveryCharge: lineDeliveryCharge,
               totalAmount: lineGrandTotal,
               orderStatus: "PLACED",
               paymentStatus: "PAID",
@@ -318,6 +359,8 @@ export async function POST(req: Request) {
             comboOrderId: order.comboOrderId,
             comboProductId: order.comboProductId,
             quantity: order.quantity,
+            productTotal: order.productTotal,
+            deliveryCharge: order.deliveryCharge,
             totalAmount: order.totalAmount,
           });
         }
@@ -363,9 +406,14 @@ export async function POST(req: Request) {
               orderId: `NC-${row.comboOrderId.toString()}`,
               productName: combo?.comboName || "Combo Product",
               qty: Number(row.quantity || 1),
-              amount: Number(row.totalAmount || 0),
+              amount: Number(row.productTotal || row.totalAmount || 0),
             };
           });
+          const subtotalAmount = lines.reduce((sum, line) => sum + line.amount, 0);
+          const totalDeliveryCharge = created.reduce(
+            (sum, row) => sum + Number(row.deliveryCharge || 0),
+            0,
+          );
           const addressText = address
             ? [
                 address.fullName,
@@ -386,6 +434,9 @@ export async function POST(req: Request) {
               qty: line.qty,
               amount: line.amount,
             })),
+            subtotalAmount,
+            discountAmount: 0,
+            deliveryCharge: totalDeliveryCharge,
             totalAmount: grandTotal,
             addressText,
           });
@@ -393,6 +444,9 @@ export async function POST(req: Request) {
             customerName: user.name || "Customer",
             transactionId: connectipsReferenceId,
             lines,
+            subtotalAmount,
+            discountAmount: 0,
+            deliveryCharge: totalDeliveryCharge,
             totalAmount: grandTotal,
             addressText,
           });
@@ -578,22 +632,44 @@ export async function POST(req: Request) {
       );
     }
 
+    const calculatedItemTotal = resolvedItems.reduce((sum, row) => {
+      const product = productMap.get(String(row.productId));
+      const unitPrice = row.unitPrice > 0 ? row.unitPrice : Number(product?.sellingPrice || 0);
+      return sum + unitPrice * row.qty;
+    }, 0);
+    const deliveryDifference = Math.max(
+      0,
+      Number((paidTotalAmount - calculatedItemTotal).toFixed(2)),
+    );
+
     const now = new Date();
     const created = await prisma.$transaction(async (tx) => {
-      const createdOrders: { orderId: bigint; productId: bigint; quantity: bigint; totalAmount: number }[] = [];
-      for (const row of resolvedItems) {
+      const createdOrders: {
+        orderId: bigint;
+        productId: bigint;
+        quantity: bigint;
+        productTotal: number;
+        deliveryCharge: number;
+        totalAmount: number;
+      }[] = [];
+      for (const [index, row] of resolvedItems.entries()) {
         const product = productMap.get(String(row.productId));
         const unitPrice = row.unitPrice > 0 ? row.unitPrice : Number(product?.sellingPrice || 0);
         const available = getAvailableStock(product);
         const remainingStock = Math.max(0, available - row.qty);
         const lineTotal = Number((unitPrice * row.qty).toFixed(2));
+        const lineDeliveryCharge = index === 0 ? deliveryDifference : 0;
+        const lineGrandTotal = Number((lineTotal + lineDeliveryCharge).toFixed(2));
 
         const order = await tx.orders.create({
           data: {
             userId: BigInt(userId),
             productId: BigInt(row.productId),
             quantity: BigInt(row.qty),
-            totalAmount: lineTotal,
+            unitPrice,
+            productTotal: lineTotal,
+            deliveryCharge: lineDeliveryCharge,
+            totalAmount: lineGrandTotal,
             orderStatus: "PLACED",
             paymentStatus: "PAID",
           },
@@ -604,7 +680,7 @@ export async function POST(req: Request) {
             orderId: order.orderId,
             userId: BigInt(userId),
             paymentMode: "CONNECTIPS",
-            paymentAmount: lineTotal,
+            paymentAmount: lineGrandTotal,
             paymentDate: now,
             transactionId: connectipsReferenceId,
             paymentStatus: "PAID",
@@ -661,6 +737,8 @@ export async function POST(req: Request) {
           orderId: order.orderId,
           productId: order.productId,
           quantity: order.quantity,
+          productTotal: order.productTotal,
+          deliveryCharge: order.deliveryCharge,
           totalAmount: order.totalAmount,
         });
       }
@@ -699,10 +777,18 @@ export async function POST(req: Request) {
 
         const lines = orderRows.map((row) => ({
           orderId: row.orderId.toString(),
-          productName: row.product?.subGroupName || row.product?.productName || "Product",
+          productName: getProductDisplayName(row.product),
           qty: Number(row.quantity || 1),
-          amount: Number(row.totalAmount || 0),
+          amount: Number(row.productTotal || row.totalAmount || 0),
         }));
+        const subtotalAmount = orderRows.reduce(
+          (sum, row) => sum + Number(row.productTotal || 0),
+          0,
+        );
+        const totalDeliveryCharge = orderRows.reduce(
+          (sum, row) => sum + Number(row.deliveryCharge || 0),
+          0,
+        );
 
         const addressText = address
           ? [
@@ -725,6 +811,9 @@ export async function POST(req: Request) {
             qty: line.qty,
             amount: line.amount,
           })),
+          subtotalAmount,
+          discountAmount: 0,
+          deliveryCharge: totalDeliveryCharge,
           totalAmount: grandTotal,
           addressText,
         });
@@ -733,6 +822,9 @@ export async function POST(req: Request) {
           customerName: user.name || "Customer",
           transactionId: connectipsReferenceId,
           lines,
+          subtotalAmount,
+          discountAmount: 0,
+          deliveryCharge: totalDeliveryCharge,
           totalAmount: grandTotal,
           addressText,
         });

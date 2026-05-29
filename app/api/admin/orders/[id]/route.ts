@@ -50,6 +50,37 @@ function getProductDisplayName(product: {
   return group || variant || "N/A";
 }
 
+function getOrderAmounts(order: {
+  quantity?: bigint | number | null;
+  unitPrice?: number | null;
+  productTotal?: number | null;
+  deliveryCharge?: number | null;
+  totalAmount?: number | null;
+  product?: { sellingPrice?: number | null } | null;
+}) {
+  const qty = Math.max(1, Number(order.quantity || 1));
+  const unitPrice =
+    Number(order.unitPrice || 0) > 0
+      ? Number(order.unitPrice)
+      : Number(order.product?.sellingPrice || 0) > 0
+        ? Number(order.product?.sellingPrice)
+        : Number(order.totalAmount || 0) / qty;
+  const productTotal =
+    Number(order.productTotal || 0) > 0
+      ? Number(order.productTotal)
+      : Number((unitPrice * qty).toFixed(2));
+  const deliveryCharge =
+    Number(order.deliveryCharge || 0) > 0
+      ? Number(order.deliveryCharge)
+      : Math.max(0, Number(order.totalAmount || 0) - productTotal);
+  const totalAmount =
+    Number(order.totalAmount || 0) > 0
+      ? Number(order.totalAmount)
+      : Number((productTotal + deliveryCharge).toFixed(2));
+
+  return { qty, unitPrice, productTotal, deliveryCharge, totalAmount };
+}
+
 type AdminOrderRow = {
   orderId: bigint;
   quantity: bigint;
@@ -58,7 +89,7 @@ type AdminOrderRow = {
   totalAmount: number;
   createdAt: Date;
   users?: { name: string | null; email: string | null; phone: string | null } | null;
-  product?: { productCode: string; productName: string; subGroupName: string | null } | null;
+  product?: { productCode: string; productName: string; subGroupName: string | null; sellingPrice?: number | null } | null;
   paymentDetails?: Array<{
     paymentMode: string | null;
     transactionId: string | null;
@@ -81,14 +112,15 @@ function mapOrder(order: AdminOrderRow) {
   const paymentStatus = normalizePaymentStatus(order.paymentStatus);
   const payment = order.paymentDetails?.[0] || null;
   const shipping = order.shippingDetails?.[0] || null;
+  const amounts = getOrderAmounts(order);
   return {
     id: order.orderId.toString(),
     orderNumber: `NG-${order.orderId.toString()}`,
     orderStatus,
     paymentStatus,
-    totalAmount: Number(order.totalAmount || 0),
-    subtotal: Number(order.totalAmount || 0),
-    shippingCost: 0,
+    totalAmount: amounts.totalAmount,
+    subtotal: amounts.productTotal,
+    shippingCost: amounts.deliveryCharge,
     tax: 0,
     createdAt: order.createdAt,
     user: {
@@ -113,8 +145,9 @@ function mapOrder(order: AdminOrderRow) {
       {
         id: `${order.orderId}-1`,
         productCode: order.product?.productCode || "",
-        quantity: Number(order.quantity || 1),
-        subtotal: Number(order.totalAmount || 0),
+        quantity: amounts.qty,
+        unitPrice: amounts.unitPrice,
+        subtotal: amounts.productTotal,
         serialNumber: null,
         product: {
           name: getProductDisplayName(order.product || {}),
@@ -177,6 +210,7 @@ export async function GET(
             productCode: true,
             productName: true,
             subGroupName: true,
+            sellingPrice: true,
           },
         },
         paymentDetails: { orderBy: { paymentDetailsId: "desc" }, take: 1 },

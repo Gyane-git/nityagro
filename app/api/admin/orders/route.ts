@@ -36,6 +36,37 @@ function getProductDisplayName(product: {
   return group || variant || "N/A";
 }
 
+function getOrderAmounts(order: {
+  quantity?: bigint | number | null;
+  unitPrice?: number | null;
+  productTotal?: number | null;
+  deliveryCharge?: number | null;
+  totalAmount?: number | null;
+  product?: { sellingPrice?: number | null } | null;
+}) {
+  const qty = Math.max(1, Number(order.quantity || 1));
+  const unitPrice =
+    Number(order.unitPrice || 0) > 0
+      ? Number(order.unitPrice)
+      : Number(order.product?.sellingPrice || 0) > 0
+        ? Number(order.product?.sellingPrice)
+        : Number(order.totalAmount || 0) / qty;
+  const productTotal =
+    Number(order.productTotal || 0) > 0
+      ? Number(order.productTotal)
+      : Number((unitPrice * qty).toFixed(2));
+  const deliveryCharge =
+    Number(order.deliveryCharge || 0) > 0
+      ? Number(order.deliveryCharge)
+      : Math.max(0, Number(order.totalAmount || 0) - productTotal);
+  const totalAmount =
+    Number(order.totalAmount || 0) > 0
+      ? Number(order.totalAmount)
+      : Number((productTotal + deliveryCharge).toFixed(2));
+
+  return { qty, unitPrice, productTotal, deliveryCharge, totalAmount };
+}
+
 export async function OPTIONS() {
   return new Response(null, { status: 200, headers: corsHeaders });
 }
@@ -65,6 +96,7 @@ export async function GET(req: Request) {
             productCode: true,
             productName: true,
             subGroupName: true,
+            sellingPrice: true,
           },
         },
         paymentDetails: {
@@ -87,14 +119,15 @@ export async function GET(req: Request) {
       const paymentStatus = normalizePaymentStatus(order.paymentStatus);
       const productName = getProductDisplayName(order.product || {});
       const payment = order.paymentDetails?.[0] || null;
+      const amounts = getOrderAmounts(order);
       return {
         id: order.orderId.toString(),
         orderNumber: `NG-${order.orderId.toString()}`,
         orderStatus,
         paymentStatus,
-        totalAmount: Number(order.totalAmount || 0),
-        subtotal: Number(order.totalAmount || 0),
-        shippingCost: 0,
+        totalAmount: amounts.totalAmount,
+        subtotal: amounts.productTotal,
+        shippingCost: amounts.deliveryCharge,
         tax: 0,
         createdAt: order.createdAt,
         user: {
@@ -119,8 +152,9 @@ export async function GET(req: Request) {
           {
             id: `${order.orderId}-1`,
             productCode: order.product?.productCode || "",
-            quantity: Number(order.quantity || 1),
-            subtotal: Number(order.totalAmount || 0),
+            quantity: amounts.qty,
+            unitPrice: amounts.unitPrice,
+            subtotal: amounts.productTotal,
             serialNumber: null,
             product: {
               name: productName,
@@ -131,9 +165,7 @@ export async function GET(req: Request) {
       };
     });
 
-    const filtered = mapped.filter((row) => {
-      if (status !== "all" && row.orderStatus !== status) return false;
-
+    const dateAndSearchFiltered = mapped.filter((row) => {
       if (search) {
         const hay = [
           row.orderNumber,
@@ -160,7 +192,7 @@ export async function GET(req: Request) {
       return true;
     });
 
-    const statusCounts = filtered.reduce(
+    const statusCounts = dateAndSearchFiltered.reduce(
       (acc, row) => {
         acc.all += 1;
         if (acc[row.orderStatus] !== undefined) acc[row.orderStatus] += 1;
@@ -175,6 +207,11 @@ export async function GET(req: Request) {
         returns: 0,
       } as Record<string, number>,
     );
+
+    const filtered =
+      status === "all"
+        ? dateAndSearchFiltered
+        : dateAndSearchFiltered.filter((row) => row.orderStatus === status);
 
     const total = filtered.length;
     const totalPages = Math.max(1, Math.ceil(total / limit));

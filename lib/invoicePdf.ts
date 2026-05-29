@@ -20,7 +20,11 @@ export type InvoiceLine = {
 export type InvoicePayload = {
   customerName: string;
   transactionId: string;
+  referenceLabel?: string;
   lines: InvoiceLine[];
+  subtotalAmount?: number;
+  discountAmount?: number;
+  deliveryCharge?: number;
   totalAmount: number;
   addressText?: string;
 };
@@ -201,6 +205,7 @@ export async function generateInvoicePdf(payload: InvoicePayload): Promise<Buffe
 
   const now = new Date();
   const dateStr = formatDate(now);
+  const referenceLabel = payload.referenceLabel || "TRANSACTION ID";
 
   // ── Sub-header row: INVOICE label + date ──────────────────────────────────
   drawText(page, "INVOICE", CONTENT_X, y, { font: bold, size: 11, color: C.amber });
@@ -217,7 +222,7 @@ export async function generateInvoicePdf(payload: InvoicePayload): Promise<Buffe
 
   // Left — Bill To
   drawText(page, "BILL TO", CONTENT_X, y, { font: bold, size: 8, color: C.sage });
-  drawTextRight(page, "TRANSACTION ID", CONTENT_RIGHT, y, { font: bold, size: 8, color: C.sage });
+  drawTextRight(page, referenceLabel.toUpperCase(), CONTENT_RIGHT, y, { font: bold, size: 8, color: C.sage });
   y -= 5 * mm;
 
   drawText(page, payload.customerName, CONTENT_X, y, { font: bold, size: 12, color: C.forest });
@@ -309,14 +314,44 @@ export async function generateInvoicePdf(payload: InvoicePayload): Promise<Buffe
   const TOTAL_BOX_W = 95 * mm;
   const TOTAL_BOX_X = CONTENT_RIGHT - TOTAL_BOX_W;
 
-  const subtotal = payload.lines.reduce((s, l) => s + l.amount, 0);
+  const linesSubtotal = payload.lines.reduce((s, l) => s + l.amount, 0);
+  const subtotal =
+    typeof payload.subtotalAmount === "number"
+      ? payload.subtotalAmount
+      : linesSubtotal;
+  const discountAmount = Number(payload.discountAmount || 0);
+  const inferredDelivery = Math.max(
+    0,
+    Number(payload.totalAmount || 0) - subtotal + discountAmount,
+  );
+  const deliveryCharge =
+    typeof payload.deliveryCharge === "number"
+      ? payload.deliveryCharge
+      : inferredDelivery;
 
-  // Optional subtotal row (when subtotal ≠ totalAmount)
-  if (subtotal !== payload.totalAmount) {
-    drawTextRight(page, "Subtotal",            TOTAL_BOX_X + TOTAL_BOX_W * 0.58, y, { font: regular, size: 9, color: C.muted });
-    drawTextRight(page, formatMoney(subtotal), TOTAL_BOX_X + TOTAL_BOX_W,        y, { font: regular, size: 9, color: C.muted });
-    y -= 6 * mm;
-  }
+  drawTextRight(page, "Subtotal", TOTAL_BOX_X + TOTAL_BOX_W * 0.58, y, {
+    font: regular, size: 9, color: C.muted,
+  });
+  drawTextRight(page, formatMoney(subtotal), TOTAL_BOX_X + TOTAL_BOX_W, y, {
+    font: regular, size: 9, color: C.muted,
+  });
+  y -= 6 * mm;
+
+  drawTextRight(page, "Discount Amount", TOTAL_BOX_X + TOTAL_BOX_W * 0.58, y, {
+    font: regular, size: 9, color: C.muted,
+  });
+  drawTextRight(page, `-${formatMoney(discountAmount)}`, TOTAL_BOX_X + TOTAL_BOX_W, y, {
+    font: regular, size: 9, color: C.muted,
+  });
+  y -= 6 * mm;
+
+  drawTextRight(page, "Delivery Charge", TOTAL_BOX_X + TOTAL_BOX_W * 0.58, y, {
+    font: regular, size: 9, color: C.muted,
+  });
+  drawTextRight(page, formatMoney(deliveryCharge), TOTAL_BOX_X + TOTAL_BOX_W, y, {
+    font: regular, size: 9, color: C.muted,
+  });
+  y -= 6 * mm;
 
   // Total row background
   const TOTAL_ROW_H = 10 * mm;
