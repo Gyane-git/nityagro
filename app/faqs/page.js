@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 const FAQ_DATA = [
   {
@@ -136,6 +136,14 @@ const FAQ_DATA = [
   },
 ];
 
+const SECTION_KEYS = [
+  "products-quality",
+  "orders-payment",
+  "shipping-delivery",
+  "returns-refunds",
+  "health-usage",
+];
+
 const SearchIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="11" cy="11" r="8"/>
@@ -159,13 +167,46 @@ export default function FAQPage() {
   const [activeCategory, setActiveCategory] = useState(0);
   const [openQuestion, setOpenQuestion] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
+  const [faqData, setFaqData] = useState(FAQ_DATA);
+
+  useEffect(() => {
+    const loadFaqs = async () => {
+      try {
+        const response = await fetch("/api/faqs?activeOnly=true", {
+          cache: "no-store",
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload?.success) return;
+
+        const apiFaqs = Array.isArray(payload.data) ? payload.data : [];
+        const grouped = FAQ_DATA.map((section, index) => {
+          const questions = apiFaqs
+            .filter((item) => item.faqSection === SECTION_KEYS[index])
+            .map((item) => ({
+              q: item.question,
+              a: item.answer || "",
+            }));
+          return {
+            ...section,
+            questions,
+          };
+        });
+
+        setFaqData(grouped);
+      } catch {
+        // Static FAQs remain as graceful fallback.
+      }
+    };
+
+    loadFaqs();
+  }, []);
 
   // Search across all categories
   const searchResults = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return null;
     const results = [];
-    FAQ_DATA.forEach((cat) => {
+    faqData.forEach((cat) => {
       cat.questions.forEach((item) => {
         if (
           item.q.toLowerCase().includes(q) ||
@@ -176,10 +217,10 @@ export default function FAQPage() {
       });
     });
     return results;
-  }, [searchQuery]);
+  }, [faqData, searchQuery]);
 
   const isSearching = searchQuery.trim().length > 0;
-  const currentCategory = FAQ_DATA[activeCategory];
+  const currentCategory = faqData[activeCategory] || faqData[0];
 
   const handleCategoryClick = (idx) => {
     setActiveCategory(idx);
@@ -363,7 +404,7 @@ export default function FAQPage() {
         {!isSearching && (
           <aside style={{ width: "280px", flexShrink: 0 }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              {FAQ_DATA.map((cat, idx) => {
+              {faqData.map((cat, idx) => {
                 const isActive = idx === activeCategory;
                 return (
                   <button
@@ -473,17 +514,34 @@ export default function FAQPage() {
                 {currentCategory.category}
               </h2>
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                {currentCategory.questions.map((item, idx) => (
-                  <AccordionItem
-                    key={idx}
-                    question={item.q}
-                    answer={item.a}
-                    isOpen={openQuestion === idx}
-                    onToggle={() =>
-                      setOpenQuestion(openQuestion === idx ? null : idx)
-                    }
-                  />
-                ))}
+                {currentCategory.questions.length === 0 ? (
+                  <div
+                    style={{
+                      padding: "48px 32px",
+                      textAlign: "center",
+                      background: "#fff",
+                      borderRadius: "12px",
+                      border: "1px solid #e5e7eb",
+                      fontFamily: "sans-serif",
+                      color: "#9ca3af",
+                      fontSize: "14px",
+                    }}
+                  >
+                    No FAQs added for this section yet.
+                  </div>
+                ) : (
+                  currentCategory.questions.map((item, idx) => (
+                    <AccordionItem
+                      key={idx}
+                      question={item.q}
+                      answer={item.a}
+                      isOpen={openQuestion === idx}
+                      onToggle={() =>
+                        setOpenQuestion(openQuestion === idx ? null : idx)
+                      }
+                    />
+                  ))
+                )}
               </div>
             </>
           )}

@@ -101,6 +101,7 @@ export default function SideHeaderBar() {
     },
 
     { icon: FileText, label: "Grievances", path: "/admin/grievances" },
+    { icon: FileText, label: "FAQs", path: "/admin/faqs" },
     
     { icon: XCircle, label: "Return List", path: "/admin/returns" },
     { icon: MessageSquare, label: "Testimonials", path: "/admin/testimonials" },

@@ -291,12 +291,15 @@ model Banner {
 }
 
 model Faqs {
-  faqsId    BigInt   @id @default(autoincrement())
-  question  String
-  answer    String?
-  faqStatus Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  faqsId     BigInt   @id @default(autoincrement())
+  question   String   @db.Text
+  answer     String?  @db.Text
+  faqSection String   @default("products-quality")
+  showOnHome Boolean  @default(false)
+  sortOrder  BigInt   @default(0)
+  faqStatus  Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@map("faqs")
 }

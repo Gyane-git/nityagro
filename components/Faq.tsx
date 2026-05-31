@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface FAQItem {
@@ -97,8 +97,34 @@ function FAQRow({
 export default function FAQ() {
   const [openId, setOpenId] = useState<number | null>(null); // first open by default
   const [showAll, setShowAll] = useState(false);
+  const [apiFaqs, setApiFaqs] = useState<FAQItem[]>(faqs);
 
-  const visibleFaqs = showAll ? faqs : faqs.slice(0, INITIAL_VISIBLE);
+  useEffect(() => {
+    const loadFaqs = async () => {
+      try {
+        const response = await fetch("/api/faqs?homeOnly=true&limit=5", {
+          cache: "no-store",
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload?.success) return;
+        const rows = Array.isArray(payload.data) ? payload.data : [];
+        if (!rows.length) return;
+        setApiFaqs(
+          rows.slice(0, 5).map((item: any) => ({
+            id: Number(item.id || item.faqsId),
+            question: item.question,
+            answer: item.answer || "",
+          })),
+        );
+      } catch {
+        // Static FAQs remain as fallback.
+      }
+    };
+
+    loadFaqs();
+  }, []);
+
+  const visibleFaqs = showAll ? apiFaqs : apiFaqs.slice(0, INITIAL_VISIBLE);
 
   const toggle = (id: number) => setOpenId((prev) => (prev === id ? null : id));
 
@@ -125,7 +151,7 @@ export default function FAQ() {
       </div>
 
       {/* See More Button */}
-      {faqs.length > INITIAL_VISIBLE && (
+      {apiFaqs.length > INITIAL_VISIBLE && (
         <div className="flex justify-center mt-10">
           <button
             onClick={() => setShowAll((v) => !v)}

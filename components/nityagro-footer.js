@@ -123,7 +123,7 @@ const CUSTOMER_SUPPORT = [
 
 const COMPANY = [
   { label: "About Nityagro", href: "/about" },
-  { label: "Our Mission", href: "/mission" },
+  
   { label: "Contact Us", href: "/contact-us" },
 ];
 
