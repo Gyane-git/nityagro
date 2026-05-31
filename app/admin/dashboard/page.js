@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { DollarSign, Package, Users, ShoppingCart, MessageSquareWarning, RotateCcw, ChevronRight } from "lucide-react";
+import { DollarSign, Package, Users, ShoppingCart, MessageSquareWarning, ChevronRight } from "lucide-react";
 
 function getAdminToken() {
   if (typeof window === "undefined") return null;
@@ -78,7 +78,6 @@ export default function DashboardPage() {
   const [orders, setOrders] = useState([]);
   const [ordersMeta, setOrdersMeta] = useState({ total: 0 });
   const [customersMeta, setCustomersMeta] = useState({ total: 0 });
-  const [returns, setReturns] = useState([]);
   const [inquiries, setInquiries] = useState([]);
   const [products, setProducts] = useState([]);
 
@@ -95,14 +94,11 @@ export default function DashboardPage() {
       setLoading(true);
       setError("");
 
-      const [ordersRes, customersRes, returnsRes, inquiriesRes, productsRes] = await Promise.all([
+      const [ordersRes, customersRes, inquiriesRes, productsRes] = await Promise.all([
         fetch("/api/admin/orders?limit=100", {
           headers: { Authorization: `Bearer ${token}` },
         }),
         fetch("/api/admin/customers?limit=100", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch("/api/admin/returns", {
           headers: { Authorization: `Bearer ${token}` },
         }),
         fetch("/api/inquiries", {
@@ -111,28 +107,25 @@ export default function DashboardPage() {
         fetch("/api/products"),
       ]);
 
-      const [ordersPayload, customersPayload, returnsPayload, inquiriesPayload, productsPayload] = await Promise.all([
+      const [ordersPayload, customersPayload, inquiriesPayload, productsPayload] = await Promise.all([
         ordersRes.json(),
         customersRes.json(),
-        returnsRes.json(),
         inquiriesRes.json(),
         productsRes.json(),
       ]);
 
-      if ([ordersRes, customersRes, returnsRes, inquiriesRes].some((r) => r.status === 401 || r.status === 403)) {
+      if ([ordersRes, customersRes, inquiriesRes].some((r) => r.status === 401 || r.status === 403)) {
         router.replace("/login-admin");
         return;
       }
 
       if (!ordersRes.ok) throw new Error(ordersPayload?.message || "Failed to load orders");
       if (!customersRes.ok) throw new Error(customersPayload?.message || "Failed to load customers");
-      if (!returnsRes.ok) throw new Error(returnsPayload?.message || "Failed to load returns");
       if (!inquiriesRes.ok) throw new Error(inquiriesPayload?.message || "Failed to load inquiries");
 
       setOrders(ordersPayload?.data || []);
       setOrdersMeta(ordersPayload?.meta || { total: 0 });
       setCustomersMeta(customersPayload?.meta || { total: 0 });
-      setReturns(returnsPayload?.data || []);
       setInquiries(inquiriesPayload?.data || []);
       setProducts(productsPayload?.products || []);
     } catch (e) {
@@ -162,12 +155,6 @@ export default function DashboardPage() {
       if (orderStatus[key] !== undefined) orderStatus[key] += 1;
     });
 
-    const returnStatus = { new: 0, shipped: 0, cancelled: 0 };
-    returns.forEach((r) => {
-      const key = String(r?.status || "new").toLowerCase();
-      if (returnStatus[key] !== undefined) returnStatus[key] += 1;
-    });
-
     const inquiryStatus = { new: 0, in_progress: 0, resolved: 0 };
     inquiries.forEach((i) => {
       const key = String(i?.status || "new").toLowerCase();
@@ -177,15 +164,13 @@ export default function DashboardPage() {
     return {
       totalRevenue,
       orderStatus,
-      returnStatus,
       inquiryStatus,
       totalOrders: Number(ordersMeta?.total || orders.length),
       totalCustomers: Number(customersMeta?.total || 0),
       totalProducts: Number(products.length || 0),
-      totalReturns: Number(returns.length || 0),
       totalInquiries: Number(inquiries.length || 0),
     };
-  }, [orders, ordersMeta, customersMeta, returns, inquiries, products]);
+  }, [orders, ordersMeta, customersMeta, inquiries, products]);
 
   const recentOrders = useMemo(() => {
     return [...orders].slice(0, 7);
@@ -196,7 +181,7 @@ export default function DashboardPage() {
       <div className="rounded-3xl border border-orange-100 bg-linear-to-r from-orange-500 via-amber-500 to-yellow-500 p-6 text-white shadow-lg">
         <p className="text-xs uppercase tracking-[0.2em] text-white/90">Admin Command Center</p>
         <h1 className="mt-2 text-3xl font-black">Dashboard Overview</h1>
-        <p className="mt-2 text-sm text-white/90">Real-time snapshot of orders, customers, inquiries, returns and revenue.</p>
+        <p className="mt-2 text-sm text-white/90">Real-time snapshot of orders, customers, inquiries and revenue.</p>
       </div>
 
       {error && <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>}
@@ -214,7 +199,6 @@ export default function DashboardPage() {
             <StatCard icon={ShoppingCart} title="Orders" value={metrics.totalOrders} subtitle="Total order count" tone="orange" />
             <StatCard icon={Users} title="Customers" value={metrics.totalCustomers} subtitle="Registered customers" tone="blue" />
             <StatCard icon={Package} title="Products" value={metrics.totalProducts} subtitle="Available in product table" tone="purple" />
-            <StatCard icon={RotateCcw} title="Return Requests" value={metrics.totalReturns} subtitle="Product-level return requests" tone="red" />
             <StatCard icon={MessageSquareWarning} title="Inquiries" value={metrics.totalInquiries} subtitle="Contact form grievances" tone="slate" />
           </div>
 
@@ -272,10 +256,6 @@ export default function DashboardPage() {
               <div className="rounded-2xl border bg-white p-5 shadow-sm">
                 <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wide">Support Pipeline</h3>
                 <div className="space-y-3">
-                  <StatusBar label="returns new" value={metrics.returnStatus.new} total={metrics.totalReturns || 1} color="bg-orange-500" />
-                  <StatusBar label="returns shipped" value={metrics.returnStatus.shipped} total={metrics.totalReturns || 1} color="bg-green-500" />
-                  <StatusBar label="returns cancelled" value={metrics.returnStatus.cancelled} total={metrics.totalReturns || 1} color="bg-red-500" />
-                  <div className="my-2 border-t" />
                   <StatusBar label="inquiries new" value={metrics.inquiryStatus.new} total={metrics.totalInquiries || 1} color="bg-slate-500" />
                   <StatusBar label="in_progress" value={metrics.inquiryStatus.in_progress} total={metrics.totalInquiries || 1} color="bg-blue-500" />
                   <StatusBar label="resolved" value={metrics.inquiryStatus.resolved} total={metrics.totalInquiries || 1} color="bg-emerald-500" />

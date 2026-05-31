@@ -73,7 +73,13 @@ function ReviewCard({ review }: { review: Review }) {
     <div className="flex flex-col sm:flex-row bg-white rounded-lg border shadow-sm overflow-hidden w-full min-w-0">
       {/* Image */}
       <div className="relative w-full h-56 sm:w-44 sm:h-auto overflow-hidden shrink-0">
-        <Image src={review.image} alt={review.name} fill className="object-cover" />
+        <Image
+          src={review.image}
+          alt={review.name}
+          fill
+          className="object-cover"
+          unoptimized={review.image.startsWith("/uploads/")}
+        />
       </div>
 
       {/* Content */}
@@ -99,11 +105,43 @@ function ReviewCard({ review }: { review: Review }) {
 export default function CustomerReviews() {
   const CARDS_PER_PAGE = 2;
   const [page, setPage] = useState(0);
+  const [items, setItems] = useState<Review[]>(reviews);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const totalPages = Math.ceil(reviews.length / CARDS_PER_PAGE);
+  useEffect(() => {
+    const loadReviews = async () => {
+      try {
+        const response = await fetch("/api/testimonials", {
+          cache: "no-store",
+        });
+        const payload = await response.json();
+        const rows = Array.isArray(payload) ? payload : payload?.data || [];
+        const activeRows = rows.filter((item: any) => item.isActive !== false);
+        if (!activeRows.length) return;
 
-  const visible = reviews.slice(page * CARDS_PER_PAGE, page * CARDS_PER_PAGE + CARDS_PER_PAGE);
+        setItems(
+          activeRows.map((item: any) => ({
+            id: Number(item.id || item.testimonialsId || 0),
+            title: item.title || "Customer Review",
+            rating: Number(item.rating || item.starRating || 5),
+            body: item.description || item.message || "",
+            name: item.name || item.userName || "Customer",
+            timeAgo: item.destination || item.designation || "Verified customer",
+            image: item.image || item.profile_image || "/c1.jpg",
+          })),
+        );
+        setPage(0);
+      } catch {
+        // Static reviews remain as graceful fallback.
+      }
+    };
+
+    loadReviews();
+  }, []);
+
+  const totalPages = Math.max(1, Math.ceil(items.length / CARDS_PER_PAGE));
+
+  const visible = items.slice(page * CARDS_PER_PAGE, page * CARDS_PER_PAGE + CARDS_PER_PAGE);
 
   const resetAutoSlide = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);

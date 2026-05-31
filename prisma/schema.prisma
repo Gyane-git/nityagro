@@ -331,7 +331,7 @@ model Testimonials {
   name              String
   userId            BigInt
   title             String?
-  message           String?
+  message           String?  @db.Text
   image             String?
   designation       String?
   starRating        BigInt?

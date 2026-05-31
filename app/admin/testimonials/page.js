@@ -40,10 +40,11 @@ export default function TestimonialsAdmin() {
   const [testimonialImageFile, setTestimonialImageFile] = useState(null);
 
   const [formData, setFormData] = useState({
+    title: "",
     name: "",
     destination: "",
-    address: "",
     profile_image: "",
+    rating: 5,
     message: "",
     isActive: true,
   });
@@ -64,13 +65,15 @@ export default function TestimonialsAdmin() {
       const res = await fetch(API_URL);
       const data = await res.json();
 
-      const parsed = data.map((item) => ({
+      const list = Array.isArray(data) ? data : data?.data || [];
+      const parsed = list.map((item) => ({
         id: item.id,
+        title: item.title || "",
         name: item.name,
         destination: item.destination,
-        address: item.address,
-        profile_image: item.profile_image,
-        message: item.message,
+        profile_image: item.profile_image || item.image,
+        rating: Number(item.rating || item.starRating || 5),
+        message: item.description || item.message,
         isActive: !!item.isActive,
       }));
 
@@ -106,19 +109,20 @@ export default function TestimonialsAdmin() {
     }
 
     if (!formData.name || !formData.message) {
-      toast.error("Name and message are required");
+      toast.error("User name and description are required");
       return;
     }
 
     const payload = new FormData();
+    payload.append("title", formData.title || "");
     payload.append("name", formData.name || "");
     payload.append("destination", formData.destination || "");
-    payload.append("address", formData.address || "");
-    payload.append("message", formData.message || "");
+    payload.append("description", formData.message || "");
+    payload.append("rating", String(formData.rating || 5));
     payload.append("isActive", formData.isActive ? "1" : "0");
     payload.append("existingImage", formData.profile_image || "");
     if (testimonialImageFile) {
-      payload.append("profileImage", testimonialImageFile);
+      payload.append("image", testimonialImageFile);
     }
 
     try {
@@ -158,10 +162,11 @@ export default function TestimonialsAdmin() {
   const handleEdit = (item) => {
     setEditingItem(item);
     setFormData({
+      title: item.title || "",
       name: item.name,
       destination: item.destination,
-      address: item.address,
       profile_image: item.profile_image,
+      rating: Number(item.rating || 5),
       message: item.message,
       isActive: item.isActive,
     });
@@ -297,10 +302,11 @@ export default function TestimonialsAdmin() {
 
   const resetForm = () => {
     setFormData({
+      title: "",
       name: "",
       destination: "",
-      address: "",
       profile_image: "",
+      rating: 5,
       message: "",
       isActive: true,
     });
@@ -388,10 +394,11 @@ export default function TestimonialsAdmin() {
                       </div>
 
                       <p className="text-sm text-slate-600">
-                        {item.destination} · {item.address}
+                        {item.destination || "Customer"} · {item.rating || 5} Star
                       </p>
 
                       <p className="mt-2 text-slate-700 line-clamp-2">
+                        {item.title ? <span className="font-semibold">{item.title}: </span> : null}
                         “{item.message}”
                       </p>
                     </div>
@@ -426,10 +433,17 @@ export default function TestimonialsAdmin() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[92vh] overflow-y-auto text-gray-600">
             <form onSubmit={handleSubmit} className="p-8 space-y-5">
+              <input
+                name="title"
+                placeholder="Review Title"
+                value={formData.title}
+                onChange={handleInputChange}
+                className="w-full border px-4 py-3 rounded-lg"
+              />
 
               <input
                 name="name"
-                placeholder="Full Name"
+                placeholder="User Name"
                 value={formData.name}
                 onChange={handleInputChange}
                 className="w-full border px-4 py-3 rounded-lg"
@@ -438,19 +452,36 @@ export default function TestimonialsAdmin() {
 
               <input
                 name="destination"
-                placeholder="Rating"
+                placeholder="Destination / Designation"
                 value={formData.destination}
                 onChange={handleInputChange}
                 className="w-full border px-4 py-3 rounded-lg"
               />
 
-              <input
-                name="address"
-                placeholder="Address"
-                value={formData.address}
-                onChange={handleInputChange}
-                className="w-full border px-4 py-3 rounded-lg"
-              />
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
+                  Rating
+                </label>
+                <div className="flex items-center gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, rating: star }))}
+                      className={`text-3xl leading-none ${
+                        star <= Number(formData.rating || 0)
+                          ? "text-yellow-400"
+                          : "text-slate-300"
+                      }`}
+                    >
+                      ★
+                    </button>
+                  ))}
+                  <span className="ml-2 text-sm text-slate-500">
+                    {formData.rating}/5
+                  </span>
+                </div>
+              </div>
 
               <input
                 type="file"
@@ -477,7 +508,7 @@ export default function TestimonialsAdmin() {
 
               <textarea
                 name="message"
-                placeholder="write your review..."
+                placeholder="Description / Review"
                 value={formData.message}
                 onChange={handleInputChange}
                 className="w-full border px-4 py-3 rounded-lg min-h-[120px]"
