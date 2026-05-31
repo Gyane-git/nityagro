@@ -140,6 +140,7 @@ export async function GET(req: Request) {
         subtotal: amounts.productTotal,
         shippingCost: amounts.deliveryCharge,
         createdAt: order.createdAt,
+        updatedAt: order.updatedAt,
         paymentMethod: payment?.paymentMode || "COD",
         transactionId: payment?.transactionId || "",
         shipping: {
@@ -152,6 +153,7 @@ export async function GET(req: Request) {
         items: [
           {
             id: `${order.orderId}-1`,
+            productId: order.productId.toString(),
             productCode: order.product?.productCode || "",
             name: getProductDisplayName(order.product || {}),
             image: order.product?.pImage || "/products/mustard-oil.png",

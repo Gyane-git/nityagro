@@ -1,6 +1,16 @@
 "use client";
 
-import { Clock, KeyRound, LogOut, MapPin, Truck, User } from "lucide-react";
+import {
+  Clock,
+  KeyRound,
+  LogOut,
+  MapPin,
+  RotateCcw,
+  Star,
+  Truck,
+  User,
+  XCircle,
+} from "lucide-react";
 
 const NAV_SECTIONS = [
   {
@@ -15,6 +25,9 @@ const NAV_SECTIONS = [
     items: [
       { id: "history", label: "Order History", icon: <Clock size={16} /> },
       { id: "tracking", label: "Order Tracking", icon: <Truck size={16} /> },
+      { id: "cancellations", label: "Cancellation", icon: <XCircle size={16} /> },
+      { id: "returns", label: "Return", icon: <RotateCcw size={16} /> },
+      { id: "reviews", label: "Review", icon: <Star size={16} /> },
     ],
   },
 ];

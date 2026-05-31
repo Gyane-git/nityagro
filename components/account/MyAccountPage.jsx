@@ -7,6 +7,7 @@ import AddressBook from "@/components/account/AddressBook";
 import ChangePassword from "@/components/account/ChangePassword";
 import OrderHistory from "@/components/account/OrderHistory";
 import OrderTracking from "@/components/account/OrderTracking";
+import AccountActivityList from "@/components/account/AccountActivityList";
 import toast from "react-hot-toast";
 import useCartStore from "@/store/cartStore";
 import useWishlistStore from "@/store/wishlistStore";
@@ -35,7 +36,19 @@ export default function MyAccountPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
-    if (tab && ["profile", "address", "history", "tracking", "password"].includes(tab)) {
+    if (
+      tab &&
+      [
+        "profile",
+        "address",
+        "history",
+        "tracking",
+        "cancellations",
+        "returns",
+        "reviews",
+        "password",
+      ].includes(tab)
+    ) {
       setActiveTab(tab);
     }
   }, []);
@@ -95,6 +108,9 @@ export default function MyAccountPage() {
     address: <AddressBook userId={user.userId || USER.userId} />,
     history: <OrderHistory userId={user.userId || USER.userId} />,
     tracking: <OrderTracking userId={user.userId || USER.userId} userName={user.name || "User"} />,
+    cancellations: <AccountActivityList type="cancellations" />,
+    returns: <AccountActivityList type="returns" />,
+    reviews: <AccountActivityList type="reviews" />,
     password: <ChangePassword />,
   };
 

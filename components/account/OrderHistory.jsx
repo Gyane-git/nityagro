@@ -58,7 +58,231 @@ function StatusBadge({ status }) {
   );
 }
 
-function OrderCard({ order }) {
+function daysSince(value) {
+  const date = value ? new Date(value) : null;
+  if (!date || Number.isNaN(date.getTime())) return Infinity;
+  return Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function OrderActions({ order, onAction, onReview }) {
+  const status = normalizeStatus(order.orderStatus);
+  const deliveredDate = order.deliveredAt || order.updatedAt || order.createdAt;
+  const returnWindowOpen = daysSince(deliveredDate) <= 7;
+
+  const baseButton =
+    "w-full px-3 py-1.5 rounded-md text-[12px] font-semibold transition-colors whitespace-nowrap";
+
+  if (status === "Processing" || status === "Pending") {
+    return (
+      <button
+        type="button"
+        onClick={() => onAction("cancel", order)}
+        className={`${baseButton} border border-red-200 bg-red-50 text-red-600 hover:bg-red-100`}
+      >
+        Cancel
+      </button>
+    );
+  }
+
+  if (status === "Shipped") {
+    return (
+      <button
+        type="button"
+        disabled
+        className={`${baseButton} cursor-not-allowed border border-gray-200 bg-gray-100 text-gray-400`}
+      >
+        Cancel
+      </button>
+    );
+  }
+
+  if (status === "Delivered") {
+    return (
+      <div className="flex flex-col gap-1.5">
+        <button
+          type="button"
+          disabled={!returnWindowOpen}
+          onClick={() => onAction("return", order)}
+          title={
+            returnWindowOpen
+              ? "Return is available within 7 days of delivery"
+              : "Return window expired after 7 days"
+          }
+          className={`${baseButton} ${
+            returnWindowOpen
+              ? "border border-orange-200 bg-orange-50 text-orange-600 hover:bg-orange-100"
+              : "cursor-not-allowed border border-gray-200 bg-gray-100 text-gray-400"
+          }`}
+        >
+          Return
+        </button>
+        <button
+          type="button"
+          onClick={() => onReview(order)}
+          className={`${baseButton} border border-[#2e5e2e]/20 bg-[#2e5e2e]/10 text-[#2e5e2e] hover:bg-[#2e5e2e]/15`}
+        >
+          Review
+        </button>
+      </div>
+    );
+  }
+
+  if (status === "Cancelled") {
+    return (
+      <button
+        type="button"
+        disabled
+        className={`${baseButton} cursor-not-allowed border border-gray-200 bg-gray-100 text-gray-400`}
+      >
+        Cancelled
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      disabled
+      className={`${baseButton} cursor-not-allowed border border-gray-200 bg-gray-100 text-gray-400`}
+    >
+      No Action
+    </button>
+  );
+}
+
+function ReviewModal({
+  order,
+  rating,
+  review,
+  setRating,
+  setReview,
+  submitting,
+  onClose,
+  onSubmit,
+}) {
+  if (!order) return null;
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 px-4">
+      <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-xl">
+        <div className="mb-4">
+          <h3 className="text-lg font-bold text-gray-900">Write Product Review</h3>
+          <p className="mt-1 text-xs text-gray-500">
+            #{order.orderNumber} · {order.items?.[0]?.name || "Product"}
+          </p>
+        </div>
+
+        <label className="text-sm font-semibold text-gray-700">Your Rating</label>
+        <div className="mt-2 flex items-center gap-1">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              key={star}
+              type="button"
+              onClick={() => setRating(star)}
+              disabled={submitting}
+              aria-label={`Rate ${star} star${star > 1 ? "s" : ""}`}
+              className={`text-3xl leading-none transition-transform hover:scale-110 disabled:opacity-60 ${
+                star <= rating ? "text-[#DB8F00]" : "text-gray-300"
+              }`}
+            >
+              ★
+            </button>
+          ))}
+        </div>
+
+        <label className="mt-4 block text-sm font-semibold text-gray-700">
+          Write Review
+        </label>
+        <textarea
+          value={review}
+          onChange={(event) => setReview(event.target.value)}
+          rows={4}
+          disabled={submitting}
+          placeholder="Share your experience with this product..."
+          className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 outline-none transition-colors focus:border-[#2e5e2e] disabled:opacity-60"
+        />
+        <p className="mt-1 text-xs text-gray-400">Minimum 5 characters required.</p>
+
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            className="rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-60"
+          >
+            Close
+          </button>
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={submitting}
+            className="rounded-md bg-[#2e5e2e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#244b24] disabled:opacity-60"
+          >
+            {submitting ? "Saving..." : "Save Review"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ActionReasonModal({ action, order, reason, setReason, submitting, onClose, onSubmit }) {
+  if (!action || !order) return null;
+
+  const isCancel = action === "cancel";
+  const title = isCancel ? "Cancel Order" : "Return Order";
+  const label = isCancel ? "Cancellation Reason" : "Return Reason";
+  const buttonText = isCancel ? "Submit Cancellation" : "Submit Return";
+  const helper = isCancel
+    ? "Please tell us why you want to cancel this order."
+    : "Please tell us why you want to return this delivered order.";
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 px-4">
+      <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-xl">
+        <div className="mb-4">
+          <h3 className="text-lg font-bold text-gray-900">{title}</h3>
+          <p className="mt-1 text-xs text-gray-500">
+            #{order.orderNumber} · {order.items?.[0]?.name || "Order"}
+          </p>
+        </div>
+
+        <label className="text-sm font-semibold text-gray-700">{label}</label>
+        <textarea
+          value={reason}
+          onChange={(event) => setReason(event.target.value)}
+          rows={4}
+          placeholder={helper}
+          className="mt-2 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 outline-none transition-colors focus:border-[#2e5e2e]"
+        />
+        <p className="mt-1 text-xs text-gray-400">Minimum 5 characters required.</p>
+
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            className="rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-60"
+          >
+            Close
+          </button>
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={submitting}
+            className={`rounded-md px-4 py-2 text-sm font-semibold text-white disabled:opacity-60 ${
+              isCancel ? "bg-red-600 hover:bg-red-700" : "bg-orange-500 hover:bg-orange-600"
+            }`}
+          >
+            {submitting ? "Submitting..." : buttonText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OrderCard({ order, onAction, onReview }) {
   const firstItem = order?.items?.[0];
   const qty = Number(firstItem?.qty || 1);
   const unitPrice = Number(firstItem?.unitPrice ?? order?.totalAmount ?? 0);
@@ -93,9 +317,12 @@ function OrderCard({ order }) {
         <StatusBadge status={normalizeStatus(order.orderStatus)} />
       </div>
 
-      <button className="ml-1 px-4 py-2 border border-gray-300 rounded-md text-[12.5px] text-gray-600 font-medium hover:border-[#2e5e2e] hover:text-[#2e5e2e] transition-colors whitespace-nowrap shrink-0">
-        #{order.orderNumber}
-      </button>
+      <div className="ml-1 w-30 shrink-0">
+        <p className="mb-1 text-center text-[11px] font-semibold text-gray-400">
+          #{order.orderNumber}
+        </p>
+        <OrderActions order={order} onAction={onAction} onReview={onReview} />
+      </div>
     </div>
   );
 }
@@ -104,6 +331,18 @@ export default function OrderHistory({ userId = "1" }) {
   const [search, setSearch] = useState("");
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [actionModal, setActionModal] = useState({
+    action: null,
+    order: null,
+    reason: "",
+  });
+  const [reviewModal, setReviewModal] = useState({
+    order: null,
+    rating: 5,
+    review: "",
+  });
+  const [submittingAction, setSubmittingAction] = useState(false);
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -130,6 +369,7 @@ export default function OrderHistory({ userId = "1" }) {
             paymentStatus: order.paymentStatus,
             totalAmount: Number(order.totalAmount || 0),
             createdAt: order.createdAt,
+            updatedAt: order.updatedAt,
             items: [
               {
                 id: `${order.id}-combo`,
@@ -166,6 +406,143 @@ export default function OrderHistory({ userId = "1" }) {
     });
   }, [orders, search]);
 
+  const closeActionModal = () => {
+    if (submittingAction) return;
+    setActionModal({ action: null, order: null, reason: "" });
+  };
+
+  const openActionModal = (action, order) => {
+    setActionModal({ action, order, reason: "" });
+  };
+
+  const closeReviewModal = () => {
+    if (submittingReview) return;
+    setReviewModal({ order: null, rating: 5, review: "" });
+  };
+
+  const openReviewModal = (order) => {
+    setReviewModal({ order, rating: 5, review: "" });
+  };
+
+  const submitOrderAction = async () => {
+    const { action, order, reason } = actionModal;
+    const cleanReason = reason.trim();
+    if (!action || !order) return;
+    if (cleanReason.length < 5) {
+      toast.error("Reason must be at least 5 characters");
+      return;
+    }
+    if (order?.orderType === "combo") {
+      toast.error("Combo cancel/return store flow needs combo cancellation schema first.");
+      return;
+    }
+
+    const endpoint =
+      action === "cancel"
+        ? "/api/account/orders/cancel"
+        : "/api/account/orders/return";
+    const loadingToastId = toast.loading(
+      action === "cancel" ? "Submitting cancellation..." : "Submitting return request...",
+    );
+
+    try {
+      setSubmittingAction(true);
+      const token = window.localStorage.getItem("token");
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          orderId: order.rawId || order.id,
+          reason: cleanReason,
+        }),
+      });
+      const payload = await response.json();
+
+      if (!response.ok || !payload?.success) {
+        toast.error(payload?.message || "Request failed", { id: loadingToastId });
+        return;
+      }
+
+      const nextStatus = payload.data?.orderStatus || (action === "cancel" ? "cancelled" : "returns");
+      setOrders((prev) =>
+        prev.map((row) =>
+          String(row.id) === String(order.id)
+            ? { ...row, orderStatus: nextStatus, updatedAt: new Date().toISOString() }
+            : row,
+        ),
+      );
+      toast.success(payload.message || "Request submitted successfully", {
+        id: loadingToastId,
+      });
+      setActionModal({ action: null, order: null, reason: "" });
+    } catch (error) {
+      console.error(error);
+      toast.error("Request failed. Please try again.", { id: loadingToastId });
+    } finally {
+      setSubmittingAction(false);
+    }
+  };
+
+  const submitReview = async () => {
+    const { order, rating, review } = reviewModal;
+    const cleanReview = review.trim();
+    if (!order) return;
+    if (order?.orderType === "combo") {
+      toast.error("Combo product review needs combo review schema first.");
+      return;
+    }
+    if (!rating || rating < 1 || rating > 5) {
+      toast.error("Please select a rating");
+      return;
+    }
+    if (cleanReview.length < 5) {
+      toast.error("Review must be at least 5 characters");
+      return;
+    }
+
+    const loadingToastId = toast.loading("Saving review...");
+    try {
+      setSubmittingReview(true);
+      const token = window.localStorage.getItem("token");
+      const response = await fetch("/api/account/orders/review", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          orderId: order.rawId || order.id,
+          productId: order.items?.[0]?.productId,
+          rating,
+          review: cleanReview,
+        }),
+      });
+      const payload = await response.json();
+
+      if (!response.ok || !payload?.success) {
+        toast.error(payload?.message || "Review save failed", { id: loadingToastId });
+        return;
+      }
+
+      toast.success(payload.message || "Review saved successfully", {
+        id: loadingToastId,
+      });
+      setReviewModal({ order: null, rating: 5, review: "" });
+    } catch (error) {
+      console.error(error);
+      toast.error("Review save failed. Please try again.", { id: loadingToastId });
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   return (
     <div>
       <h2 className="text-xl font-bold text-[#2e5e2e] mb-0.5">Order History</h2>
@@ -188,9 +565,37 @@ export default function OrderHistory({ userId = "1" }) {
         ) : filtered.length === 0 ? (
           <div className="bg-white rounded-lg border border-gray-100 px-6 py-12 text-center text-[13px] text-gray-400">No orders found.</div>
         ) : (
-          filtered.map((order) => <OrderCard key={order.id} order={order} />)
+          filtered.map((order) => (
+            <OrderCard
+              key={order.id}
+              order={order}
+              onAction={openActionModal}
+              onReview={openReviewModal}
+            />
+          ))
         )}
       </div>
+
+      <ActionReasonModal
+        action={actionModal.action}
+        order={actionModal.order}
+        reason={actionModal.reason}
+        setReason={(reason) => setActionModal((prev) => ({ ...prev, reason }))}
+        submitting={submittingAction}
+        onClose={closeActionModal}
+        onSubmit={submitOrderAction}
+      />
+
+      <ReviewModal
+        order={reviewModal.order}
+        rating={reviewModal.rating}
+        review={reviewModal.review}
+        setRating={(rating) => setReviewModal((prev) => ({ ...prev, rating }))}
+        setReview={(review) => setReviewModal((prev) => ({ ...prev, review }))}
+        submitting={submittingReview}
+        onClose={closeReviewModal}
+        onSubmit={submitReview}
+      />
     </div>
   );
 }

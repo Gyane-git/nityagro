@@ -53,6 +53,7 @@ function mapComboOrder(order: any) {
     orderStatus: normalizeOrderStatus(order.orderStatus),
     paymentStatus: normalizePaymentStatus(order.paymentStatus),
     createdAt: order.createdAt,
+    updatedAt: order.updatedAt,
     combo: {
       id: order.comboProduct?.comboProductId?.toString() || order.comboProductId.toString(),
       name: order.comboProduct?.comboName || "Combo Product",
