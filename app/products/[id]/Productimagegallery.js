@@ -118,23 +118,81 @@ export default function ProductImageGallery({ images = [] }) {
     //     }
     //   `}</style>
     // </div>
-    <div className="relative flex gap-3 w-full lg:w-[420px] lg:flex-shrink-0" style={{ overflow: "visible" }}>
-      {/* ── Thumbnail strip (left column) ── */}
-      <div className="flex flex-col gap-2 flex-shrink-0" style={{ width: "90px" }}>
+  <div className="relative w-full lg:w-[420px] lg:flex-shrink-0" style={{ overflow: "visible" }}>
+      <div className="flex gap-3">
+        {/* ── Thumbnail strip — vertical on lg+, hidden below ── */}
+        <div className="hidden lg:flex flex-col gap-2 flex-shrink-0" style={{ width: "90px" }}>
+          {imgs.map((src, i) => (
+            <button
+              key={i}
+              onClick={() => setSelected(i)}
+              className="relative overflow-hidden border-2 transition-all duration-200 flex-shrink-0"
+              style={{
+                width: "90px",
+                height: "80px",
+                borderRadius: "6px",
+                borderColor: selected === i ? "#00462C" : "#E5E7EB",
+                background: "#F9FAFB",
+              }}
+            >
+              <Image src={src} alt={`Thumbnail ${i + 1}`} fill className="object-contain p-2" sizes="90px" />
+              {i === 1 && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                  <PlayIcon />
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* main image  */}
+        <div
+          className="relative w-full lg:flex-1 overflow-hidden border border-gray-200"
+          style={{ height: "clamp(260px, 48vw, 350px)", borderRadius: "8px", background: "#F9FAFB" }}
+          onMouseEnter={() => setZoomActive(true)}
+          onMouseLeave={() => setZoomActive(false)}
+          onMouseMove={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 100;
+            const y = ((e.clientY - rect.top) / rect.height) * 100;
+            setZoomPosition({
+              x: Math.max(0, Math.min(100, x)),
+              y: Math.max(0, Math.min(100, y)),
+            });
+          }}
+        >
+          <Image src={selectedImageUrl} alt="Product main" fill className={`object-contain sm:object-contain md:object-contain lg:object-contain p-2 transition-transform duration-500 ${zoomActive ? "scale-110" : "scale-100"}`} sizes="(max-width: 1024px) 100vw, 310px" priority />
+
+          {zoomActive && (
+            <div
+              className="hidden lg:block absolute w-20 h-20 border-2 border-orange-500/70 bg-white/20 pointer-events-none"
+              style={{
+                left: `calc(${zoomPosition.x}% - 56px)`,
+                top: `calc(${zoomPosition.y}% - 56px)`,
+              }}
+            />
+          )}
+
+          <div className="absolute bottom-3 right-3 opacity-30"></div>
+        </div>
+      </div>
+
+      {/* ── Thumbnail strip — horizontal below main image on xs, sm, md ── */}
+      <div className="flex lg:hidden flex-row justify-center gap-4 overflow-x-auto pb-1 mt-2 w-full">
         {imgs.map((src, i) => (
           <button
             key={i}
             onClick={() => setSelected(i)}
             className="relative overflow-hidden border-2 transition-all duration-200 flex-shrink-0"
             style={{
-              width: "90px",
-              height: "80px",
+              width: "72px",
+              height: "66px",
               borderRadius: "6px",
               borderColor: selected === i ? "#00462C" : "#E5E7EB",
               background: "#F9FAFB",
             }}
           >
-            <Image src={src} alt={`Thumbnail ${i + 1}`} fill className="object-contain p-2" sizes="90px" unoptimized={String(src).startsWith("/uploads/")} />
+            <Image src={src} alt={`Thumbnail ${i + 1}`} fill className="object-contain p-2" sizes="72px" />
             {i === 1 && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                 <PlayIcon />
@@ -142,41 +200,6 @@ export default function ProductImageGallery({ images = [] }) {
             )}
           </button>
         ))}
-      </div>
-
-      {/* ── Main image ── */}
-      <div
-        className="relative flex-1 overflow-hidden border border-gray-200"
-        style={{ height: "clamp(260px, 48vw, 350px)", borderRadius: "8px", background: "#F9FAFB" }}
-        onMouseEnter={() => setZoomActive(true)}
-        onMouseLeave={() => setZoomActive(false)}
-        onMouseMove={(e) => {
-          const rect = e.currentTarget.getBoundingClientRect();
-          const x = ((e.clientX - rect.left) / rect.width) * 100;
-          const y = ((e.clientY - rect.top) / rect.height) * 100;
-          setZoomPosition({
-            x: Math.max(0, Math.min(100, x)),
-            y: Math.max(0, Math.min(100, y)),
-          });
-        }}
-      >
-        <Image src={selectedImageUrl} alt="Product main" fill className={`object-contain p-6 transition-transform duration-500 ${zoomActive ? "scale-110" : "scale-100"}`} sizes="310px" priority unoptimized={String(selectedImageUrl).startsWith("/uploads/")} />
-
-        {zoomActive && (
-          <div
-            className="hidden lg:block absolute w-20 h-20 border-2 border-orange-500/70 bg-white/20 pointer-events-none"
-            style={{
-              left: `calc(${zoomPosition.x}% - 56px)`,
-              top: `calc(${zoomPosition.y}% - 56px)`,
-            }}
-          />
-        )}
-
-        <div className="absolute bottom-3 right-3 opacity-30">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="#00462C">
-            <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" />
-          </svg>
-        </div>
       </div>
 
       {zoomActive && (
@@ -190,6 +213,7 @@ export default function ProductImageGallery({ images = [] }) {
           }}
         />
       )}
+
       <style jsx global>{`
         body.product-zoom-active .product-info-panel {
           opacity: 0.1;
