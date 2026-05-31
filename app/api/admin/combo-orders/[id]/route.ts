@@ -25,7 +25,7 @@ function getMainImage(combo: any) {
   return images.find((image: any) => image.isMain)?.imageUrl || images[0]?.imageUrl || "/no-image.png";
 }
 
-function mapComboOrder(order: any) {
+function mapComboOrder(order: any, statusOverride?: string) {
   const combo = order.comboProduct || {};
   const comboItems = Array.isArray(combo.comboItems) ? combo.comboItems : [];
   const paymentStatus = normalizePaymentStatus(order.paymentStatus);
@@ -35,7 +35,7 @@ function mapComboOrder(order: any) {
   return {
     id: order.comboOrderId.toString(),
     orderNumber: `NC-${order.comboOrderId.toString()}`,
-    orderStatus: normalizeOrderStatus(order.orderStatus),
+    orderStatus: normalizeOrderStatus(statusOverride || order.orderStatus),
     paymentStatus,
     totalAmount: Number(order.totalAmount || 0),
     subtotal: Number(order.productTotal || order.totalAmount || 0),
@@ -51,6 +51,33 @@ function mapComboOrder(order: any) {
     availableSerialNumbers: [],
     serialSelectionRequired: false,
   };
+}
+
+async function getComboStatusOverride(comboOrderId: bigint) {
+  try {
+    const cancellations = await prisma.$queryRaw`
+      SELECT comboOrderId
+      FROM comboOrderCancellation
+      WHERE comboOrderId = ${comboOrderId}
+      LIMIT 1
+    `;
+    if (Array.isArray(cancellations) && cancellations.length) {
+      return "cancelled";
+    }
+
+    const returns = await prisma.$queryRaw`
+      SELECT comboOrderId
+      FROM comboOrderReturn
+      WHERE comboOrderId = ${comboOrderId}
+      LIMIT 1
+    `;
+    if (Array.isArray(returns) && returns.length) {
+      return "returns";
+    }
+  } catch (error) {
+    console.warn("Combo order status override unavailable", error);
+  }
+  return undefined;
 }
 
 async function getComboOrder(id: string) {
@@ -77,7 +104,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     const { id } = await params;
     const order = await getComboOrder(id);
     if (!order) return NextResponse.json({ success: false, message: "Combo order not found" }, { status: 404, headers: corsHeaders });
-    return NextResponse.json({ success: true, data: mapComboOrder(order) }, { status: 200, headers: corsHeaders });
+    const override = await getComboStatusOverride(BigInt(id));
+    return NextResponse.json({ success: true, data: mapComboOrder(order, override) }, { status: 200, headers: corsHeaders });
   } catch (error) {
     return NextResponse.json({ success: false, message: error instanceof Error ? error.message : "Failed to load combo order" }, { status: 500, headers: corsHeaders });
   }
@@ -92,7 +120,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (body?.paymentStatus) data.paymentStatus = String(body.paymentStatus).toUpperCase();
     await prisma.comboOrders.update({ where: { comboOrderId: BigInt(id) }, data });
     const updated = await getComboOrder(id);
-    return NextResponse.json({ success: true, message: "Combo order updated successfully", data: mapComboOrder(updated) }, { status: 200, headers: corsHeaders });
+    const override = await getComboStatusOverride(BigInt(id));
+    return NextResponse.json({ success: true, message: "Combo order updated successfully", data: mapComboOrder(updated, override) }, { status: 200, headers: corsHeaders });
   } catch (error) {
     return NextResponse.json({ success: false, message: error instanceof Error ? error.message : "Failed to update combo order" }, { status: 500, headers: corsHeaders });
   }

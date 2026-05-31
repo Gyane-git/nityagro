@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { resolveComboItems } from "@/lib/comboItems";
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,13 +28,13 @@ function getMainImage(combo: any) {
   return images.find((image: any) => image.isMain)?.imageUrl || images[0]?.imageUrl || "/no-image.png";
 }
 
-function mapComboOrder(order: any) {
+function mapComboOrder(order: any, statusOverride?: string) {
   const combo = order.comboProduct || {};
   const comboItems = Array.isArray(combo.comboItems) ? combo.comboItems : [];
   const productCodes = comboItems.length
     ? comboItems.map((item: any) => item.code)
     : String(combo.productCodes || "").split(",").map((code) => code.trim()).filter(Boolean);
-  const orderStatus = normalizeOrderStatus(order.orderStatus);
+  const orderStatus = normalizeOrderStatus(statusOverride || order.orderStatus);
   const paymentStatus = normalizePaymentStatus(order.paymentStatus);
   const firstComboItem = comboItems[0];
   const comboDisplayName = comboItems.length
@@ -61,6 +62,38 @@ function mapComboOrder(order: any) {
     items: [{ id: `${order.comboOrderId}-combo`, productCode: combo.comboCode || "", quantity: Number(order.quantity || 1), unitPrice: Number(order.unitPrice || combo.comboPrice || 0), subtotal: Number(order.productTotal || order.totalAmount || 0), serialNumber: null, product: { name: comboDisplayName, comboName: combo.comboName || "Combo Product", image: firstComboItem?.image || getMainImage(combo), productCodes, comboItems } }],
     updateLogs: [],
   };
+}
+
+async function getComboStatusOverrides(orderIds: bigint[]) {
+  if (!orderIds.length) return new Map<string, string>();
+
+  const overrides = new Map<string, string>();
+  try {
+    const cancellations = await prisma.$queryRaw`
+      SELECT comboOrderId
+      FROM comboOrderCancellation
+      WHERE comboOrderId IN (${Prisma.join(orderIds)})
+    `;
+    const returns = await prisma.$queryRaw`
+      SELECT comboOrderId
+      FROM comboOrderReturn
+      WHERE comboOrderId IN (${Prisma.join(orderIds)})
+    `;
+
+    if (Array.isArray(cancellations)) {
+      cancellations.forEach((row: any) => {
+        overrides.set(String(row.comboOrderId), "cancelled");
+      });
+    }
+    if (Array.isArray(returns)) {
+      returns.forEach((row: any) => {
+        overrides.set(String(row.comboOrderId), "returns");
+      });
+    }
+  } catch (error) {
+    console.warn("Combo request status override unavailable", error);
+  }
+  return overrides;
 }
 
 export async function OPTIONS() {
@@ -100,7 +133,12 @@ export async function GET(req: Request) {
       })),
     );
 
-    const mapped = ordersWithItems.map(mapComboOrder);
+    const statusOverrides = await getComboStatusOverrides(
+      ordersWithItems.map((order) => order.comboOrderId),
+    );
+    const mapped = ordersWithItems.map((order) =>
+      mapComboOrder(order, statusOverrides.get(String(order.comboOrderId))),
+    );
     const filtered = mapped.filter((row) => {
       if (status !== "all" && row.orderStatus !== status) return false;
       if (search) {

@@ -68,6 +68,7 @@ function OrderActions({ order, onAction, onReview }) {
   const status = normalizeStatus(order.orderStatus);
   const deliveredDate = order.deliveredAt || order.updatedAt || order.createdAt;
   const returnWindowOpen = daysSince(deliveredDate) <= 7;
+  const isCombo = order?.orderType === "combo";
 
   const baseButton =
     "w-full px-3 py-1.5 rounded-md text-[12px] font-semibold transition-colors whitespace-nowrap";
@@ -116,13 +117,15 @@ function OrderActions({ order, onAction, onReview }) {
         >
           Return
         </button>
-        <button
-          type="button"
-          onClick={() => onReview(order)}
-          className={`${baseButton} border border-[#2e5e2e]/20 bg-[#2e5e2e]/10 text-[#2e5e2e] hover:bg-[#2e5e2e]/15`}
-        >
-          Review
-        </button>
+        {!isCombo ? (
+          <button
+            type="button"
+            onClick={() => onReview(order)}
+            className={`${baseButton} border border-[#2e5e2e]/20 bg-[#2e5e2e]/10 text-[#2e5e2e] hover:bg-[#2e5e2e]/15`}
+          >
+            Review
+          </button>
+        ) : null}
       </div>
     );
   }
