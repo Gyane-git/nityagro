@@ -5,7 +5,10 @@ import AuthModal from "./AuthModal";
 import toast from "react-hot-toast";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_REGEX = /^[+\d\s-]{7,20}$/;
+const PHONE_REGEX = /^\d{7,15}$/;
+const NAME_REGEX = /^[A-Za-z\s.'-]{2,80}$/;
+const normalizeEmail = (value) => String(value || "").trim().toLowerCase();
+const onlyDigits = (value) => String(value || "").replace(/\D/g, "");
 
 const EyeIcon = ({ show }) => (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -42,6 +45,8 @@ export default function SignupModal({ isOpen, onClose, onLogin, onOtp }) {
   const [loading, setLoading] = useState(false);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+  const setPhone = (e) =>
+    setForm((f) => ({ ...f, phone: onlyDigits(e.target.value).slice(0, 15) }));
 
   const startGoogleSignup = () => {
     toast.loading("Opening Google signup...");
@@ -51,19 +56,23 @@ export default function SignupModal({ isOpen, onClose, onLogin, onOtp }) {
   const handleSignup = async (e) => {
     e.preventDefault();
 
-    if (form.name.trim().length < 2) {
-      toast.error("Please enter your full name");
+    const name = form.name.trim().replace(/\s+/g, " ");
+    const phone = onlyDigits(form.phone);
+    const email = normalizeEmail(form.email);
+
+    if (!NAME_REGEX.test(name)) {
+      toast.error("Please enter a valid full name");
       return;
     }
-    if (!EMAIL_REGEX.test(form.email.trim())) {
+    if (!EMAIL_REGEX.test(email)) {
       toast.error("Please enter a valid email address");
       return;
     }
-    if (!PHONE_REGEX.test(form.phone.trim())) {
-      toast.error("Please enter a valid phone number");
+    if (!PHONE_REGEX.test(phone)) {
+      toast.error("Phone number must contain 7 to 15 digits only");
       return;
     }
-    if (form.password.length < 8) {
+    if (form.password.length < 8 || form.password.length > 72 || !form.password.trim()) {
       toast.error("Password must be at least 8 characters");
       return;
     }
@@ -80,9 +89,9 @@ export default function SignupModal({ isOpen, onClose, onLogin, onOtp }) {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          name: form.name.trim(),
-          phone: form.phone.trim(),
-          email: form.email.trim().toLowerCase(),
+          name,
+          phone,
+          email,
           password: form.password,
         }),
       });
@@ -97,9 +106,9 @@ export default function SignupModal({ isOpen, onClose, onLogin, onOtp }) {
         id: loadingToastId,
       });
       onOtp?.({
-        name: form.name.trim(),
-        phone: form.phone.trim(),
-        email: form.email.trim().toLowerCase(),
+        name,
+        phone,
+        email,
         password: form.password,
       });
     } catch {
@@ -134,9 +143,11 @@ export default function SignupModal({ isOpen, onClose, onLogin, onOtp }) {
             </label>
             <input
               type="tel"
+              inputMode="numeric"
+              pattern="[0-9]*"
               placeholder="Enter your phone number"
               value={form.phone}
-              onChange={set("phone")}
+              onChange={setPhone}
               className={inputClass}
               style={{ height: "48px" }}
               required

@@ -4,20 +4,24 @@ import { verifyAuthOtp } from "@/lib/authOtp";
 import { hashPassword } from "@/lib/password";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_REGEX = /^[+\d\s-]{7,20}$/;
+const PHONE_REGEX = /^\d{7,15}$/;
+const NAME_REGEX = /^[A-Za-z\s.'-]{2,80}$/;
+const onlyDigits = (value: unknown) => String(value || "").replace(/\D/g, "");
+const normalizeName = (value: unknown) =>
+  String(value || "").trim().replace(/\s+/g, " ");
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const name = String(body?.name || "").trim();
-    const phone = String(body?.phone || "").trim();
+    const name = normalizeName(body?.name);
+    const phone = onlyDigits(body?.phone);
     const email = String(body?.email || "").trim().toLowerCase();
     const password = String(body?.password || "");
     const otp = String(body?.otp || "").trim();
 
-    if (name.length < 2) {
+    if (!NAME_REGEX.test(name)) {
       return NextResponse.json(
-        { success: false, message: "Full name is required" },
+        { success: false, message: "Valid full name is required" },
         { status: 400 },
       );
     }
@@ -31,12 +35,12 @@ export async function POST(req: Request) {
 
     if (!PHONE_REGEX.test(phone)) {
       return NextResponse.json(
-        { success: false, message: "Valid phone number is required" },
+        { success: false, message: "Phone number must contain 7 to 15 digits only" },
         { status: 400 },
       );
     }
 
-    if (password.length < 8) {
+    if (password.length < 8 || password.length > 72 || !password.trim()) {
       return NextResponse.json(
         { success: false, message: "Password must be at least 8 characters" },
         { status: 400 },

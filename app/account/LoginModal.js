@@ -5,6 +5,7 @@ import AuthModal from "./AuthModal";
 import toast from "react-hot-toast";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const normalizeEmail = (value) => String(value || "").trim().toLowerCase();
 
 // ─── Icons ───────────────────────────────────────────────────────────────────
 const EyeIcon = ({ show }) => (
@@ -60,7 +61,9 @@ export default function LoginModal({ isOpen, onClose, onSignup, onForgot }) {
       return;
     }
 
-    if (!EMAIL_REGEX.test(email.trim())) {
+    const normalizedEmail = normalizeEmail(email);
+
+    if (!EMAIL_REGEX.test(normalizedEmail)) {
       toast.error("Please enter a valid email address");
       return;
     }
@@ -77,7 +80,7 @@ export default function LoginModal({ isOpen, onClose, onSignup, onForgot }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: normalizedEmail, password }),
       });
       const payload = await response.json();
 

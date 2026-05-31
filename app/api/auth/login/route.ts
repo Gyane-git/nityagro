@@ -5,6 +5,7 @@ import { hashPassword, isHashedPassword, verifyPassword } from "@/lib/password";
 
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 8;
 const ADMIN_ROLES = new Set(["ADMIN", "SUPER_ADMIN", "SUPERADMIN"]);
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function normalizeRole(role: string | null | undefined) {
   return String(role || "customer").trim().toUpperCase();
@@ -41,9 +42,15 @@ export async function POST(req: Request) {
     const email = String(body?.email || "").trim().toLowerCase();
     const password = String(body?.password || "");
 
-    if (!email || !password) {
+    if (!EMAIL_REGEX.test(email)) {
       return NextResponse.json(
-        { success: false, message: "Email and password are required" },
+        { success: false, message: "Valid email is required" },
+        { status: 400 },
+      );
+    }
+    if (!password) {
+      return NextResponse.json(
+        { success: false, message: "Password is required" },
         { status: 400 },
       );
     }

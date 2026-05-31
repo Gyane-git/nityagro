@@ -8,7 +8,12 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
-const PHONE_REGEX = /^[+\d\s-]{7,20}$/;
+const PHONE_REGEX = /^\d{7,15}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const ZIP_REGEX = /^[A-Za-z0-9 -]{3,12}$/;
+const onlyDigits = (value: unknown) => String(value || "").replace(/\D/g, "");
+const normalizeText = (value: unknown) =>
+  String(value || "").trim().replace(/\s+/g, " ");
 
 function normalize(row: {
   addressId: bigint;
@@ -44,41 +49,54 @@ function normalize(row: {
 }
 
 function parsePayload(body: Record<string, unknown>, userId: bigint) {
-  const fullName = String(body?.fullName || "").trim();
-  const phone = String(body?.phone || "").trim();
-  const region = String(body?.region || "").trim();
-  const city = String(body?.city || "").trim();
-  const district = String(body?.district || city).trim();
-  const area = String(body?.area || "").trim();
-  const colony = String(body?.colony || "").trim();
-  const addType = String(body?.addType || body?.label || "Home").trim();
+  const fullName = normalizeText(body?.fullName);
+  const phone = onlyDigits(body?.phone);
+  const email = String(body?.email || "").trim().toLowerCase();
+  const region = normalizeText(body?.region);
+  const city = normalizeText(body?.city);
+  const district = normalizeText(body?.district || city);
+  const area = normalizeText(body?.area);
+  const colony = normalizeText(body?.colony);
+  const addType = normalizeText(body?.addType || body?.label || "Home");
   const zipCode = String(body?.zipCode || "").trim();
 
   if (!fullName || fullName.length < 2) {
     throw new Error("Full name must be at least 2 characters");
   }
-  if (!phone || !PHONE_REGEX.test(phone)) {
-    throw new Error("Valid phone number is required");
+  if (!PHONE_REGEX.test(phone)) {
+    throw new Error("Phone number must contain 7 to 15 digits only");
+  }
+  if (email && !EMAIL_REGEX.test(email)) {
+    throw new Error("Valid email is required");
   }
   if (!region) {
-    throw new Error("Region is required");
+    throw new Error("Province is required");
+  }
+  if (!district) {
+    throw new Error("District is required");
   }
   if (!city) {
     throw new Error("City is required");
   }
-  if (!district) {
-    throw new Error("District is required");
+  if (!colony) {
+    throw new Error("Ward is required");
+  }
+  if (zipCode && !ZIP_REGEX.test(zipCode)) {
+    throw new Error("Valid zip code is required");
+  }
+  if (!["home", "office"].includes(addType.toLowerCase())) {
+    throw new Error("Address type must be Home or Office");
   }
 
   return {
     userId,
     fullName,
     phone,
-    email: String(body?.email || "").trim() || null,
+    email: email || null,
     province: region,
     district,
     city,
-    ward: colony || "N/A",
+    ward: colony,
     addType: addType || "Home",
     locality: area || null,
     zipCode: zipCode || null,

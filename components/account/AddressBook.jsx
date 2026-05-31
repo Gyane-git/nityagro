@@ -22,8 +22,11 @@ const EMPTY_FORM = {
   addType: "Home",
 };
 
-const PHONE_REGEX = /^[+\d\s-]{7,20}$/;
+const PHONE_REGEX = /^\d{7,15}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const ZIP_REGEX = /^[A-Za-z0-9 -]{3,12}$/;
+const normalizeText = (value) => String(value || "").trim().replace(/\s+/g, " ");
+const onlyDigits = (value) => String(value || "").replace(/\D/g, "");
 
 const normalizeOptionName = (value) => String(value || "").trim().toLowerCase();
 
@@ -254,12 +257,14 @@ export default function AddressBook({ userId = "1" }) {
   };
 
   const validate = () => {
-    if (!form.fullName.trim() || form.fullName.trim().length < 2) return "Full name is required";
-    if (!form.phone.trim() || !PHONE_REGEX.test(form.phone.trim())) return "Valid phone is required";
-    if (form.email.trim() && !EMAIL_REGEX.test(form.email.trim())) return "Valid email is required";
-    if (!form.city.trim()) return "City is required";
-    if (!form.district.trim()) return "District is required";
+    if (normalizeText(form.fullName).length < 2) return "Full name must be at least 2 characters";
+    if (!PHONE_REGEX.test(onlyDigits(form.phone))) return "Phone number must contain 7 to 15 digits only";
+    if (form.email.trim() && !EMAIL_REGEX.test(form.email.trim().toLowerCase())) return "Valid email is required";
     if (!form.province.trim()) return "Province is required";
+    if (!form.district.trim()) return "District is required";
+    if (!form.city.trim()) return "City is required";
+    if (!form.ward.trim()) return "Ward is required";
+    if (form.zipCode.trim() && !ZIP_REGEX.test(form.zipCode.trim())) return "Valid zip code is required";
     return null;
   };
 
@@ -274,15 +279,15 @@ export default function AddressBook({ userId = "1" }) {
     const payload = {
       ...(selectedAddress ? { id: selectedAddress.id } : {}),
       userId,
-      fullName: form.fullName,
-      phone: form.phone,
-      email: form.email,
-      region: form.province,
-      district: form.district,
-      city: form.city,
-      colony: form.ward,
-      area: form.locality,
-      zipCode: form.zipCode,
+      fullName: normalizeText(form.fullName),
+      phone: onlyDigits(form.phone),
+      email: form.email.trim().toLowerCase(),
+      region: normalizeText(form.province),
+      district: normalizeText(form.district),
+      city: normalizeText(form.city),
+      colony: normalizeText(form.ward),
+      area: normalizeText(form.locality),
+      zipCode: form.zipCode.trim(),
       addType: form.addType,
       label: form.addType,
     };
@@ -398,7 +403,21 @@ export default function AddressBook({ userId = "1" }) {
             ["locality", "Locality"],
             ["zipCode", "Zip Code"],
           ].map(([key, label]) => (
-            <input key={key} value={form[key] || ""} onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))} placeholder={label} className="rounded border border-gray-300 px-3 py-2 text-sm" />
+            <input
+              key={key}
+              value={form[key] || ""}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  [key]: key === "phone" ? onlyDigits(e.target.value).slice(0, 15) : e.target.value,
+                }))
+              }
+              placeholder={`${label}${["fullName", "phone", "ward"].includes(key) ? " *" : ""}`}
+              type={key === "email" ? "email" : key === "phone" ? "tel" : "text"}
+              inputMode={key === "phone" ? "numeric" : undefined}
+              pattern={key === "phone" ? "[0-9]*" : undefined}
+              className="rounded border border-gray-300 px-3 py-2 text-sm"
+            />
           ))}
           <select
             value={form.provinceId}

@@ -9,7 +9,8 @@ const corsHeaders = {
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_REGEX = /^[+\d\s-]{7,20}$/;
+const PHONE_REGEX = /^\d{7,15}$/;
+const onlyDigits = (value: unknown) => String(value || "").replace(/\D/g, "");
 
 export async function OPTIONS() {
   return new Response(null, { status: 200, headers: corsHeaders });
@@ -67,7 +68,7 @@ export async function PUT(req: Request) {
 
     const name = String(body?.name || "").trim();
     const email = String(body?.email || "").trim().toLowerCase();
-    const phone = String(body?.phone || "").trim();
+    const phone = onlyDigits(body?.phone);
     const city = String(body?.city || "").trim();
     const state = String(body?.state || "").trim();
     const zipCode = String(body?.zipCode || "").trim();
@@ -89,7 +90,7 @@ export async function PUT(req: Request) {
 
     if (phone && !PHONE_REGEX.test(phone)) {
       return NextResponse.json(
-        { success: false, message: "Invalid phone number" },
+        { success: false, message: "Phone number must contain 7 to 15 digits only" },
         { status: 400, headers: corsHeaders },
       );
     }

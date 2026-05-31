@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_REGEX = /^[+\d\s-]{7,20}$/;
+const PHONE_REGEX = /^\d{7,15}$/;
+const onlyDigits = (value) => String(value || "").replace(/\D/g, "");
 
 function splitName(name) {
   const value = String(name || "").trim();
@@ -45,8 +46,8 @@ export default function MyProfile({ user, userId = "1", onProfileUpdated }) {
     if (!form.firstName.trim()) return "First name is required";
     if (!form.lastName.trim()) return "Last name is required";
     if (!EMAIL_REGEX.test(form.email.trim())) return "Valid email is required";
-    if (form.phone.trim() && !PHONE_REGEX.test(form.phone.trim())) {
-      return "Valid phone number is required";
+    if (form.phone.trim() && !PHONE_REGEX.test(onlyDigits(form.phone))) {
+      return "Phone number must contain 7 to 15 digits only";
     }
     return null;
   };
@@ -64,7 +65,7 @@ export default function MyProfile({ user, userId = "1", onProfileUpdated }) {
         userId,
         name: `${form.firstName.trim()} ${form.lastName.trim()}`.trim(),
         email: form.email.trim().toLowerCase(),
-        phone: form.phone.trim(),
+        phone: onlyDigits(form.phone),
         city: form.city.trim(),
         state: form.state.trim(),
         zipCode: form.zipCode.trim(),
@@ -120,7 +121,7 @@ export default function MyProfile({ user, userId = "1", onProfileUpdated }) {
         </div>
         <div className="flex flex-col gap-1.5">
           <label className="text-[13px] text-[#4C6759]">Phone no</label>
-          <input type="text" value={form.phone} onChange={set("phone")} className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-sm text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
+          <input type="tel" inputMode="numeric" pattern="[0-9]*" value={form.phone} onChange={(e) => setForm((prev) => ({ ...prev, phone: onlyDigits(e.target.value).slice(0, 15) }))} className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-sm text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
         </div>
       </div>
 

@@ -5,6 +5,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import Banner from "@/app/products/[id]/Banner";
 import ProductImageGallery from "@/app/products/[id]/Productimagegallery";
 import DeliveryCard from "@/app/products/[id]/Deliverycard";
+import FrequentlyBoughtTogether from "@/app/products/[id]/Frequentlyboughttogether";
 import ComboProductInfo from "./ComboProductInfo";
 import { getComboAvailability, resolveComboItems } from "@/lib/comboItems";
 
@@ -85,6 +86,10 @@ export default async function ComboProductDetailPage({ params }) {
           <h2 className="text-[#00462C] font-bold text-xl mb-3">Combo Description</h2>
           <p className="text-sm leading-7 text-gray-600">{normalizedCombo.description || "This combo pack is specially curated by Nityagro for better value and convenience."}</p>
         </section>
+
+        <div className="border-t border-gray-200 my-10" />
+        <FrequentlyBoughtTogether />
+
         <div className="h-16" />
       </div>
     </main>
