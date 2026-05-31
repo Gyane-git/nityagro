@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Sidebar from "@/components/account/Sidebar";
 import MyProfile from "@/components/account/MyProfile";
 import AddressBook from "@/components/account/AddressBook";
+import ChangePassword from "@/components/account/ChangePassword";
 import OrderHistory from "@/components/account/OrderHistory";
 import OrderTracking from "@/components/account/OrderTracking";
 import toast from "react-hot-toast";
@@ -34,7 +35,7 @@ export default function MyAccountPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
-    if (tab && ["profile", "address", "history", "tracking"].includes(tab)) {
+    if (tab && ["profile", "address", "history", "tracking", "password"].includes(tab)) {
       setActiveTab(tab);
     }
   }, []);
@@ -94,6 +95,7 @@ export default function MyAccountPage() {
     address: <AddressBook userId={user.userId || USER.userId} />,
     history: <OrderHistory userId={user.userId || USER.userId} />,
     tracking: <OrderTracking userId={user.userId || USER.userId} userName={user.name || "User"} />,
+    password: <ChangePassword />,
   };
 
   const performLogout = async () => {
