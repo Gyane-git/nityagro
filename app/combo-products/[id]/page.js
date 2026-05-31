@@ -6,7 +6,7 @@ import Banner from "@/app/products/[id]/Banner";
 import ProductImageGallery from "@/app/products/[id]/Productimagegallery";
 import DeliveryCard from "@/app/products/[id]/Deliverycard";
 import ComboProductInfo from "./ComboProductInfo";
-import { resolveComboItems } from "@/lib/comboItems";
+import { getComboAvailability, resolveComboItems } from "@/lib/comboItems";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -52,6 +52,7 @@ export default async function ComboProductDetailPage({ params }) {
   );
   const images = resolveImages(safeCombo);
   const comboItems = await resolveComboItems(prisma, safeCombo.productCodes);
+  const comboAvailability = getComboAvailability(comboItems);
   const normalizedCombo = {
     id: Number(safeCombo.comboProductId),
     code: safeCombo.comboCode || "",
@@ -64,6 +65,7 @@ export default async function ComboProductDetailPage({ params }) {
     image: images[0] || "/no-image.png",
     images: images.length ? images : ["/no-image.png"],
     comboItems,
+    ...comboAvailability,
   };
 
   return (

@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
-import { resolveComboItems } from "@/lib/comboItems";
+import {
+  decrementComboItemsStock,
+  getComboAvailability,
+  resolveComboItems,
+} from "@/lib/comboItems";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -140,28 +144,52 @@ export async function POST(req: Request) {
       );
     }
 
+    const comboItems = await resolveComboItems(prisma, combo.productCodes);
+    const availability = getComboAvailability(comboItems, qty);
+    if (availability.comboOutOfStock) {
+      const itemNames = availability.outOfStockItems
+        .map((item: any) => item.name)
+        .filter(Boolean)
+        .join(", ");
+      return NextResponse.json(
+        {
+          success: false,
+          message: itemNames
+            ? `Combo is out of stock. Unavailable item(s): ${itemNames}`
+            : "Combo is out of stock",
+        },
+        { status: 400, headers: corsHeaders },
+      );
+    }
+
     const totalAmount = Number((Number(combo.comboPrice || 0) * qty).toFixed(2));
-    const order = await prisma.comboOrders.create({
-      data: {
-        userId: BigInt(auth.sub),
-        comboProductId: combo.comboProductId,
-        quantity: BigInt(qty),
-        unitPrice: Number(combo.comboPrice || 0),
-        productTotal: totalAmount,
-        deliveryCharge: 0,
-        totalAmount,
-        orderStatus: "PLACED",
-        paymentStatus: "PENDING",
-      },
-      include: {
-        comboProduct: {
-          include: {
-            productImages: {
-              orderBy: [{ isMain: "desc" }, { createdAt: "asc" }],
+    const order = await prisma.$transaction(async (tx) => {
+      const created = await tx.comboOrders.create({
+        data: {
+          userId: BigInt(auth.sub),
+          comboProductId: combo.comboProductId,
+          quantity: BigInt(qty),
+          unitPrice: Number(combo.comboPrice || 0),
+          productTotal: totalAmount,
+          deliveryCharge: 0,
+          totalAmount,
+          orderStatus: "PLACED",
+          paymentStatus: "PENDING",
+        },
+        include: {
+          comboProduct: {
+            include: {
+              productImages: {
+                orderBy: [{ isMain: "desc" }, { createdAt: "asc" }],
+              },
             },
           },
         },
-      },
+      });
+
+      await decrementComboItemsStock(tx, comboItems, qty);
+
+      return created;
     });
 
     return NextResponse.json(
@@ -172,7 +200,7 @@ export async function POST(req: Request) {
           ...order,
           comboProduct: {
             ...order.comboProduct,
-            comboItems: await resolveComboItems(prisma, order.comboProduct.productCodes),
+            comboItems,
           },
         })),
       },

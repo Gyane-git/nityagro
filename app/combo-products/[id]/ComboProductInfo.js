@@ -43,10 +43,27 @@ export default function ComboProductInfo({ combo }) {
   const productCodes = splitCodes(combo.productCodes);
   const comboItems = Array.isArray(combo.comboItems) ? combo.comboItems : [];
   const savedAmount = Math.max(0, Number(combo.productPrices || 0) - Number(combo.comboPrice || 0));
+  const comboStockQuantity = Number(
+    combo.comboStockQuantity ??
+      (comboItems.length
+        ? Math.min(...comboItems.map((item) => Number(item.stockQuantity ?? 0)))
+        : 0),
+  );
+  const outOfStock =
+    combo.comboOutOfStock === true ||
+    comboStockQuantity <= 0 ||
+    comboItems.some((item) => Number(item.stockQuantity ?? 0) <= 0);
+  const unavailableItems = comboItems.filter(
+    (item) => Number(item.stockQuantity ?? 0) <= 0,
+  );
 
   const handleAdd = () => {
     if (!requireLoginForAction()) {
       showToast("Please login to add combo to cart");
+      return;
+    }
+    if (outOfStock) {
+      showToast("This combo is out of stock because one or more items are unavailable");
       return;
     }
 
@@ -68,6 +85,10 @@ export default function ComboProductInfo({ combo }) {
   const handleBuyNow = () => {
     if (!requireLoginForAction()) {
       showToast("Please login to buy this combo");
+      return;
+    }
+    if (outOfStock) {
+      showToast("This combo is out of stock because one or more items are unavailable");
       return;
     }
 
@@ -97,6 +118,9 @@ export default function ComboProductInfo({ combo }) {
       <div className="flex items-center gap-2">
         <span className="text-xs font-semibold px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">Combo Pack</span>
         <span className="text-xs text-gray-500">{productCodes.length} item{productCodes.length !== 1 ? "s" : ""} included</span>
+        <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${outOfStock ? "bg-red-50 text-red-700 border-red-100" : "bg-green-50 text-green-700 border-green-100"}`}>
+          {outOfStock ? "Out of Stock" : `${comboStockQuantity} combo${comboStockQuantity !== 1 ? "s" : ""} available`}
+        </span>
       </div>
 
       <p className="font-bold" style={{ color: "#00462C", fontSize: "clamp(18px, 3vw, 22px)" }}>
@@ -112,11 +136,21 @@ export default function ComboProductInfo({ combo }) {
         <p className="text-sm font-semibold text-gray-700">Included Products</p>
         <div className="flex flex-wrap gap-2">
           {comboItems.length > 0 ? comboItems.map((item) => (
-            <span key={item.code} className="text-xs font-semibold px-3 py-1 rounded-full bg-gray-50 text-gray-700 border border-gray-200">{item.name}</span>
+            <span key={item.code} className={`text-xs font-semibold px-3 py-1 rounded-full border ${Number(item.stockQuantity ?? 0) <= 0 ? "bg-red-50 text-red-700 border-red-100" : "bg-gray-50 text-gray-700 border-gray-200"}`}>
+              {item.name}
+              <span className="ml-1 font-medium">
+                ({Number(item.stockQuantity ?? 0) <= 0 ? "Out of stock" : `${item.stockQuantity} left`})
+              </span>
+            </span>
           )) : productCodes.length > 0 ? productCodes.map((code) => (
             <span key={code} className="text-xs font-semibold px-3 py-1 rounded-full bg-gray-50 text-gray-600 border border-gray-200">{code}</span>
           )) : <span className="text-sm text-gray-400">Combo items configured by admin</span>}
         </div>
+        {unavailableItems.length > 0 ? (
+          <p className="text-xs text-red-600">
+            Unavailable: {unavailableItems.map((item) => item.name).join(", ")}
+          </p>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-2">
@@ -124,16 +158,21 @@ export default function ComboProductInfo({ combo }) {
         <div className="flex items-center border border-gray-300 rounded-md overflow-hidden" style={{ width: "110px", height: "40px" }}>
           <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} className="flex items-center justify-center flex-1 h-full hover:bg-gray-100 transition-colors text-gray-600"><MinusIcon /></button>
           <span className="flex items-center justify-center font-semibold text-sm text-gray-800 border-x border-gray-300 h-full" style={{ width: "36px" }}>{qty}</span>
-          <button type="button" onClick={() => setQty((q) => q + 1)} className="flex items-center justify-center flex-1 h-full hover:bg-gray-100 transition-colors text-gray-600"><PlusIcon /></button>
+          <button type="button" onClick={() => setQty((q) => Math.min(comboStockQuantity || 1, q + 1))} disabled={outOfStock || qty >= comboStockQuantity} className="flex items-center justify-center flex-1 h-full hover:bg-gray-100 transition-colors text-gray-600 disabled:opacity-40"><PlusIcon /></button>
         </div>
+        {outOfStock ? (
+          <p className="text-xs font-semibold text-red-600">
+            This combo cannot be ordered until all included variations are in stock.
+          </p>
+        ) : null}
       </div>
 
       <div className="flex gap-3">
-        <button onClick={handleAdd} className="flex items-center justify-center gap-2 text-white font-semibold text-sm rounded-md transition-all duration-200 hover:scale-105 active:scale-95 flex-1 sm:flex-none" style={{ background: added ? "#2d7a4f" : "#00462C", height: "44px", width: "clamp(140px, 40%, 220px)", boxShadow: "0 3px 14px rgba(0,70,44,0.25)" }}>
+        <button onClick={handleAdd} disabled={outOfStock} className="flex items-center justify-center gap-2 text-white font-semibold text-sm rounded-md transition-all duration-200 hover:scale-105 active:scale-95 flex-1 sm:flex-none disabled:hover:scale-100 disabled:cursor-not-allowed" style={{ background: outOfStock ? "#9CA3AF" : added ? "#2d7a4f" : "#00462C", height: "44px", width: "clamp(140px, 40%, 220px)", boxShadow: "0 3px 14px rgba(0,70,44,0.25)" }}>
           <CartIcon /> {added ? "Added!" : "Add"}
         </button>
-        <button onClick={handleBuyNow} disabled={buying} className="flex items-center justify-center font-semibold text-sm rounded-md border-2 transition-all duration-200 hover:bg-gray-50 active:scale-95 flex-1 sm:flex-none disabled:opacity-60" style={{ borderColor: "#00462C", color: "#00462C", height: "44px", width: "clamp(140px, 40%, 220px)" }}>
-          {buying ? "Placing..." : "Buy Now"}
+        <button onClick={handleBuyNow} disabled={buying || outOfStock} className="flex items-center justify-center font-semibold text-sm rounded-md border-2 transition-all duration-200 hover:bg-gray-50 active:scale-95 flex-1 sm:flex-none disabled:opacity-60 disabled:cursor-not-allowed" style={{ borderColor: outOfStock ? "#9CA3AF" : "#00462C", color: outOfStock ? "#6B7280" : "#00462C", height: "44px", width: "clamp(140px, 40%, 220px)" }}>
+          {outOfStock ? "Out of Stock" : buying ? "Placing..." : "Buy Now"}
         </button>
       </div>
     </div>

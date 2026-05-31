@@ -29,6 +29,8 @@ export async function resolveComboItems(prisma: any, productCodes: unknown) {
         pImage: true,
         sellingPrice: true,
         actualPrice: true,
+        stockQuantity: true,
+        availableQuantity: true,
       },
     }),
   ]);
@@ -59,9 +61,70 @@ export async function resolveComboItems(prisma: any, productCodes: unknown) {
       variationName,
       image: product?.pImage || "/no-image.png",
       price: Number(variant?.salesRate ?? product?.sellingPrice ?? 0),
-      stockQuantity: variant?.stockQuantity?.toString?.() || null,
+      stockQuantity: (
+        variant?.stockQuantity ??
+        product?.availableQuantity ??
+        product?.stockQuantity ??
+        0
+      )?.toString?.() || "0",
     };
   });
+}
+
+export function getComboAvailability(comboItems: any[], requestedQty = 1) {
+  const qty = Math.max(1, Number(requestedQty || 1));
+  const items = Array.isArray(comboItems) ? comboItems : [];
+  const stocks = items.map((item) => Number(item?.stockQuantity ?? 0));
+  const comboStockQuantity = stocks.length ? Math.min(...stocks) : 0;
+  const outOfStockItems = items.filter(
+    (item) => Number(item?.stockQuantity ?? 0) < qty,
+  );
+
+  return {
+    comboStockQuantity,
+    comboOutOfStock: items.length === 0 || outOfStockItems.length > 0,
+    outOfStockItems,
+  };
+}
+
+export async function decrementComboItemsStock(
+  tx: any,
+  comboItems: any[],
+  requestedQty = 1,
+) {
+  const qty = Math.max(1, Number(requestedQty || 1));
+  const decrementBy = BigInt(qty);
+  const items = Array.isArray(comboItems) ? comboItems : [];
+
+  for (const item of items) {
+    const pCode = String(item?.pCode || item?.code || "").trim();
+    if (!pCode) continue;
+
+    const variantUpdate = await tx.productVariant.updateMany({
+      where: {
+        pCode,
+        stockQuantity: { gte: decrementBy },
+      },
+      data: {
+        stockQuantity: { decrement: decrementBy },
+      },
+    });
+
+    if (variantUpdate.count === 0) {
+      throw new Error(`${item?.name || pCode} does not have enough stock`);
+    }
+
+    await tx.products.updateMany({
+      where: {
+        productCode: pCode,
+        stockQuantity: { gte: decrementBy },
+      },
+      data: {
+        stockQuantity: { decrement: decrementBy },
+        availableQuantity: { decrement: decrementBy },
+      },
+    });
+  }
 }
 
 export async function attachComboItems<T extends { productCodes?: unknown }>(
@@ -69,9 +132,12 @@ export async function attachComboItems<T extends { productCodes?: unknown }>(
   combo: T | null | undefined,
 ) {
   if (!combo) return combo;
+  const comboItems = await resolveComboItems(prisma, combo.productCodes);
+  const availability = getComboAvailability(comboItems);
   return {
     ...combo,
-    comboItems: await resolveComboItems(prisma, combo.productCodes),
+    comboItems,
+    ...availability,
   };
 }
 

@@ -33,10 +33,25 @@ function getProductCodes(combo) {
     .filter(Boolean);
 }
 
+function getComboStock(combo) {
+  if (combo.comboStockQuantity !== undefined && combo.comboStockQuantity !== null) {
+    return Number(combo.comboStockQuantity || 0);
+  }
+
+  const items = Array.isArray(combo.comboItems) ? combo.comboItems : [];
+  if (!items.length) return 0;
+  return Math.min(...items.map((item) => Number(item.stockQuantity ?? 0)));
+}
+
+function isComboOutOfStock(combo) {
+  return combo.comboOutOfStock === true || getComboStock(combo) <= 0;
+}
+
 function ComboCard({ combo }) {
   const image = resolveImageUrl(getMainImage(combo));
   const productCodes = getProductCodes(combo);
   const savedAmount = Math.max(0, Number(combo.productPrices || 0) - Number(combo.comboPrice || 0));
+  const outOfStock = isComboOutOfStock(combo);
   const galleryCount = Array.isArray(combo.productImages)
     ? combo.productImages.filter((image) => !image.isMain).length
     : 0;
@@ -50,16 +65,24 @@ function ComboCard({ combo }) {
       ) : null}
 
       <div className="absolute top-3 right-0 z-10 text-white text-xs px-2 py-1 bg-[#F5A623] rounded-l">
-        Combo
+        {outOfStock ? "Out of Stock" : "Combo"}
       </div>
 
       <Link href={`/combo-products/${combo.comboProductId}`} className="block relative w-full bg-gray-50 h-44">
         <img src={image} alt={combo.comboName || "Combo pack"} onError={(event) => (event.currentTarget.src = "/no-image.png")} className="w-full h-full object-contain p-3" />
+        {outOfStock ? (
+          <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+            <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white shadow-sm">
+              Out of Stock
+            </span>
+          </div>
+        ) : null}
       </Link>
 
       <div className="px-3 pt-3 pb-2 flex-1">
         <p className="text-sm font-semibold text-gray-800 line-clamp-2 min-h-10">{combo.comboName}</p>
         <p className="text-xs text-gray-500 line-clamp-2 mt-1 min-h-8">{combo.comboDescription || `${productCodes.length} products bundled for better value.`}</p>
+        {outOfStock ? <p className="text-xs font-semibold text-red-600 mt-1">One or more combo items are unavailable</p> : null}
         <div className="flex flex-wrap gap-1.5 mt-2">
           {productCodes.slice(0, 3).map((code) => (
             <span key={code} className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">{code}</span>
@@ -74,7 +97,7 @@ function ComboCard({ combo }) {
       </div>
 
       <div className="px-3 pb-3">
-        <Link href={`/combo-products/${combo.comboProductId}`} className="w-full py-2 rounded text-white font-semibold flex items-center justify-center gap-1.5 text-sm bg-[#00462C] hover:bg-[#0b5a3b]">
+        <Link href={`/combo-products/${combo.comboProductId}`} className={`w-full py-2 rounded text-white font-semibold flex items-center justify-center gap-1.5 text-sm ${outOfStock ? "bg-gray-500 hover:bg-gray-600" : "bg-[#00462C] hover:bg-[#0b5a3b]"}`}>
           <CartIcon /> View Combo
         </Link>
       </div>

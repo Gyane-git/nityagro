@@ -4,7 +4,11 @@ import { sendMail } from "@/lib/mailer";
 import { buildOrderPlacedEmail } from "@/lib/orderEmail";
 import { generateInvoicePdf } from "@/lib/invoicePdf";
 import { syncOmsOrderSafely } from "@/lib/omsOrderSync";
-import { resolveComboItems } from "@/lib/comboItems";
+import {
+  decrementComboItemsStock,
+  getComboAvailability,
+  resolveComboItems,
+} from "@/lib/comboItems";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -129,6 +133,37 @@ export async function POST(req: Request) {
         );
       }
 
+      const comboStockChecks = await Promise.all(
+        normalizedComboItems.map(async (row) => {
+          const combo = comboMap.get(String(row.comboProductId));
+          const comboItems = await resolveComboItems(prisma, combo?.productCodes || "");
+          return {
+            row,
+            combo,
+            comboItems,
+            availability: getComboAvailability(comboItems, row.qty),
+          };
+        }),
+      );
+      const unavailableCombo = comboStockChecks.find(
+        (check) => check.availability.comboOutOfStock,
+      );
+      if (unavailableCombo) {
+        const itemNames = unavailableCombo.availability.outOfStockItems
+          .map((item: any) => item.name)
+          .filter(Boolean)
+          .join(", ");
+        return NextResponse.json(
+          {
+            success: false,
+            message: itemNames
+              ? `Combo is out of stock. Unavailable item(s): ${itemNames}`
+              : "Combo is out of stock",
+          },
+          { status: 400, headers: corsHeaders },
+        );
+      }
+
       const txCode = `COD-COMBO-${Date.now()}`;
       const created = await prisma.$transaction(async (tx) => {
         const createdOrders: {
@@ -142,6 +177,10 @@ export async function POST(req: Request) {
 
         for (const [index, row] of normalizedComboItems.entries()) {
           const combo = comboMap.get(String(row.comboProductId));
+          const stockCheck = comboStockChecks.find(
+            (check) =>
+              Number(check.row.comboProductId) === Number(row.comboProductId),
+          );
           const unitPrice =
             row.unitPrice > 0 ? row.unitPrice : Number(combo?.comboPrice || 0);
           const lineTotal = Number((unitPrice * row.qty).toFixed(2));
@@ -163,6 +202,8 @@ export async function POST(req: Request) {
               paymentStatus: "PENDING",
             },
           });
+
+          await decrementComboItemsStock(tx, stockCheck?.comboItems || [], row.qty);
 
           createdOrders.push({
             comboOrderId: order.comboOrderId,
