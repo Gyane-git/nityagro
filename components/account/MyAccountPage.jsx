@@ -28,6 +28,7 @@ const USER = {
 export default function MyAccountPage() {
   const [activeTab, setActiveTab] = useState("profile");
   const [user, setUser] = useState(USER);
+  const [trackingOrderId, setTrackingOrderId] = useState(null);
   const clearCart = useCartStore((state) => state.clearCart);
   const clearWishlist = useWishlistStore((state) => state.clearWishlist);
   const openConfirm = useConfirmModalStore((state) => state.open);
@@ -103,11 +104,17 @@ export default function MyAccountPage() {
     setSidebarOpen(false);
   };
 
+  const handleTrackOrder = (orderId) => {
+    setTrackingOrderId(orderId);
+    setActiveTab("tracking");
+    setSidebarOpen(false);
+  };
+
   const tabComponents = {
     profile: <MyProfile user={user} userId={user.userId || USER.userId} onProfileUpdated={(data) => setUser((prev) => ({ ...prev, ...data }))} />,
     address: <AddressBook userId={user.userId || USER.userId} />,
-    history: <OrderHistory userId={user.userId || USER.userId} />,
-    tracking: <OrderTracking userId={user.userId || USER.userId} userName={user.name || "User"} />,
+    history: <OrderHistory userId={user.userId || USER.userId} onTrackOrder={handleTrackOrder} />,
+    tracking: <OrderTracking userId={user.userId || USER.userId} userName={user.name || "User"} selectedOrderId={trackingOrderId} />,
     cancellations: <AccountActivityList type="cancellations" />,
     returns: <AccountActivityList type="returns" />,
     reviews: <AccountActivityList type="reviews" />,

@@ -127,6 +127,56 @@ export async function decrementComboItemsStock(
   }
 }
 
+export async function restoreComboItemsStock(
+  tx: any,
+  comboItems: any[],
+  requestedQty = 1,
+) {
+  const qty = Math.max(1, Number(requestedQty || 1));
+  const incrementBy = BigInt(qty);
+  const items = Array.isArray(comboItems) ? comboItems : [];
+
+  for (const item of items) {
+    const pCode = String(item?.pCode || item?.code || "").trim();
+    if (!pCode) continue;
+
+    const variants = await tx.productVariant.findMany({
+      where: { pCode },
+      select: { variantId: true, stockQuantity: true },
+    });
+
+    await Promise.all(
+      variants.map((variant: any) =>
+        tx.productVariant.update({
+          where: { variantId: variant.variantId },
+          data: {
+            stockQuantity: BigInt(variant.stockQuantity ?? 0) + incrementBy,
+          },
+        }),
+      ),
+    );
+
+    const product = await tx.products.findUnique({
+      where: { productCode: pCode },
+      select: {
+        productId: true,
+        stockQuantity: true,
+        availableQuantity: true,
+      },
+    });
+
+    if (product) {
+      await tx.products.update({
+        where: { productId: product.productId },
+        data: {
+          stockQuantity: BigInt(product.stockQuantity ?? 0) + incrementBy,
+          availableQuantity: BigInt(product.availableQuantity ?? 0) + incrementBy,
+        },
+      });
+    }
+  }
+}
+
 export async function attachComboItems<T extends { productCodes?: unknown }>(
   prisma: any,
   combo: T | null | undefined,

@@ -49,7 +49,7 @@ function buildSteps(status) {
   ];
 }
 
-export default function OrderTracking({ userId = "1", userName = "User" }) {
+export default function OrderTracking({ userId = "1", userName = "User", selectedOrderId = null }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const selectedAddress = useCheckoutStore((state) => state.getSelectedAddress());
@@ -57,28 +57,78 @@ export default function OrderTracking({ userId = "1", userName = "User" }) {
   useEffect(() => {
     const fetchOrders = async () => {
       setLoading(true);
-      const response = await apiGetRequest(`/orders?userId=${userId}&status=all`, false);
-      if (!response.success) {
-        toast.error(response.message || "Failed to fetch tracking data");
+      const [orderResponse, comboResponse] = await Promise.all([
+        apiGetRequest(`/orders?userId=${userId}&status=all`, false),
+        apiGetRequest("/combo-orders", true),
+      ]);
+
+      if (!orderResponse.success) {
+        toast.error(orderResponse.message || "Failed to fetch tracking data");
         setLoading(false);
         return;
       }
-      setOrders(Array.isArray(response.data) ? response.data : []);
+
+      const normalOrders = Array.isArray(orderResponse.data) ? orderResponse.data : [];
+      const comboOrders = comboResponse.success && Array.isArray(comboResponse.data)
+        ? comboResponse.data.map((order) => ({
+            id: `combo-${order.id}`,
+            rawId: order.id,
+            orderNumber: order.orderNumber,
+            orderType: "combo",
+            orderStatus: order.orderStatus,
+            paymentStatus: order.paymentStatus,
+            totalAmount: Number(order.totalAmount || 0),
+            subtotal: Number(order.subtotal || order.totalAmount || 0),
+            shippingCost: Number(order.shippingCost || 0),
+            createdAt: order.createdAt,
+            updatedAt: order.updatedAt,
+            paymentMethod: "COD",
+            items: [
+              {
+                id: `${order.id}-combo`,
+                productCode: order.combo?.code || order.combo?.productCodes || "COMBO",
+                name: order.combo?.name || "Combo Product",
+                image: order.combo?.image || "/no-image.png",
+                qty: Number(order.quantity || 1),
+                unitPrice: Number(order.totalAmount || 0) / Math.max(1, Number(order.quantity || 1)),
+                subtotal: Number(order.totalAmount || 0),
+              },
+            ],
+          }))
+        : [];
+
+      setOrders(
+        [...normalOrders, ...comboOrders].sort(
+          (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime(),
+        ),
+      );
       setLoading(false);
     };
     fetchOrders();
   }, [userId]);
 
-  const latestOrder = useMemo(() => orders[0] || null, [orders]);
-  const orderItems = latestOrder?.items || [];
-  const steps = buildSteps(latestOrder?.orderStatus || "processing");
-  const progressWidth = latestOrder?.orderStatus === "delivered" ? "100%" : latestOrder?.orderStatus === "shipped" ? "66%" : latestOrder?.orderStatus === "cancelled" ? "100%" : "35%";
+  const selectedOrder = useMemo(() => {
+    if (!selectedOrderId) return orders[0] || null;
+    return (
+      orders.find(
+        (order) =>
+          String(order.id) === String(selectedOrderId) ||
+          String(order.rawId || "") === String(selectedOrderId) ||
+          String(order.orderNumber || "") === String(selectedOrderId),
+      ) ||
+      orders[0] ||
+      null
+    );
+  }, [orders, selectedOrderId]);
+  const orderItems = selectedOrder?.items || [];
+  const steps = buildSteps(selectedOrder?.orderStatus || "processing");
+  const progressWidth = selectedOrder?.orderStatus === "delivered" ? "100%" : selectedOrder?.orderStatus === "shipped" ? "66%" : selectedOrder?.orderStatus === "cancelled" ? "100%" : "35%";
 
   if (loading) {
     return <div className="p-6 text-sm text-gray-500">Loading tracking details...</div>;
   }
 
-  if (!latestOrder) {
+  if (!selectedOrder) {
     return <div className="p-6 text-sm text-gray-500">No orders available for tracking.</div>;
   }
 
@@ -102,7 +152,7 @@ export default function OrderTracking({ userId = "1", userName = "User" }) {
           <div className="text-[14px] font-bold text-[#235a4e]">Order Status</div>
 
           <div className="text-[12px] text-[#4E5663] mt-0.5 mb-5">
-            Order ID <span className="text-[#4E5663] font-medium"># {latestOrder.orderNumber}</span>
+            Order ID <span className="text-[#4E5663] font-medium"># {selectedOrder.orderNumber}</span>
           </div>
 
           {/* ================= MOBILE (VERTICAL) ================= */}
@@ -114,7 +164,7 @@ export default function OrderTracking({ userId = "1", userName = "User" }) {
             <div
               className="absolute left-4 top-0 w-1 bg-[#235a3e] z-10"
               style={{
-                height: latestOrder?.orderStatus === "delivered" ? "100%" : latestOrder?.orderStatus === "shipped" ? "66%" : latestOrder?.orderStatus === "cancelled" ? "100%" : "35%",
+                height: selectedOrder?.orderStatus === "delivered" ? "100%" : selectedOrder?.orderStatus === "shipped" ? "66%" : selectedOrder?.orderStatus === "cancelled" ? "100%" : "35%",
               }}
             />
 
@@ -172,9 +222,9 @@ export default function OrderTracking({ userId = "1", userName = "User" }) {
             </div>
 
             {[
-              { label: "Order Date", value: formatDateTime(latestOrder.createdAt), green: false },
-              { label: "Payment Method", value: latestOrder.paymentMethod || "COD", green: false },
-              { label: "Order Status", value: String(latestOrder.orderStatus || "-").toUpperCase(), green: true },
+              { label: "Order Date", value: formatDateTime(selectedOrder.createdAt), green: false },
+              { label: "Payment Method", value: selectedOrder.paymentMethod || "COD", green: false },
+              { label: "Order Status", value: String(selectedOrder.orderStatus || "-").toUpperCase(), green: true },
             ].map((row, i) => (
               <div key={i} className="flex justify-between items-center mb-2">
                 <span className="text-[12px] text-gray-500">{row.label}</span>
@@ -184,7 +234,7 @@ export default function OrderTracking({ userId = "1", userName = "User" }) {
 
             <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-100">
               <span className="text-[12px] font-semibold text-gray-800">Total Amount :</span>
-              <span className="text-[14px] font-bold text-[#235a3e]">{formatMoney(latestOrder.totalAmount)}</span>
+              <span className="text-[14px] font-bold text-[#235a3e]">{formatMoney(selectedOrder.totalAmount)}</span>
             </div>
           </div>
         </div>

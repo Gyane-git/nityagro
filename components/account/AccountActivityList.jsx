@@ -58,9 +58,22 @@ function Stars({ rating }) {
   );
 }
 
+function parseComboItems(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 function ActivityCard({ item, type }) {
   const isReview = type === "reviews";
+  const isCombo = item.orderType === "combo";
   const imageSrc = item.image || "/no-image.png";
+  const includedItems = parseComboItems(item.comboItems);
 
   return (
     <div className="rounded-lg border border-gray-100 bg-white px-4 py-4 shadow-sm">
@@ -78,9 +91,16 @@ function ActivityCard({ item, type }) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
-              <p className="truncate text-[14px] font-bold text-gray-800">
-                {item.productName || "Product"}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="truncate text-[14px] font-bold text-gray-800">
+                  {item.productName || "Product"}
+                </p>
+                {isCombo ? (
+                  <span className="shrink-0 rounded-full border border-emerald-100 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-[#2e5e2e]">
+                    Combo
+                  </span>
+                ) : null}
+              </div>
               <p className="mt-0.5 text-[12px] text-gray-400">
                 Code: {item.productCode || "-"}
                 {item.orderNumber ? ` · Order #${item.orderNumber}` : ""}
@@ -123,6 +143,12 @@ function ActivityCard({ item, type }) {
                   {item.adminReason}
                 </p>
               ) : null}
+              {includedItems.length ? (
+                <p className="sm:col-span-2">
+                  <span className="font-semibold text-gray-800">Included Items:</span>{" "}
+                  {includedItems.map((comboItem) => comboItem.name || comboItem.pCode || comboItem.code).join(", ")}
+                </p>
+              ) : null}
             </div>
           )}
 
@@ -131,6 +157,96 @@ function ActivityCard({ item, type }) {
           </p>
         </div>
       </div>
+    </div>
+  );
+}
+
+function RequestTable({ title, items, type, emptyText }) {
+  return (
+    <div className="rounded-lg border border-gray-100 bg-white shadow-sm">
+      <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+        <h3 className="text-[14px] font-bold text-gray-800">{title}</h3>
+        <span className={`rounded-full border px-2.5 py-1 text-[11px] font-bold ${getBadgeClass(type)}`}>
+          {items.length}
+        </span>
+      </div>
+
+      {items.length === 0 ? (
+        <div className="px-4 py-8 text-center text-[13px] text-gray-400">
+          {emptyText}
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[850px] text-left text-[12.5px]">
+            <thead className="bg-gray-50 text-gray-500">
+              <tr>
+                <th className="px-4 py-3 font-semibold">Product</th>
+                <th className="px-4 py-3 font-semibold">Order</th>
+                <th className="px-4 py-3 font-semibold">Reason</th>
+                <th className="px-4 py-3 font-semibold">Total</th>
+                <th className="px-4 py-3 font-semibold">Status</th>
+                <th className="px-4 py-3 font-semibold">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item) => {
+                const includedItems = parseComboItems(item.comboItems);
+                const imageSrc = item.image || "/no-image.png";
+                return (
+                  <tr key={item.id} className="border-t border-gray-100">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-md border border-amber-100 bg-amber-50">
+                          <Image
+                            src={imageSrc}
+                            alt={item.productName || "Product"}
+                            fill
+                            className="object-contain p-1"
+                            unoptimized={imageSrc.startsWith("/uploads/") || imageSrc.startsWith("/categories/")}
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="max-w-56 truncate font-bold text-gray-800">
+                            {item.productName || "Product"}
+                          </p>
+                          <p className="text-[11.5px] text-gray-400">
+                            Code: {item.productCode || "-"}
+                          </p>
+                          {includedItems.length ? (
+                            <p className="mt-1 max-w-80 truncate text-[11.5px] text-gray-500">
+                              Includes: {includedItems.map((comboItem) => comboItem.name || comboItem.pCode || comboItem.code).join(", ")}
+                            </p>
+                          ) : null}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 font-semibold text-gray-700">
+                      #{item.orderNumber || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">
+                      <span className="line-clamp-2">{item.reason || "-"}</span>
+                    </td>
+                    <td className="px-4 py-3 font-semibold text-gray-800">
+                      {formatMoney(item.totalAmount)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-bold ${getBadgeClass(type)}`}>
+                        {item.status || "Submitted"}
+                      </span>
+                      <p className="mt-1 text-[11px] text-gray-400">
+                        {item.orderStatus || "-"}
+                      </p>
+                    </td>
+                    <td className="px-4 py-3 text-gray-500">
+                      {formatDate(item.createdAt)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
@@ -187,6 +303,15 @@ export default function AccountActivityList({ type = "cancellations" }) {
     );
   }, [items, search]);
 
+  const normalItems = useMemo(
+    () => filtered.filter((item) => item.orderType !== "combo"),
+    [filtered],
+  );
+  const comboItems = useMemo(
+    () => filtered.filter((item) => item.orderType === "combo"),
+    [filtered],
+  );
+
   return (
     <div>
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -212,6 +337,21 @@ export default function AccountActivityList({ type = "cancellations" }) {
           <div className="rounded-lg border border-gray-100 bg-white px-6 py-12 text-center text-[13px] text-gray-400">
             {config.empty}
           </div>
+        ) : type === "cancellations" || type === "returns" ? (
+          <>
+            <RequestTable
+              title={type === "cancellations" ? "Product Cancellation List" : "Product Return List"}
+              items={normalItems}
+              type={type}
+              emptyText={type === "cancellations" ? "No product cancellation requests found." : "No product return requests found."}
+            />
+            <RequestTable
+              title={type === "cancellations" ? "Combo Cancellation List" : "Combo Return List"}
+              items={comboItems}
+              type={type}
+              emptyText={type === "cancellations" ? "No combo cancellation requests found." : "No combo return requests found."}
+            />
+          </>
         ) : (
           filtered.map((item) => (
             <ActivityCard key={item.id} item={item} type={type} />

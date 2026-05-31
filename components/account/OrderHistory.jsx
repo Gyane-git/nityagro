@@ -282,7 +282,7 @@ function ActionReasonModal({ action, order, reason, setReason, submitting, onClo
   );
 }
 
-function OrderCard({ order, onAction, onReview }) {
+function OrderCard({ order, onAction, onReview, onTrackOrder }) {
   const firstItem = order?.items?.[0];
   const qty = Number(firstItem?.qty || 1);
   const unitPrice = Number(firstItem?.unitPrice ?? order?.totalAmount ?? 0);
@@ -321,13 +321,20 @@ function OrderCard({ order, onAction, onReview }) {
         <p className="mb-1 text-center text-[11px] font-semibold text-gray-400">
           #{order.orderNumber}
         </p>
+        <button
+          type="button"
+          onClick={() => onTrackOrder?.(order.id)}
+          className="mb-1.5 w-full rounded-md border border-sky-100 bg-sky-50 px-3 py-1.5 text-[12px] font-semibold text-sky-700 transition-colors hover:bg-sky-100"
+        >
+          Order Tracking
+        </button>
         <OrderActions order={order} onAction={onAction} onReview={onReview} />
       </div>
     </div>
   );
 }
 
-export default function OrderHistory({ userId = "1" }) {
+export default function OrderHistory({ userId = "1", onTrackOrder }) {
   const [search, setSearch] = useState("");
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -432,13 +439,11 @@ export default function OrderHistory({ userId = "1" }) {
       toast.error("Reason must be at least 5 characters");
       return;
     }
-    if (order?.orderType === "combo") {
-      toast.error("Combo cancel/return store flow needs combo cancellation schema first.");
-      return;
-    }
-
-    const endpoint =
-      action === "cancel"
+    const endpoint = order?.orderType === "combo"
+      ? action === "cancel"
+        ? "/api/account/combo-orders/cancel"
+        : "/api/account/combo-orders/return"
+      : action === "cancel"
         ? "/api/account/orders/cancel"
         : "/api/account/orders/return";
     const loadingToastId = toast.loading(
@@ -571,6 +576,7 @@ export default function OrderHistory({ userId = "1" }) {
               order={order}
               onAction={openActionModal}
               onReview={openReviewModal}
+              onTrackOrder={onTrackOrder}
             />
           ))
         )}

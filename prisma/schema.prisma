@@ -27,6 +27,8 @@ model Users {
   cartListers        CartList[]
   categories         Categories[]
   comboOrders        ComboOrders[]
+  comboCancellations ComboOrderCancellation[]
+  comboReturns       ComboOrderReturn[]
   orderCancellations OrderCancellation[]
   orderReturns       OrderReturn[]
   orders             Orders[]
@@ -126,7 +128,9 @@ model ComboProduct {
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   product          Products       @relation(fields: [productId], references: [productId])
+  comboCancellations ComboOrderCancellation[]
   comboOrders      ComboOrders[]
+  comboReturns     ComboOrderReturn[]
   productImages    ProductImage[]
 
   @@map("comboProduct")
@@ -200,12 +204,58 @@ model ComboOrders {
   paymentStatus  String?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+  cancellations  ComboOrderCancellation[]
   comboProduct   ComboProduct @relation(fields: [comboProductId], references: [comboProductId])
+  returns        ComboOrderReturn[]
   users          Users        @relation(fields: [userId], references: [userId])
 
   @@index([comboProductId], map: "comboOrders_comboProductId_fkey")
   @@index([userId], map: "comboOrders_userId_fkey")
   @@map("comboOrders")
+}
+
+model ComboOrderCancellation {
+  comboOrderCancellationId BigInt       @id @default(autoincrement())
+  comboOrderId             BigInt
+  userId                   BigInt
+  comboProductId           BigInt
+  comboName                String?
+  comboItems               String?
+  cancellationReason       String?
+  adminCancellationReason  String?
+  cancellationStatus       Boolean      @default(true)
+  createdAt                DateTime     @default(now())
+  updatedAt                DateTime     @updatedAt
+  comboOrder               ComboOrders  @relation(fields: [comboOrderId], references: [comboOrderId])
+  comboProduct             ComboProduct @relation(fields: [comboProductId], references: [comboProductId])
+  users                    Users        @relation(fields: [userId], references: [userId])
+
+  @@index([comboOrderId], map: "comboOrderCancellation_comboOrderId_fkey")
+  @@index([comboProductId], map: "comboOrderCancellation_comboProductId_fkey")
+  @@index([userId], map: "comboOrderCancellation_userId_fkey")
+  @@map("comboOrderCancellation")
+}
+
+model ComboOrderReturn {
+  comboOrderReturnId BigInt       @id @default(autoincrement())
+  comboOrderId       BigInt
+  userId             BigInt
+  comboProductId     BigInt
+  comboName          String?
+  comboItems         String?
+  reason             String?
+  returnImage        String?
+  returnStatus       Boolean      @default(true)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  comboOrder         ComboOrders  @relation(fields: [comboOrderId], references: [comboOrderId])
+  comboProduct       ComboProduct @relation(fields: [comboProductId], references: [comboProductId])
+  users              Users        @relation(fields: [userId], references: [userId])
+
+  @@index([comboOrderId], map: "comboOrderReturn_comboOrderId_fkey")
+  @@index([comboProductId], map: "comboOrderReturn_comboProductId_fkey")
+  @@index([userId], map: "comboOrderReturn_userId_fkey")
+  @@map("comboOrderReturn")
 }
 
 model OmsOrderSyncLog {
