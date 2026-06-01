@@ -127,7 +127,7 @@ function ProductCard({ product }) {
       {/* Badge */}
       {product.badge && (
         <div
-          className="absolute top-3 right-0 z-10 text-white px-2 py-1"
+          className="absolute top-2.5 right-8 z-10 text-white px-2 py-1"
           style={{
             background: "#F5A623",
             borderTopLeftRadius: "4px",

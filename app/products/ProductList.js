@@ -12,16 +12,7 @@ import { addCartToDb, addWishlistToDb, removeWishlistFromDb } from "@/utils/acco
 
 // ─── Icons ─────────────────────────────────────────────────────────────────
 const CartIcon = () => (
-  <svg
-    width="15"
-    height="15"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="9" cy="21" r="1" />
     <circle cx="20" cy="21" r="1" />
     <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
@@ -29,57 +20,25 @@ const CartIcon = () => (
 );
 
 const StarIcon = ({ filled }) => (
-  <svg
-    width="13"
-    height="13"
-    viewBox="0 0 24 24"
-    fill={filled ? "#F5A623" : "none"}
-    stroke="#F5A623"
-    strokeWidth="1.5"
-  >
+  <svg width="13" height="13" viewBox="0 0 24 24" fill={filled ? "#F5A623" : "none"} stroke="#F5A623" strokeWidth="1.5">
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
   </svg>
 );
 
 const ChevronLeft = () => (
-  <svg
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-  >
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
     <polyline points="15 18 9 12 15 6" />
   </svg>
 );
 
 const ChevronRight = () => (
-  <svg
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-  >
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
     <polyline points="9 18 15 12 9 6" />
   </svg>
 );
 
 const HeartIcon = ({ filled }) => (
-  <svg
-    width="15"
-    height="15"
-    viewBox="0 0 24 24"
-    fill={filled ? "#DC2626" : "none"}
-    stroke={filled ? "#DC2626" : "currentColor"}
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
+  <svg width="15" height="15" viewBox="0 0 24 24" fill={filled ? "#DC2626" : "none"} stroke={filled ? "#DC2626" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
   </svg>
 );
@@ -177,9 +136,9 @@ function ProductCard({ product }) {
       {/* Best Seller badge */}
       {product.badge && (
         <div
-          className="absolute top-2 sm:top-3 right-0 z-10 text-white font-semibold
+          className="absolute top-2 sm:top-3 right-8 z-10 text-white font-semibold
       text-[10px] sm:text-xs
-      px-2 sm:px-3
+      px-1 sm:px-3
       py-1 sm:py-1.5
       leading-tight
       whitespace-normal
@@ -195,28 +154,17 @@ function ProductCard({ product }) {
         </div>
       )}
 
-      <Link
-        href={`/products/${product.id}`}
-        className="flex flex-col flex-1 min-h-0"
-      >
+      <Link href={`/products/${product.id}`} className="flex flex-col flex-1 min-h-0">
         {/* Image */}
         <div className="relative w-full aspect-4/3 bg-gray-50 flex items-center justify-center">
-          <Image
-            src={product.image}
-            alt={product.name}
-            fill
-            className="object-contain p-4"
-            sizes="259px"
-          />
+          <Image src={product.image} alt={product.name} fill className="object-contain p-4" sizes="259px" />
         </div>
 
         {/* Info */}
         <div className="flex flex-col flex-1 px-3 pt-2.5 pb-3">
           <div className="flex flex-col gap-1">
             <StarRating rating={product.rating} reviews={product.reviews} />
-            <p className="text-gray-800 text-sm font-medium leading-snug line-clamp-2">
-              {product.name}
-            </p>
+            <p className="text-gray-800 text-sm font-medium leading-snug line-clamp-2">{product.name}</p>
             <p className="text-gray-900 font-bold" style={{ fontSize: "15px" }}>
               NPR {product.price}
             </p>
@@ -246,11 +194,7 @@ function Pagination({ current, total, onChange }) {
   const pages = Array.from({ length: total }, (_, i) => i + 1);
   return (
     <div className="flex items-center gap-1 justify-end mt-8">
-      <button
-        onClick={() => onChange(Math.max(1, current - 1))}
-        disabled={current === 1}
-        className="w-8 h-8 flex items-center justify-center rounded border border-gray-300 text-gray-600 hover:border-[#00462C] hover:text-[#00462C] disabled:opacity-30 transition-colors"
-      >
+      <button onClick={() => onChange(Math.max(1, current - 1))} disabled={current === 1} className="w-8 h-8 flex items-center justify-center rounded border border-gray-300 text-gray-600 hover:border-[#00462C] hover:text-[#00462C] disabled:opacity-30 transition-colors">
         <ChevronLeft />
       </button>
       {pages.map((p) => (
@@ -267,11 +211,7 @@ function Pagination({ current, total, onChange }) {
           {p}
         </button>
       ))}
-      <button
-        onClick={() => onChange(Math.min(total, current + 1))}
-        disabled={current === total}
-        className="w-8 h-8 flex items-center justify-center rounded border border-gray-300 text-gray-600 hover:border-[#00462C] hover:text-[#00462C] disabled:opacity-30 transition-colors"
-      >
+      <button onClick={() => onChange(Math.min(total, current + 1))} disabled={current === total} className="w-8 h-8 flex items-center justify-center rounded border border-gray-300 text-gray-600 hover:border-[#00462C] hover:text-[#00462C] disabled:opacity-30 transition-colors">
         <ChevronRight />
       </button>
     </div>
@@ -289,14 +229,11 @@ export default function ProductList({ products = ALL_PRODUCTS }) {
     <div className="flex flex-col flex-1 min-w-0">
       {/* Items count */}
       <p className="text-sm text-gray-600 mb-4 font-medium">
-        Items {start + 1}–{Math.min(start + PER_PAGE, products.length)} of{" "}
-        <span className="font-bold text-gray-800">{products.length}</span>
+        Items {start + 1}–{Math.min(start + PER_PAGE, products.length)} of <span className="font-bold text-gray-800">{products.length}</span>
       </p>
 
       {products.length === 0 ? (
-        <div className="rounded-md border border-gray-200 p-6 text-sm text-gray-500">
-          No products found for selected filters.
-        </div>
+        <div className="rounded-md border border-gray-200 p-6 text-sm text-gray-500">No products found for selected filters.</div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
           {visible.map((product) => (
@@ -306,9 +243,7 @@ export default function ProductList({ products = ALL_PRODUCTS }) {
       )}
 
       {/* Pagination */}
-      {products.length > 0 ? (
-        <Pagination current={page} total={totalPages} onChange={setPage} />
-      ) : null}
+      {products.length > 0 ? <Pagination current={page} total={totalPages} onChange={setPage} /> : null}
     </div>
   );
 }
