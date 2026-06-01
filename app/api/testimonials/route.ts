@@ -2,6 +2,7 @@ import { mkdir, unlink, writeFile } from "fs/promises";
 import path from "path";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getPublicUploadDir } from "@/lib/uploadPaths";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,7 +10,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "testimonials");
+const UPLOAD_DIR = getPublicUploadDir("uploads", "testimonials");
 const PUBLIC_DIR = "/uploads/testimonials";
 
 function serialize(item: any) {
@@ -69,7 +70,7 @@ async function saveImage(file: File | null, prefix = "testimonial") {
 async function deleteLocalImage(imageUrl: string | null | undefined) {
   if (!imageUrl || !imageUrl.startsWith(PUBLIC_DIR)) return;
   try {
-    await unlink(path.join(process.cwd(), "public", imageUrl));
+    await unlink(path.join(getPublicUploadDir(), imageUrl));
   } catch {
     // Missing old files should not block testimonial updates.
   }
