@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { refreshLocalStockFromOms } from "@/lib/omsStock";
 import { getPublicUploadDir } from "@/lib/uploadPaths";
 import { NextResponse } from "next/server";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -8,8 +9,11 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Cache-Control": "no-store, no-cache, must-revalidate",
 };
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function OPTIONS() {
   return new Response(null, {
@@ -141,9 +145,25 @@ export async function GET() {
       distinct: ["subGroupName"],
     });
 
-    // Fix BigInt serialization
+    const liveStockByCode = await refreshLocalStockFromOms(
+      productGroupWise.map((product) => product.productCode),
+    ).catch((error) => {
+      console.warn("Live OMS stock overlay failed", error);
+      return new Map<string, number>();
+    });
+    const rows = productGroupWise.map((product) => {
+      const liveStock = liveStockByCode.get(product.productCode);
+      if (liveStock === undefined) return product;
+      return {
+        ...product,
+        stockQuantity: liveStock,
+        availableQuantity: liveStock,
+        omsAvailableQty: liveStock,
+      };
+    });
+
     const safeData = JSON.parse(
-      JSON.stringify(productGroupWise, (_, value) =>
+      JSON.stringify(rows, (_, value) =>
         typeof value === "bigint" ? value.toString() : value,
       ),
     );
@@ -342,14 +362,15 @@ export async function POST(req: Request) {
       };
 
       if (existing) {
-        const omsChanged =
+        const stockChanged =
+          !sameBigIntValue(existing.stockQuantity, nextStockQuantity) ||
+          !sameBigIntValue(existing.availableQuantity, nextAvailableQuantity);
+        const omsIdentityChanged =
           normalizeText(existing.categoryId) !== nextCategoryId ||
           normalizeText(existing.productName) !== nextProductName ||
           normalizeText(existing.subGroupName) !== normalizeText(nextSubGroupName) ||
           Number(existing.actualPrice ?? 0) !== nextActualPrice ||
-          Number(existing.sellingPrice ?? 0) !== nextSellingPrice ||
-          !sameBigIntValue(existing.stockQuantity, nextStockQuantity) ||
-          !sameBigIntValue(existing.availableQuantity, nextAvailableQuantity);
+          Number(existing.sellingPrice ?? 0) !== nextSellingPrice;
 
         await prisma.products.update({
           where: { productCode: item.productCode },
@@ -357,7 +378,7 @@ export async function POST(req: Request) {
         });
         updatedCount += 1;
 
-        if (omsChanged) {
+        if (omsIdentityChanged) {
           const affectedSubGroup = nextSubGroupName || existing.subGroupName || "";
           if (affectedSubGroup) {
             const result = await prisma.products.updateMany({
@@ -373,6 +394,8 @@ export async function POST(req: Request) {
             });
             deactivatedSubGroupCount += 1;
           }
+        } else if (stockChanged) {
+          // Stock-only refreshes come from OMS full-reset and must not change product status.
         }
       } else {
         await prisma.products.create({

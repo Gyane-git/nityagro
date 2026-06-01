@@ -7,6 +7,7 @@ import FrequentlyBoughtTogether from "./Frequentlyboughttogether";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { refreshLocalStockFromOms } from "@/lib/omsStock";
 import { unstable_noStore as noStore } from "next/cache";
 
 export const dynamic = "force-dynamic";
@@ -64,6 +65,23 @@ export default async function ProductDetailPage({ params }) {
 
   if (!product || product.productStatus === false) {
     notFound();
+  }
+
+  if (product.productCode) {
+    const liveStock = await refreshLocalStockFromOms([product.productCode]).catch(
+      (error) => {
+        console.warn("Live OMS stock refresh for product detail failed", error);
+        return new Map();
+      },
+    );
+    const liveQuantity = liveStock.get(product.productCode);
+    if (liveQuantity !== undefined) {
+      product = {
+        ...product,
+        stockQuantity: BigInt(liveQuantity),
+        availableQuantity: BigInt(liveQuantity),
+      };
+    }
   }
 
   const safeProduct = JSON.parse(JSON.stringify(product, (_, value) => (typeof value === "bigint" ? value.toString() : value)));

@@ -1,11 +1,16 @@
 import { prisma } from "@/lib/prisma";
+import { refreshLocalStockFromOms } from "@/lib/omsStock";
 import { NextResponse } from "next/server";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Cache-Control": "no-store, no-cache, must-revalidate",
 };
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 
 export async function OPTIONS() {
@@ -43,8 +48,25 @@ export async function GET(
       );
     }
 
+    const liveStock = await refreshLocalStockFromOms([category.productCode]).catch(
+      (error) => {
+        console.warn("Live OMS stock refresh for product API failed", error);
+        return new Map<string, number>();
+      },
+    );
+    const liveQuantity = liveStock.get(category.productCode);
+    const data =
+      liveQuantity === undefined
+        ? category
+        : {
+            ...category,
+            stockQuantity: BigInt(liveQuantity),
+            availableQuantity: BigInt(liveQuantity),
+            omsAvailableQty: liveQuantity,
+          };
+
     const safeData = JSON.parse(
-      JSON.stringify(category, (_, value) =>
+      JSON.stringify(data, (_, value) =>
         typeof value === "bigint" ? value.toString() : value,
       ),
     );
@@ -66,4 +88,3 @@ export async function GET(
     );
   }
 }
-

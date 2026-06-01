@@ -11,7 +11,7 @@ type SubCategoryDTO = {
   subGroupName: string;
   variationName: string;
   salesRate: number;
-  stockQuantity:number
+  stockQuantity?: number;
 };
 // ✅ Preflight handler
 export async function OPTIONS() {
@@ -75,7 +75,10 @@ export async function POST(req: Request) {
         subGroupName: String(row?.subGroupName || "").trim(),
         variationName: String(row?.variationName || "").trim(),
         salesRate: Number(row?.salesRate ?? 0),
-        stockQuantity:Number(row?.stockQuantity ?? 0),
+        stockQuantity:
+          row?.stockQuantity === undefined || row?.stockQuantity === null
+            ? undefined
+            : Number(row.stockQuantity),
       });
     }
 
@@ -112,7 +115,7 @@ export async function POST(req: Request) {
           subGroupName: p.subGroupName,
           variationName: p.variationName,
           salesRate: p.salesRate,
-          stockQuantity:p.stockQuantity
+          stockQuantity: BigInt(Number(p.stockQuantity ?? 0)),
         })),
         skipDuplicates: true,
       });
@@ -126,7 +129,9 @@ export async function POST(req: Request) {
           subGroupName: row.subGroupName,
           variationName: row.variationName,
           salesRate: row.salesRate,
-          stockQuantity: BigInt(row.stockQuantity ?? 0),
+          ...(row.stockQuantity === undefined
+            ? {}
+            : { stockQuantity: BigInt(Number(row.stockQuantity ?? 0)) }),
         },
       });
       updatedCount += updated.count;

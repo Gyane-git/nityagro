@@ -1,7 +1,8 @@
 import { prisma as defaultPrisma } from "@/lib/prisma";
 
-const DEFAULT_OMS_SAVE_ORDER_URL =
-  "http://bkgroupapi.globaltech.com.np:802/api/Order/SaveOrder";
+const DEFAULT_OMS_TOKEN_URL = "http://nityamecomapi.globaltech.com.np/token";
+const DEFAULT_OMS_PLACE_ORDER_URL =
+  "http://nityamecomapi.globaltech.com.np/api/v1/placeEcomOrder";
 
 type PrismaLike = typeof defaultPrisma;
 
@@ -12,10 +13,15 @@ type OmsSyncItem = {
   totalAmt?: number;
   discountAmount?: number;
   discountRate?: number;
-  vatAmount?: number;
-  vatRate?: number;
-  exciseAmount?: number;
-  exciseRate?: number;
+  dispatchAmount?: number;
+  remarks?: string;
+};
+
+type OmsCustomer = {
+  name?: string | null;
+  phone?: string | null;
+  memberCode?: string | null;
+  userCode?: string | null;
 };
 
 type OmsSyncArgs = {
@@ -24,7 +30,19 @@ type OmsSyncArgs = {
   localOrderIds: Array<string | number | bigint>;
   items: OmsSyncItem[];
   comment?: string;
+  paymentMode?: string;
+  paymentAmount?: number;
+  deliveryCharge?: number;
+  customer?: OmsCustomer | null;
 };
+
+type OmsOrderPayload = ReturnType<typeof buildOmsOrderPayload>;
+
+let tokenCache: { token: string; expiresAt: number } | null = null;
+
+function env(key: string, fallback = "") {
+  return String(process.env[key] ?? fallback).trim().replace(/^['\"]|['\"]$/g, "");
+}
 
 function isOmsSuccess(response: unknown) {
   if (response == null) return true;
@@ -36,7 +54,7 @@ function isOmsSuccess(response: unknown) {
   const data = response as Record<string, unknown>;
   const status = String(data.status || data.Status || data.result || data.Result || "").toLowerCase();
   const success = data.success ?? data.Success ?? data.isSuccess ?? data.IsSuccess;
-  const code = String(data.code || data.Code || data.responseCode || data.ResponseCode || "").toLowerCase();
+  const code = String(data.code || data.Code || data.responseCode || data.ResponseCode || data.status_code || "").toLowerCase();
   const message = String(data.message || data.Message || data.error || data.Error || "").toLowerCase();
 
   if (success === true || success === "true") return true;
@@ -47,92 +65,194 @@ function isOmsSuccess(response: unknown) {
   if (["failed", "fail", "error", "0", "false"].includes(code)) return false;
   if (message.includes("error") || message.includes("fail")) return false;
 
-  // Some legacy OMS APIs return a plain success object without a standard flag.
   return true;
 }
 
-const toAmount = (value: unknown) => {
+const moneyString = (value: unknown) => {
   const amount = Number(value || 0);
-  return Number.isFinite(amount) ? amount.toFixed(2) : "0.00";
+  return Number.isFinite(amount) ? String(Number(amount.toFixed(2))) : "0";
 };
 
-const toQty = (value: unknown) => {
+const qtyString = (value: unknown) => {
   const qty = Number(value || 0);
   return Number.isFinite(qty) && qty > 0 ? String(qty) : "1";
 };
 
-const toNumberString = (value: unknown, fallback = "0") => {
-  const amount = Number(value ?? fallback);
-  return Number.isFinite(amount) ? String(amount) : fallback;
-};
+function getPaymentAmount(paymentMode: string, amount: unknown) {
+  const mode = paymentMode.toLowerCase();
+  if (mode === "cod" || mode === "cash on delivery") return "0";
+  return moneyString(amount);
+}
 
-export function buildOmsOrderPayload(items: OmsSyncItem[], comment = "Website Order") {
+function getCashBankName(paymentMode: string) {
+  const normalized = paymentMode.toLowerCase();
+  if (normalized === "connectips") {
+    return env("OMS_CONNECTIPS_CASHBANKNAME", "CONNECTIPS");
+  }
+  if (normalized === "cod" || normalized === "cash on delivery") {
+    return env("OMS_COD_CASHBANKNAME", "COD");
+  }
+  return paymentMode || env("OMS_COD_CASHBANKNAME", "COD");
+}
+
+function getCustomerName(customer?: OmsCustomer | null) {
+  return String(customer?.name || env("OMS_DEFAULT_CUSTOMER_NAME", "Ecommerce Party")).trim();
+}
+
+function getCustomerPhone(customer?: OmsCustomer | null) {
+  return String(customer?.phone || env("OMS_DEFAULT_CUSTOMER_PHONE", "")).trim();
+}
+
+function getMemberCode(customer?: OmsCustomer | null) {
+  return String(
+    customer?.memberCode ||
+      customer?.userCode ||
+      env("OMS_MEMBER_CODE") ||
+      env("OMS_ORDER_BY", "1000002"),
+  ).trim();
+}
+
+function buildUserDetails(customer?: OmsCustomer | null) {
+  const name = getCustomerName(customer);
+  const phone = getCustomerPhone(customer);
+  const code = String(customer?.userCode || getMemberCode(customer) || env("OMS_USER_CODE", "U001")).trim();
+
   return {
-    DbName: process.env.OMS_DB_NAME || "Nityam8201",
-    OrderDetails: [
-      {
-        SalesmanId: process.env.OMS_SALESMAN_ID || "",
-        RouteCode: process.env.OMS_ROUTE_CODE || "1",
-        OutletCode: process.env.OMS_OUTLET_CODE || "Y000000001",
-        OrderBy: process.env.OMS_ORDER_BY || "1000002",
-        Comment: comment,
-        Lat: toNumberString(process.env.OMS_LAT, "0"),
-        Lng: toNumberString(process.env.OMS_LNG, "0"),
-        // This legacy OMS endpoint expects a Unix timestamp in seconds, not an ISO date.
-        Timestamp: process.env.OMS_TIMESTAMP || String(Math.floor(Date.now() / 1000)),
-        ItemDetails: items.map((item) => {
-          const rate = Number(item.rate || 0);
-          const qty = Number(item.qty || 1);
-          const totalAmt = Number(item.totalAmt ?? rate * qty);
-
-          return {
-            ExciseAmount: toAmount(item.exciseAmount),
-            DiscountAmount: toAmount(item.discountAmount),
-            TotalAmt: toAmount(totalAmt),
-            Qty: toQty(qty),
-            DiscountRate: toAmount(item.discountRate),
-            VatAmount: toAmount(item.vatAmount),
-            VatRate: toAmount(item.vatRate),
-            ExciseRate: toAmount(item.exciseRate),
-            Rate: toAmount(rate),
-            ItemCode: String(item.itemCode || "").trim(),
-          };
-        }),
-      },
-    ],
+    userName: name,
+    userCode: code,
+    phone,
+    deliveryTime: new Date().toISOString(),
   };
 }
 
-async function postOmsOrder(payload: ReturnType<typeof buildOmsOrderPayload>) {
-  const url = process.env.OMS_SAVE_ORDER_URL || DEFAULT_OMS_SAVE_ORDER_URL;
+export function buildOmsOrderPayload(
+  items: OmsSyncItem[],
+  options: {
+    comment?: string;
+    localOrderIds?: Array<string | number | bigint>;
+    paymentMode?: string;
+    paymentAmount?: number;
+    deliveryCharge?: number;
+    customer?: OmsCustomer | null;
+  } = {},
+) {
+  const paymentMode = String(options.paymentMode || "COD").trim() || "COD";
+  const localOrderIds = options.localOrderIds?.map((id) => id.toString()).filter(Boolean) || [];
+  const orderNumber = localOrderIds.length ? localOrderIds.join("-") : `WEB-${Date.now()}`;
+  const customerName = getCustomerName(options.customer);
+  const customerPhone = getCustomerPhone(options.customer);
+  const memberCode = getMemberCode(options.customer);
+  const deliveryCharge = Number(options.deliveryCharge || 0);
+
+  return {
+    storeCode: env("OMS_STORE_CODE") || env("OMS_DB_NAME", "NITYAM8201"),
+    orderNumber,
+    SalesCenter: env("OMS_SALES_CENTER", ""),
+    orderId: orderNumber,
+    Updated: new Date().toISOString(),
+    remarks: options.comment || "Website Order",
+    membercode: memberCode,
+    membername: customerName,
+    membermobile: customerPhone,
+    PaymentAmount: getPaymentAmount(paymentMode, options.paymentAmount),
+    CustomerName: customerName,
+    Cashbankname: getCashBankName(paymentMode),
+    Order: items.map((item, index) => {
+      const qty = Number(item.qty || 1);
+      const unitPrice = Number(item.rate || 0);
+      const finalPrice = Number(item.totalAmt ?? unitPrice * qty);
+      const dispatchAmount = Number(item.dispatchAmount ?? (index === 0 ? deliveryCharge : 0));
+
+      return {
+        sku: String(item.itemCode || "").trim(),
+        quantity: qtyString(qty),
+        unitPrice: moneyString(unitPrice),
+        finalPrice: moneyString(finalPrice),
+        remarks: item.remarks || "Website Order",
+        DiscountAmount: moneyString(item.discountAmount),
+        Discountrate: moneyString(item.discountRate),
+        DispatchAmount: moneyString(dispatchAmount),
+      };
+    }),
+    userDetails: buildUserDetails(options.customer),
+  };
+}
+
+async function parseResponse(response: Response) {
+  const text = await response.text();
+  try {
+    return text ? JSON.parse(text) : null;
+  } catch {
+    return { raw: text };
+  }
+}
+
+async function getOmsToken() {
+  if (tokenCache?.token && tokenCache.expiresAt > Date.now() + 60_000) {
+    return tokenCache.token;
+  }
+
+  const url = env("OMS_TOKEN_URL", DEFAULT_OMS_TOKEN_URL);
+  const username = env("OMS_USERNAME", "9802069643");
+  const password = env("OMS_PASSWORD", "9802069643");
+  const grantType = env("OMS_GRANT_TYPE", "password");
+  const body = new URLSearchParams({ username, password, grant_type: grantType });
+
   const response = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Accept: "application/json",
+      username,
+      password,
+      grant_type: grantType,
+    },
+    body,
+  });
+
+  const data = await parseResponse(response);
+  if (!response.ok) {
+    throw new Error(`OMS token failed (${response.status}): ${JSON.stringify(data)}`);
+  }
+
+  const token = String((data as any)?.access_token || "").trim();
+  if (!token) throw new Error(`OMS token response missing access_token: ${JSON.stringify(data)}`);
+
+  const expiresIn = Number((data as any)?.expires_in || 3600);
+  tokenCache = {
+    token,
+    expiresAt: Date.now() + Math.max(60, expiresIn - 120) * 1000,
+  };
+
+  return token;
+}
+
+async function postOmsOrder(payload: OmsOrderPayload) {
+  const url = env("OMS_PLACE_ORDER_URL", DEFAULT_OMS_PLACE_ORDER_URL);
+  const token = await getOmsToken();
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(payload),
   });
 
-  const text = await response.text();
-  let data: unknown = text;
-  try {
-    data = text ? JSON.parse(text) : null;
-  } catch {
-    data = { raw: text };
-  }
-
+  const data = await parseResponse(response);
   if (!response.ok) {
-    throw new Error(
-      `OMS SaveOrder failed (${response.status}): ${typeof data === "string" ? data : JSON.stringify(data)}`,
-    );
+    throw new Error(`OMS placeEcomOrder failed (${response.status}): ${JSON.stringify(data)}`);
   }
 
   if (!isOmsSuccess(data)) {
-    throw new Error(`OMS SaveOrder rejected payload: ${typeof data === "string" ? data : JSON.stringify(data)}`);
+    throw new Error(`OMS placeEcomOrder rejected payload: ${JSON.stringify(data)}`);
   }
 
   return data;
 }
 
-async function tryPostWithRetry(payload: ReturnType<typeof buildOmsOrderPayload>, retries = 1) {
+async function tryPostWithRetry(payload: OmsOrderPayload, retries = 1) {
   let lastError: unknown;
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     try {
@@ -150,12 +270,19 @@ async function tryPostWithRetry(payload: ReturnType<typeof buildOmsOrderPayload>
 export async function syncOmsOrderSafely(args: OmsSyncArgs) {
   const db = args.prisma || defaultPrisma;
   const cleanItems = args.items.filter((item) => String(item.itemCode || "").trim());
-  const payload = buildOmsOrderPayload(cleanItems, args.comment || "Website Order");
   const localOrderIds = args.localOrderIds.map((id) => id.toString()).join(",");
+  const payload = buildOmsOrderPayload(cleanItems, {
+    comment: args.comment || "Website Order",
+    localOrderIds: args.localOrderIds,
+    paymentMode: args.paymentMode || "COD",
+    paymentAmount: args.paymentAmount || 0,
+    deliveryCharge: args.deliveryCharge || 0,
+    customer: args.customer,
+  });
   const now = new Date();
 
   if (cleanItems.length === 0) {
-    console.error("OMS order sync skipped: no valid ItemCode", { localOrderIds, items: args.items });
+    console.error("OMS order sync skipped: no valid sku/pCode", { localOrderIds, items: args.items });
     return await db.omsOrderSyncLog.create({
       data: {
         orderType: String(args.orderType || "ORDER"),
@@ -163,7 +290,7 @@ export async function syncOmsOrderSafely(args: OmsSyncArgs) {
         status: "FAILED",
         attempts: 0,
         payload,
-        errorMessage: "OMS sync skipped because no valid ItemCode/pCode was found for order items.",
+        errorMessage: "OMS sync skipped because no valid sku/pCode was found for order items.",
         lastTriedAt: now,
       },
     });
@@ -207,7 +334,7 @@ export async function retryOmsOrderSync(id: string | number | bigint, db: Prisma
 
   const now = new Date();
   try {
-    const result = await tryPostWithRetry(row.payload as ReturnType<typeof buildOmsOrderPayload>, 1);
+    const result = await tryPostWithRetry(row.payload as OmsOrderPayload, 1);
     return await db.omsOrderSyncLog.update({
       where: { omsOrderSyncLogId: row.omsOrderSyncLogId },
       data: {

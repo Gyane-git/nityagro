@@ -44,9 +44,13 @@ export async function POST(req: Request) {
         orderId: true,
         userId: true,
         productId: true,
+        quantity: true,
         orderStatus: true,
         updatedAt: true,
         createdAt: true,
+        product: {
+          select: { productCode: true },
+        },
       },
     });
 
@@ -99,6 +103,21 @@ export async function POST(req: Request) {
         where: { orderId: order.orderId },
         data: { orderStatus: "returns" },
       });
+
+      await tx.products.update({
+        where: { productId: order.productId },
+        data: {
+          stockQuantity: { increment: order.quantity },
+          availableQuantity: { increment: order.quantity },
+        },
+      });
+
+      if (order.product?.productCode) {
+        await tx.productVariant.updateMany({
+          where: { pCode: order.product.productCode },
+          data: { stockQuantity: { increment: order.quantity } },
+        });
+      }
 
       return { orderReturn, updatedOrder };
     });

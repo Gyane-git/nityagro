@@ -76,8 +76,6 @@ type ProductSyncPayload = {
   actualPrice: number;
   sellingPrice: number;
   deliveryTargetDays: null;
-  stockQuantity: number;
-  availableQuantity: number;
 };
 
 type SubGroupSyncPayload = {
@@ -85,7 +83,6 @@ type SubGroupSyncPayload = {
   subGroupName: string;
   variationName: string;
   salesRate: number;
-  stockQuantity: number;
 };
 
 type EditForm = {
@@ -189,8 +186,6 @@ export default function CategoriesListPage() {
          const subGroup: OmsSubGroupName[] = Array.isArray(omsJson?.data)
         ? omsJson.data
         : [];
-     
-     
 
       const product = Object.values(
         products.reduce((acc, item) => {
@@ -213,8 +208,6 @@ export default function CategoriesListPage() {
             actualPrice: item.MRP,
             sellingPrice: item.SalesRate,
             deliveryTargetDays: null,
-            stockQuantity: Number(item.StockQty || 0),
-            availableQuantity: Number(item.StockQty || 0),
           };
           return acc;
         }, {} as Record<string, ProductSyncPayload>),
@@ -229,7 +222,6 @@ export default function CategoriesListPage() {
             subGroupName: String(item.SubGroupName || "").trim(),
             variationName: String(item.PDesc || "").trim(),
             salesRate: item.SalesRate,
-            stockQuantity:item.StockQty
           };
           return acc;
         }, {} as Record<string, SubGroupSyncPayload>),

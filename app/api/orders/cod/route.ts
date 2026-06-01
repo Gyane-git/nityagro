@@ -4,6 +4,8 @@ import { sendMail } from "@/lib/mailer";
 import { buildOrderPlacedEmail } from "@/lib/orderEmail";
 import { generateInvoicePdf } from "@/lib/invoicePdf";
 import { syncOmsOrderSafely } from "@/lib/omsOrderSync";
+import { requireAuth } from "@/lib/auth";
+import { refreshLocalStockFromOms } from "@/lib/omsStock";
 import {
   decrementComboItemsStock,
   getComboAvailability,
@@ -63,10 +65,11 @@ export async function OPTIONS() {
 
 export async function POST(req: Request) {
   try {
+    const auth = await requireAuth();
     const body = await req.json();
     const items: CheckoutItemInput[] = Array.isArray(body?.items) ? body.items : [];
     const address: AddressInput | null = body?.address ?? null;
-    const userId = Number(body?.userId ?? 1);
+    const userId = Number(auth.sub);
     const deliveryCharge = Math.max(0, Number(body?.deliveryCharge || 0));
 
     if (!items.length) {
@@ -241,6 +244,15 @@ export async function POST(req: Request) {
             }),
           )
         ).flat(),
+        paymentMode: "COD",
+        paymentAmount: 0,
+        deliveryCharge,
+        customer: {
+          name: address?.fullName,
+          phone: address?.phone,
+          memberCode: String(userId),
+          userCode: String(userId),
+        },
       }).catch((error) => console.error("OMS combo COD sync log failed:", error));
 
       try {
@@ -481,6 +493,12 @@ export async function POST(req: Request) {
     const resolvedProductMap = new Map(
       resolvedProducts.map((product) => [product.productId.toString(), product]),
     );
+    const liveStockByCode = await refreshLocalStockFromOms(
+      resolvedProducts.map((product) => product.productCode),
+    ).catch((error) => {
+      console.warn("Live OMS stock refresh before COD order failed", error);
+      return new Map<string, number>();
+    });
     const variantStocks = await prisma.productVariant.findMany({
       where: {
         pCode: {
@@ -496,11 +514,13 @@ export async function POST(req: Request) {
       variantStocks.map((variant) => [variant.pCode, variant.stockQuantity]),
     );
     const getAvailableStock = (product: (typeof resolvedProducts)[number] | undefined) =>
-      Math.max(
-        Number(product?.productCode ? variantStockByCode.get(product.productCode) ?? 0 : 0),
-        Number(product?.availableQuantity ?? 0),
-        Number(product?.stockQuantity ?? 0),
-      );
+      product?.productCode && liveStockByCode.has(product.productCode)
+        ? Number(liveStockByCode.get(product.productCode) || 0)
+        : Math.max(
+            Number(product?.productCode ? variantStockByCode.get(product.productCode) ?? 0 : 0),
+            Number(product?.availableQuantity ?? 0),
+            Number(product?.stockQuantity ?? 0),
+          );
 
     const inactive = resolvedItems.filter((item) => {
       const p = resolvedProductMap.get(String(item.productId));
@@ -647,6 +667,15 @@ export async function POST(req: Request) {
           totalAmt: unitPrice * row.qty,
         };
       }),
+      paymentMode: "COD",
+      paymentAmount: 0,
+      deliveryCharge,
+      customer: {
+        name: address?.fullName,
+        phone: address?.phone,
+        memberCode: String(userId),
+        userCode: String(userId),
+      },
     }).catch((error) => console.error("OMS COD sync log failed:", error));
 
     // Send invoice email without breaking order placement on mail failure.
@@ -767,12 +796,13 @@ export async function POST(req: Request) {
       { status: 200, headers: corsHeaders },
     );
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Order placement failed";
     return NextResponse.json(
       {
         success: false,
-        message: error instanceof Error ? error.message : "Order placement failed",
+        message: message === "UNAUTHORIZED" ? "Please login before placing order" : message,
       },
-      { status: 500, headers: corsHeaders },
+      { status: message === "UNAUTHORIZED" ? 401 : 500, headers: corsHeaders },
     );
   }
 }

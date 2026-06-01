@@ -4,6 +4,8 @@ import { sendMail } from "@/lib/mailer";
 import { buildOrderPlacedEmail } from "@/lib/orderEmail";
 import { generateInvoicePdf } from "@/lib/invoicePdf";
 import { syncOmsOrderSafely } from "@/lib/omsOrderSync";
+import { requireAuth } from "@/lib/auth";
+import { refreshLocalStockFromOms } from "@/lib/omsStock";
 import {
   decrementComboItemsStock,
   getComboAvailability,
@@ -232,12 +234,13 @@ function hasShippingAddress(address: AddressInput | null) {
 
 export async function POST(req: Request) {
   try {
+    const auth = await requireAuth();
     const body = await req.json();
     const paymentMethod = String(body?.paymentMethod || "").toLowerCase();
     const connectipsReferenceId = String(body?.connectipsReferenceId || "").trim();
     const items: CheckoutItemInput[] = Array.isArray(body?.items) ? body.items : [];
     const address: AddressInput | null = body?.address ?? null;
-    const userId = Number(body?.userId ?? 1);
+    const userId = Number(auth.sub);
     const paidTotalAmount = Math.max(0, Number(body?.totalAmount || 0));
 
     if (paymentMethod !== "connectips") {
@@ -434,6 +437,15 @@ export async function POST(req: Request) {
             }),
           )
         ).flat(),
+        paymentMode: "connectips",
+        paymentAmount: grandTotal,
+        deliveryCharge: deliveryDifference,
+        customer: {
+          name: address?.fullName,
+          phone: address?.phone,
+          memberCode: String(userId),
+          userCode: String(userId),
+        },
       }).catch((error) => console.error("OMS combo ConnectIPS sync log failed:", error));
 
       try {
@@ -638,6 +650,12 @@ export async function POST(req: Request) {
       },
     });
     const productMap = new Map(products.map((p) => [p.productId.toString(), p]));
+    const liveStockByCode = await refreshLocalStockFromOms(
+      products.map((product) => product.productCode),
+    ).catch((error) => {
+      console.warn("Live OMS stock refresh before paid order failed", error);
+      return new Map<string, number>();
+    });
     const variantStocks = await prisma.productVariant.findMany({
       where: { pCode: { in: products.map((product) => product.productCode) } },
       select: { pCode: true, stockQuantity: true },
@@ -646,11 +664,13 @@ export async function POST(req: Request) {
       variantStocks.map((variant) => [variant.pCode, variant.stockQuantity]),
     );
     const getAvailableStock = (product: (typeof products)[number] | undefined) =>
-      Math.max(
-        Number(product?.productCode ? variantStockByCode.get(product.productCode) ?? 0 : 0),
-        Number(product?.availableQuantity ?? 0),
-        Number(product?.stockQuantity ?? 0),
-      );
+      product?.productCode && liveStockByCode.has(product.productCode)
+        ? Number(liveStockByCode.get(product.productCode) || 0)
+        : Math.max(
+            Number(product?.productCode ? variantStockByCode.get(product.productCode) ?? 0 : 0),
+            Number(product?.availableQuantity ?? 0),
+            Number(product?.stockQuantity ?? 0),
+          );
 
     const inactive = resolvedItems.filter((item) => {
       const p = productMap.get(String(item.productId));
@@ -804,6 +824,15 @@ export async function POST(req: Request) {
           totalAmt: unitPrice * row.qty,
         };
       }),
+      paymentMode: "connectips",
+      paymentAmount: grandTotal,
+      deliveryCharge: deliveryDifference,
+      customer: {
+        name: address?.fullName,
+        phone: address?.phone,
+        memberCode: String(userId),
+        userCode: String(userId),
+      },
     }).catch((error) => console.error("OMS ConnectIPS sync log failed:", error));
 
     try {
@@ -904,12 +933,13 @@ export async function POST(req: Request) {
       { status: 200, headers: corsHeaders },
     );
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to place paid order";
     return NextResponse.json(
       {
         success: false,
-        message: error instanceof Error ? error.message : "Failed to place paid order",
+        message: message === "UNAUTHORIZED" ? "Please login before placing order" : message,
       },
-      { status: 500, headers: corsHeaders },
+      { status: message === "UNAUTHORIZED" ? 401 : 500, headers: corsHeaders },
     );
   }
 }

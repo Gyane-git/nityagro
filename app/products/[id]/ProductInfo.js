@@ -50,7 +50,11 @@ const ShareIcon = () => (
 export default function ProductInfo({ product }) {
   const [qty, setQty] = useState(1);
   const [variantsFromApi, setVariantsFromApi] = useState([]);
-  const [selectedVariantId, setSelectedVariantId] = useState(Number(product?.id || 0));
+  const [selectedProductCode, setSelectedProductCode] = useState(
+    String(product?.productCode || ""),
+  );
+  const [liveAvailableQtyByCode, setLiveAvailableQtyByCode] = useState({});
+  const [liveStockStatusByCode, setLiveStockStatusByCode] = useState({});
   const [added, setAdded] = useState(false);
   const router = useRouter();
   const addToCart = useCartStore((state) => state.addToCart);
@@ -75,19 +79,17 @@ export default function ProductInfo({ product }) {
         const rows = Array.isArray(result?.data) ? result.data : [];
 
         const mapped = rows.map((item) => ({
-          id: Number(item.variantId),
+          id: Number(item.productId || p.id),
+          variantId: Number(item.variantId),
           productCode: item.pCode || "",
           label: item.variationName || item.pCode || "Variant",
           price: String(item.pCode || "") === String(p.productCode || "") ? Number(p.price ?? item.salesRate ?? 0) : Number(item.salesRate ?? p.price ?? 0),
           actualPrice: String(item.pCode || "") === String(p.productCode || "") ? Number(p.actualPrice ?? p.price ?? item.salesRate ?? 0) : Number(item.salesRate ?? p.price ?? 0),
-          image: p.image || p.images?.[0] || "/products/mustard-oil.png",
-          stockQuantity: Math.max(
-            Number(item.stockQuantity ?? 0),
-            String(item.pCode || "") === String(p.productCode || "") ? Number(p.stockQuantity ?? 0) : 0,
-          ),
-          availableQuantity: Math.max(
-            Number(item.stockQuantity ?? 0),
-            String(item.pCode || "") === String(p.productCode || "") ? Number(p.availableQuantity ?? 0) : 0,
+          image: item.productImage || p.image || p.images?.[0] || "/products/mustard-oil.png",
+          omsAvailableQty: Number(item.omsAvailableQty ?? item.productAvailableQuantity ?? item.stockQuantity ?? 0),
+          stockQuantity: Number(item.omsAvailableQty ?? item.productStockQuantity ?? item.stockQuantity ?? 0),
+          availableQuantity: Number(
+            item.omsAvailableQty ?? item.productAvailableQuantity ?? item.stockQuantity ?? 0,
           ),
         }));
 
@@ -95,9 +97,9 @@ export default function ProductInfo({ product }) {
 
         const matched = mapped.find((v) => String(v.productCode) === String(p.productCode));
         if (matched) {
-          setSelectedVariantId(Number(matched.id));
+          setSelectedProductCode(String(matched.productCode || ""));
         } else if (mapped[0]) {
-          setSelectedVariantId(Number(mapped[0].id));
+          setSelectedProductCode(String(mapped[0].productCode || ""));
         }
       } catch {
         setVariantsFromApi([]);
@@ -117,15 +119,103 @@ export default function ProductInfo({ product }) {
           price: p.price,
           actualPrice: p.actualPrice || p.price,
           image: p.image || p.images?.[0] || "/products/mustard-oil.png",
+          omsAvailableQty: Number(p.omsAvailableQty ?? p.availableQuantity ?? 0),
           stockQuantity: Number(p.stockQuantity ?? p.availableQuantity ?? 0),
           availableQuantity: Number(p.availableQuantity ?? p.stockQuantity ?? 0),
         },
       ];
-  const selectedVariant = variants.find((v) => Number(v.id) === Number(selectedVariantId)) || variants[0];
+  const selectedVariant =
+    variants.find((v) => String(v.productCode || "") === String(selectedProductCode)) ||
+    variants[0];
+  const activeProductCode = String(
+    selectedVariant?.productCode || selectedProductCode || p.productCode || "",
+  ).trim();
+
+  useEffect(() => {
+    if (!activeProductCode) return;
+
+    let cancelled = false;
+
+    const fetchLiveAvailableQty = async () => {
+      setLiveStockStatusByCode((prev) => ({
+        ...prev,
+        [activeProductCode]: "loading",
+      }));
+
+      try {
+        const response = await fetch(
+          `/api/oms/stock?sku=${encodeURIComponent(activeProductCode)}`,
+          { cache: "no-store" },
+        );
+        if (!response.ok) {
+          throw new Error("Stock API failed");
+        }
+
+        const result = await response.json();
+        if (!result?.success) {
+          throw new Error(result?.message || "Stock API failed");
+        }
+
+        const rows = Array.isArray(result?.data) ? result.data : [];
+        const row =
+          rows.find(
+            (item) =>
+              String(item?.sku || item?.pCode || item?.PCode || item?.barCode || "")
+                .trim() === activeProductCode,
+          ) || rows[0];
+
+        if (!row) {
+          throw new Error("Selected SKU stock not found");
+        }
+
+        const liveQty = Number(
+          row?.availableQty ??
+            row?.availableQuantity ??
+            row?.stockQuantity ??
+            row?.StockQty ??
+            NaN,
+        );
+
+        if (!cancelled && Number.isFinite(liveQty)) {
+          setLiveAvailableQtyByCode((prev) => ({
+            ...prev,
+            [activeProductCode]: liveQty,
+          }));
+          setLiveStockStatusByCode((prev) => ({
+            ...prev,
+            [activeProductCode]: "success",
+          }));
+        }
+      } catch {
+        if (!cancelled) {
+          setLiveStockStatusByCode((prev) => ({
+            ...prev,
+            [activeProductCode]: "error",
+          }));
+        }
+      }
+    };
+
+    fetchLiveAvailableQty();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeProductCode]);
+
   const currentPrice = Number(selectedVariant?.price ?? p.price ?? 0);
   const currentActualPrice = Number(selectedVariant?.actualPrice ?? p.actualPrice ?? currentPrice);
-  const currentStock = Number(selectedVariant?.availableQuantity ?? selectedVariant?.stockQuantity ?? p.availableQuantity ?? p.stockQuantity ?? 0);
-  const isOutOfStock = currentStock <= 0;
+  const hasLiveAvailableQty = Object.prototype.hasOwnProperty.call(
+    liveAvailableQtyByCode,
+    activeProductCode,
+  );
+  const stockStatus = liveStockStatusByCode[activeProductCode] || "loading";
+  const currentAvailableQty = hasLiveAvailableQty
+    ? Number(liveAvailableQtyByCode[activeProductCode])
+    : 0;
+  const isOutOfStock = currentAvailableQty <= 0;
+  const isStockLoading = stockStatus === "loading" && !hasLiveAvailableQty;
+  const isStockUnavailable = stockStatus === "error" && !hasLiveAvailableQty;
   const selectedLabel = selectedVariant?.label || p.label || p.name;
   const displayName = `${p.name} - ${selectedLabel}`;
 
@@ -137,13 +227,15 @@ export default function ProductInfo({ product }) {
 
     const item = {
       id: selectedVariant?.id || p.id,
+      productId: selectedVariant?.id || p.id,
+      productCode: selectedVariant?.productCode || p.productCode || "",
       name: displayName,
       price: currentPrice,
       image: selectedVariant?.image || p.image || p.images?.[0] || "/products/mustard-oil.png",
       qty,
       weight: selectedLabel,
-      availableQuantity: currentStock,
-      stockQuantity: currentStock,
+      availableQuantity: currentAvailableQty,
+      stockQuantity: currentAvailableQty,
     };
     addToCart(item);
     await addCartToDb(item).catch(() => null);
@@ -161,16 +253,22 @@ export default function ProductInfo({ product }) {
       showToast("This product is out of stock");
       return;
     }
+    if (isStockLoading || isStockUnavailable) {
+      showToast("Please wait until available quantity is synced");
+      return;
+    }
 
     setCheckoutItem({
       id: selectedVariant?.id || p.id,
+      productId: selectedVariant?.id || p.id,
+      productCode: selectedVariant?.productCode || p.productCode || "",
       name: displayName,
       image: selectedVariant?.image || p.image || p.images?.[0] || "/products/mustard-oil.png",
       weight: selectedLabel,
       qty,
       unitPrice: currentPrice,
       total: currentPrice * qty,
-      availableQuantity: currentStock,
+      availableQuantity: currentAvailableQty,
     });
     router.push("/Checkout");
   };
@@ -246,12 +344,13 @@ export default function ProductInfo({ product }) {
         <p className="text-sm font-semibold text-gray-700">Select Variant :</p>
         <div className="flex gap-2 flex-wrap">
           {variants.map((variant) => {
-            const isActive = Number(selectedVariantId) === Number(variant.id);
+            const variantCode = String(variant.productCode || "");
+            const isActive = variantCode === activeProductCode;
             return (
               <button
-                key={variant.id}
+                key={variantCode || variant.id}
                 onClick={() => {
-                  setSelectedVariantId(Number(variant.id));
+                  setSelectedProductCode(variantCode);
                   setQty(1);
                 }}
                 className="px-4 py-2 text-sm font-medium border rounded-md transition-all duration-150"
@@ -272,10 +371,14 @@ export default function ProductInfo({ product }) {
       {/* ── Quantity ── */}
       <div className="flex flex-col gap-2">
         <p className="text-sm font-semibold text-gray-700">Quantity</p>
-        {isOutOfStock ? (
+        {isStockLoading ? (
+          <p className="text-xs font-semibold text-gray-500">Checking available qty...</p>
+        ) : isStockUnavailable ? (
+          <p className="text-xs font-semibold text-red-600">Unable to sync available qty. Please refresh.</p>
+        ) : isOutOfStock ? (
           <p className="text-xs font-semibold text-red-600">Out of stock. You can add it to cart, but checkout is disabled until stock is available.</p>
         ) : (
-          <p className="text-xs text-gray-500">Available: {currentStock}</p>
+          <p className="text-xs text-gray-500">Available Qty: {currentAvailableQty}</p>
         )}
         <div className="flex items-center border border-gray-300 rounded-md overflow-hidden" style={{ width: "110px", height: "40px" }}>
           <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="flex items-center justify-center flex-1 h-full hover:bg-gray-100 transition-colors text-gray-600">
@@ -284,7 +387,7 @@ export default function ProductInfo({ product }) {
           <span className="flex items-center justify-center font-semibold text-sm text-gray-800 border-x border-gray-300 h-full" style={{ width: "36px" }}>
             {qty}
           </span>
-          <button onClick={() => setQty((q) => (isOutOfStock ? q : Math.min(currentStock, q + 1)))} className="flex items-center justify-center flex-1 h-full hover:bg-gray-100 transition-colors text-gray-600">
+          <button onClick={() => setQty((q) => (isOutOfStock || isStockLoading || isStockUnavailable ? q : Math.min(currentAvailableQty, q + 1)))} className="flex items-center justify-center flex-1 h-full hover:bg-gray-100 transition-colors text-gray-600">
             <PlusIcon />
           </button>
         </div>
@@ -314,9 +417,9 @@ export default function ProductInfo({ product }) {
             height: "44px",
             width: "clamp(140px, 40%, 220px)",
             opacity: isOutOfStock ? 0.5 : 1,
-            cursor: isOutOfStock ? "not-allowed" : "pointer",
+            cursor: isOutOfStock || isStockLoading || isStockUnavailable ? "not-allowed" : "pointer",
           }}
-          disabled={isOutOfStock}
+          disabled={isOutOfStock || isStockLoading || isStockUnavailable}
           onClick={handleBuyNow}
         >
           Buy Now
