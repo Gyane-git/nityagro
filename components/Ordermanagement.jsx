@@ -139,6 +139,8 @@ export default function Ordermanagement() {
       if (dateTo) query.set("dateTo", dateTo);
 
       const response = await fetch(`/api/admin/orders?${query.toString()}`);
+      console.log(response);
+      
 
       const payload = await response.json();
 
@@ -580,12 +582,12 @@ export default function Ordermanagement() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm ">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm ">
               <div>
                 <div className="text-gray-500">Customer</div>
                 <div className="font-medium">{selectedOrder.user?.fullName || "N/A"}</div>
                 <div>{selectedOrder.user?.email || "-"}</div>
-                <div>{selectedOrder.user?.phone || "-"}</div>
+                <div>{selectedOrder.user?.phone || "+977-0000000000"}</div>
               </div>
               <div>
                 <div className="text-gray-500">Financials</div>
@@ -593,6 +595,10 @@ export default function Ordermanagement() {
                 <div>Shipping: {formatMoney(selectedOrder.shippingCost)}</div>
                 <div>Tax: {formatMoney(selectedOrder.tax)}</div>
                 <div className="font-semibold">Total: {formatMoney(selectedOrder.totalAmount)}</div>
+              </div>
+              <div>
+                <div className="text-gray-500">Delivery Details</div>
+                <div>Delivery Date: 2026-06-10</div>
               </div>
             </div>
 
@@ -634,23 +640,23 @@ export default function Ordermanagement() {
                   <table className="w-full text-xs">
                     <thead className="bg-gray-50 border-b">
                       <tr className="text-left">
-                        <th className="px-3 py-2">From</th>
-                        <th className="px-3 py-2">To</th>
+                        {/* <th className="px-3 py-2">From</th> */}
+                        {/* <th className="px-3 py-2">To</th> */}
                         <th className="px-3 py-2">Mode</th>
                         <th className="px-3 py-2">Txn No.</th>
                         <th className="px-3 py-2">Remark</th>
-                        <th className="px-3 py-2">Date</th>
+                        <th className="px-3 py-2 text-center">Date</th>
                       </tr>
                     </thead>
                     <tbody>
                       {detailLogGroups.payment.map((log) => (
                         <tr key={`p-${log.id}`} className="border-b last:border-0">
-                          <td className="px-3 py-2 capitalize">{log.fromPaymentStatus || "-"}</td>
-                          <td className="px-3 py-2 capitalize font-medium">{log.toPaymentStatus || "-"}</td>
+                          {/* <td className="px-3 py-2 capitalize">{log.fromPaymentStatus || "-"}</td> */}
+                          {/* <td className="px-3 py-2 capitalize font-medium">{log.toPaymentStatus || "-"}</td> */}
                           <td className="px-3 py-2">{log.paymentMode || "-"}</td>
                           <td className="px-3 py-2 font-mono">{log.transactionId || "-"}</td>
                           <td className="px-3 py-2">{log.remark || "-"}</td>
-                          <td className="px-3 py-2">{formatDate(log.createdAt)}</td>
+                          <td className="px-3 py-2 text-center">{formatDate(log.createdAt)}</td>
                         </tr>
                       ))}
                     </tbody>
