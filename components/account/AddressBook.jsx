@@ -428,7 +428,14 @@ export default function AddressBook({ userId = "1" }) {
                 <button
                   onClick={() => {
                     setSelectedAddress(address.id);
-                    if (nextPath) router.push(nextPath);
+
+                    toast.success("Address selected. Redirecting...");
+
+                    setTimeout(() => {
+                      if (nextPath) {
+                        router.push(nextPath);
+                      }
+                    }, 2000);
                   }}
                   className={`rounded border px-3 py-1 text-xs font-semibold ${selectedAddressId === address.id ? "border-[#2e5e2e] bg-[#2e5e2e] text-white" : "border-gray-300 text-gray-700"}`}
                 >
@@ -457,7 +464,7 @@ export default function AddressBook({ userId = "1" }) {
             }}
             className="absolute right-3 top-3 text-gray-500 hover:text-red-500 text-xl font-bold"
           >
-            <X className="bg-red-500 rounded-md text-gray-600"/>
+            <X className="bg-red-500 rounded-md text-gray-600" />
           </button>
 
           <h3 className="text-base font-semibold text-gray-800">{editingId ? "Edit Address" : "Add Address"}</h3>
