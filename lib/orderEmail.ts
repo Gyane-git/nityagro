@@ -35,84 +35,83 @@ export type OrderStatusEmailInput = {
  * Gmail, Outlook, Apple Mail, Yahoo Mail safe.
  */
 
-const currency = (value: number): string =>
-  `NPR ${Number(value || 0).toLocaleString()}`;
+const currency = (value: number): string => `NPR ${Number(value || 0).toLocaleString()}`;
 
 // ─── Unicode Icon Map ─────────────────────────────────────────────────────────
 // These render as colored glyphs in every major email client.
 
 const ICON = {
-  confirm:    "✔",   // order confirmed hero
-  processing: "⟳",   // processing hero
-  shipped:    "➤",   // shipped hero
-  delivered:  "✔",   // delivered hero
-  cancelled:  "✕",   // cancelled hero
-  txn:        "#",   // transaction / order id
-  package:    "▣",   // package / product
-  rupee:      "₹",   // amount
-  pin:        "⊙",   // address
-  truck:      "➜",   // delivery
-  headphones: "☎",   // support
-  mail:       "✉",   // email
-  phone:      "☏",   // phone
-  leaf:       "✿",   // natural
-  utensils:   "✦",   // traditional
-  shield:     "◈",   // quality
-  heart:      "♥",   // healthy / love
-  activity:   "◉",   // status
+  confirm: "✔", // order confirmed hero
+  processing: "⟳", // processing hero
+  shipped: "➤", // shipped hero
+  delivered: "✔", // delivered hero
+  cancelled: "✕", // cancelled hero
+  txn: "#", // transaction / order id
+  package: "▣", // package / product
+  rupee: "Rs", // amount
+  pin: "⊙", // address
+  truck: "➜", // delivery
+  headphones: "☎", // support
+  mail: "✉", // email
+  phone: "☏", // phone
+  leaf: "✿", // natural
+  utensils: "✦", // traditional
+  shield: "◈", // quality
+  heart: "♥", // healthy / love
+  activity: "◉", // status
 } as const;
 
 // ─── Status Maps ──────────────────────────────────────────────────────────────
 
 const STATUS_COLORS: Record<string, string> = {
   processing: "#F59E0B",
-  shipped:    "#3B82F6",
-  delivered:  "#1B5E35",
-  cancelled:  "#EF4444",
-  default:    "#1B5E35",
+  shipped: "#3B82F6",
+  delivered: "#1B5E35",
+  cancelled: "#EF4444",
+  default: "#1B5E35",
 };
 
 const STATUS_HERO_BG: Record<string, string> = {
   processing: "#FEF3C7",
-  shipped:    "#DBEAFE",
-  delivered:  "#DCFCE7",
-  cancelled:  "#FEE2E2",
-  default:    "#DCFCE7",
+  shipped: "#DBEAFE",
+  delivered: "#DCFCE7",
+  cancelled: "#FEE2E2",
+  default: "#DCFCE7",
 };
 
 const STATUS_HERO_ICON: Record<string, string> = {
   processing: ICON.processing,
-  shipped:    ICON.shipped,
-  delivered:  ICON.delivered,
-  cancelled:  ICON.cancelled,
-  default:    ICON.delivered,
+  shipped: ICON.shipped,
+  delivered: ICON.delivered,
+  cancelled: ICON.cancelled,
+  default: ICON.delivered,
 };
 
 const STATUS_MESSAGES: Record<string, { title: string; subtitle: string }> = {
   processing: {
-    title:    "Order Processing",
+    title: "Order Processing",
     subtitle: "Your order is being processed and will be packed shortly.",
   },
   shipped: {
-    title:    "Order Shipped!",
+    title: "Order Shipped!",
     subtitle: "Your order is on its way. You'll receive it soon.",
   },
   delivered: {
-    title:    "Order Delivered!",
+    title: "Order Delivered!",
     subtitle: "Your order has been delivered. Enjoy your Nityagro products!",
   },
   cancelled: {
-    title:    "Order Cancelled",
+    title: "Order Cancelled",
     subtitle: "Your order has been cancelled. Contact us if you need help.",
   },
   default: {
-    title:    "Order Update",
+    title: "Order Update",
     subtitle: "There's an update regarding your order.",
   },
 };
 
 const PAYMENT_COLORS: Record<string, string> = {
-  paid:    "#1B5E35",
+  paid: "#1B5E35",
   pending: "#F59E0B",
   default: "#EF4444",
 };
@@ -207,10 +206,10 @@ const emailHeader = (): string => `
  */
 const featureBadges = (): string => {
   const features = [
-    { icon: ICON.leaf,      bg: "#E8F5E9", color: "#1B5E35", title: "100% Natural",          desc: "No added\npreservatives" },
-    { icon: ICON.utensils,  bg: "#E8F5E9", color: "#1B5E35", title: "Traditionally\nPrepared", desc: "Made the\nright way"     },
-    { icon: ICON.shield,    bg: "#E8F5E9", color: "#1B5E35", title: "Quality\nAssured",       desc: "Carefully sourced\nand packed" },
-    { icon: ICON.heart,     bg: "#FEE2E2", color: "#EF4444", title: "Healthy &\nNutritious",  desc: "Good for you\nand your family" },
+    { icon: ICON.leaf, bg: "#E8F5E9", color: "#1B5E35", title: "100% Natural", desc: "No added\npreservatives" },
+    { icon: ICON.utensils, bg: "#E8F5E9", color: "#1B5E35", title: "Traditionally\nPrepared", desc: "Made the\nright way" },
+    { icon: ICON.shield, bg: "#E8F5E9", color: "#1B5E35", title: "Quality\nAssured", desc: "Carefully sourced\nand packed" },
+    { icon: ICON.heart, bg: "#E8F5E9", color: "#1B5E35", title: "Healthy &\nNutritious", desc: "Good for you\nand your family" },
   ] as const;
 
   const cells = features
@@ -225,7 +224,7 @@ const featureBadges = (): string => {
         <div style="font-size:10px;color:#6B7280;line-height:1.5;">
           ${f.desc.replace("\n", "<br/>")}
         </div>
-      </td>`
+      </td>`,
     )
     .join("");
 
@@ -287,9 +286,9 @@ const helpSection = (): string => `
  */
 const socialFooter = (): string => {
   const socials = [
-    { label: "f",  title: "Facebook"  },
+    { label: "f", title: "Facebook" },
     { label: "in", title: "Instagram" },
-    { label: "W",  title: "WhatsApp"  },
+    { label: "W", title: "WhatsApp" },
   ] as const;
 
   const socialCells = socials
@@ -307,7 +306,7 @@ const socialFooter = (): string => {
             </td>
           </tr>
         </table>
-      </td>`
+      </td>`,
     )
     .join("");
 
@@ -390,8 +389,6 @@ const baseEmail = (body: string): string => `<!DOCTYPE html>
           </tr>
 
           <!-- SOCIAL FOOTER -->
-          <tr><td style="padding:0;">${socialFooter()}</td></tr>
-
         </table>
       </td>
     </tr>
@@ -408,10 +405,7 @@ export function buildOrderPlacedEmail(input: OrderPlacedEmailInput): {
   text: string;
 } {
   const referenceLabel = input.referenceLabel || "Transaction ID";
-  const subtotalAmount =
-    typeof input.subtotalAmount === "number"
-      ? input.subtotalAmount
-      : input.items.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const subtotalAmount = typeof input.subtotalAmount === "number" ? input.subtotalAmount : input.items.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const discountAmount = Number(input.discountAmount || 0);
   const deliveryCharge = Number(input.deliveryCharge || 0);
 
@@ -426,14 +420,14 @@ export function buildOrderPlacedEmail(input: OrderPlacedEmailInput): {
           </td>
           <td style="padding:12px 10px;border-bottom:1px solid #F3F4F6;text-align:center;
                      font-size:14px;color:#6B7280;vertical-align:middle;">
-            x${item.qty}
+            ${item.qty}
           </td>
           <td style="padding:12px 10px;border-bottom:1px solid #F3F4F6;text-align:right;
                      font-size:14px;font-weight:600;color:#1F2937;vertical-align:middle;
                      white-space:nowrap;">
             ${currency(item.amount)}
           </td>
-        </tr>`
+        </tr>`,
     )
     .join("");
 
@@ -601,8 +595,8 @@ export function buildOrderPlacedEmail(input: OrderPlacedEmailInput): {
 
   return {
     subject: `Order Confirmed – ${input.transactionId}`,
-    html:    baseEmail(body),
-    text:    `Order confirmed. ${referenceLabel}: ${input.transactionId}. Subtotal: ${currency(subtotalAmount)}. Discount: ${currency(discountAmount)}. Delivery: ${currency(deliveryCharge)}. Total: ${currency(input.totalAmount)}`,
+    html: baseEmail(body),
+    text: `Order confirmed. ${referenceLabel}: ${input.transactionId}. Subtotal: ${currency(subtotalAmount)}. Discount: ${currency(discountAmount)}. Delivery: ${currency(deliveryCharge)}. Total: ${currency(input.totalAmount)}`,
   };
 }
 
@@ -613,16 +607,16 @@ export function buildOrderStatusEmail(input: OrderStatusEmailInput): {
   html: string;
   text: string;
 } {
-  const statusKey  = input.orderStatus.toLowerCase();
+  const statusKey = input.orderStatus.toLowerCase();
   const paymentKey = input.paymentStatus.toLowerCase();
 
-  const color      = STATUS_COLORS[statusKey]   ?? STATUS_COLORS.default;
-  const heroBg     = STATUS_HERO_BG[statusKey]  ?? STATUS_HERO_BG.default;
-  const heroIcon   = STATUS_HERO_ICON[statusKey]?? STATUS_HERO_ICON.default;
-  const payColor   = PAYMENT_COLORS[paymentKey] ?? PAYMENT_COLORS.default;
-  const msg        = STATUS_MESSAGES[statusKey] ?? STATUS_MESSAGES.default;
+  const color = STATUS_COLORS[statusKey] ?? STATUS_COLORS.default;
+  const heroBg = STATUS_HERO_BG[statusKey] ?? STATUS_HERO_BG.default;
+  const heroIcon = STATUS_HERO_ICON[statusKey] ?? STATUS_HERO_ICON.default;
+  const payColor = PAYMENT_COLORS[paymentKey] ?? PAYMENT_COLORS.default;
+  const msg = STATUS_MESSAGES[statusKey] ?? STATUS_MESSAGES.default;
 
-  const statusLabel  = input.orderStatus.toUpperCase();
+  const statusLabel = input.orderStatus.toUpperCase();
   const paymentLabel = input.paymentStatus.toUpperCase();
 
   // ── Body ──────────────────────────────────────────────────────────────────
@@ -768,7 +762,7 @@ export function buildOrderStatusEmail(input: OrderStatusEmailInput): {
 
   return {
     subject: `Order #${input.orderId} – ${msg.title}`,
-    html:    baseEmail(body),
-    text:    `Order #${input.orderId} status: ${input.orderStatus}, payment: ${input.paymentStatus}, amount: ${currency(input.amount)}`,
+    html: baseEmail(body),
+    text: `Order #${input.orderId} status: ${input.orderStatus}, payment: ${input.paymentStatus}, amount: ${currency(input.amount)}`,
   };
 }
