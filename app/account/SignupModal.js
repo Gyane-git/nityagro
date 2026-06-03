@@ -7,7 +7,10 @@ import toast from "react-hot-toast";
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_REGEX = /^\d{7,15}$/;
 const NAME_REGEX = /^[A-Za-z\s.'-]{2,80}$/;
-const normalizeEmail = (value) => String(value || "").trim().toLowerCase();
+const normalizeEmail = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase();
 const onlyDigits = (value) => String(value || "").replace(/\D/g, "");
 
 const EyeIcon = ({ show }) => (
@@ -45,8 +48,7 @@ export default function SignupModal({ isOpen, onClose, onLogin, onOtp }) {
   const [loading, setLoading] = useState(false);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
-  const setPhone = (e) =>
-    setForm((f) => ({ ...f, phone: onlyDigits(e.target.value).slice(0, 15) }));
+  const setPhone = (e) => setForm((f) => ({ ...f, phone: onlyDigits(e.target.value).slice(0, 15) }));
 
   const startGoogleSignup = () => {
     toast.loading("Opening Google signup...");
@@ -120,12 +122,15 @@ export default function SignupModal({ isOpen, onClose, onLogin, onOtp }) {
 
   return (
     <AuthModal isOpen={isOpen} onClose={onClose}>
-      <div className="flex flex-col" style={{ padding: "32px 36px 28px" }}>
+      <div className="flex flex-col overscroll-contain" style={{ padding: "32px 36px 28px" }}>
         {/* Title */}
-        <h2 className="font-bold text-gray-900 mb-1" style={{ fontSize: "20px" }}>
-          Create Account
-        </h2>
-        <div style={{ width: "48px", height: "2.5px", background: "#266A3F", borderRadius: "2px" }} className="mb-6" />
+        <div className="mb-6 inline-block">
+          <h2 className="font-bold text-gray-900 mb-1" style={{ fontSize: "20px" }}>
+            Create Account
+          </h2>
+
+          <div className="h-1 bg-[#266A3F] rounded w-1/3" />
+        </div>
 
         <form onSubmit={handleSignup} className="flex flex-col gap-4">
           {/* Full Name */}
@@ -141,17 +146,7 @@ export default function SignupModal({ isOpen, onClose, onLogin, onOtp }) {
             <label className="text-sm font-semibold text-gray-800">
               Phone Number <span className="text-red-500">*</span>
             </label>
-            <input
-              type="tel"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              placeholder="Enter your phone number"
-              value={form.phone}
-              onChange={setPhone}
-              className={inputClass}
-              style={{ height: "48px" }}
-              required
-            />
+            <input type="tel" inputMode="numeric" pattern="[0-9]*" placeholder="Enter your phone number" value={form.phone} onChange={setPhone} className={inputClass} style={{ height: "48px" }} required />
           </div>
 
           {/* Email */}
@@ -201,12 +196,7 @@ export default function SignupModal({ isOpen, onClose, onLogin, onOtp }) {
           </div>
 
           {/* Sign Up with Google */}
-          <button
-            type="button"
-            onClick={startGoogleSignup}
-            className="w-full flex items-center justify-center gap-2.5 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-all"
-            style={{ height: "46px" }}
-          >
+          <button type="button" onClick={startGoogleSignup} className="w-full flex items-center justify-center gap-2.5 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-all" style={{ height: "46px" }}>
             <GoogleIcon />
             Sign up with Google
           </button>

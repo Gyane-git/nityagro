@@ -6,6 +6,7 @@ import Banner from "./Banner";
 import Sidebar from "./Sidebar";
 import ProductList from "./ProductList";
 import { apiGetRequest } from "@/apihelper/apiHelper";
+import { X } from "lucide-react";
 
 // ─── Filter Icon ───────────────────────────────────
 const FilterIcon = () => (
@@ -106,13 +107,13 @@ function ProductsPageContent() {
         <div className="mt-5 flex items-center justify-between">
           <div>
             <h1 className="text-[#00462C] font-bold text-xl">Products</h1>
-            <div className="w-10 h-0.75 bg-[#00462C] mt-1 rounded" />
+            <div className="w-4/5 h-0.75 bg-[#00462C] mt-1 rounded" />
           </div>
 
           {/* FILTER BUTTON (mobile only) */}
-          <button onClick={() => setFilterOpen(true)} className="lg:hidden flex items-center gap-2 border px-3 py-2 rounded-md text-sm text-[#00462C] border-[#00462C]">
+          <button onClick={() => setFilterOpen(true)} className="lg:hidden flex items-center justify-center gap-2 border px-2 py-1.5 sm:px-3 sm:py-2 rounded-md text-sm text-[#00462C] border-[#00462C]">
             <FilterIcon />
-            Filter
+            <span className="hidden md:block">Filter</span>
           </button>
         </div>
 
@@ -155,7 +156,7 @@ function ProductsPageContent() {
 
         {/* drawer */}
         <div
-          className={`absolute right-0 top-0 h-full w-[85%] sm:w-[400px] bg-white shadow-xl flex flex-col
+          className={`absolute right-0 top-0 h-full w-[85%] sm:w-[400px] bg-white rounded shadow-xl flex flex-col
     transform transition-transform duration-300 ease-in-out
     ${filterOpen ? "translate-x-0" : "translate-x-full"}`}
         >
@@ -163,8 +164,8 @@ function ProductsPageContent() {
           <div className="flex items-center justify-between px-4 py-3 border-b">
             <h2 className="font-bold text-[#00462C] text-lg">Filters</h2>
 
-            <button onClick={() => setFilterOpen(false)} className="text-gray-600 hover:text-black text-xl">
-              ✕
+            <button onClick={() => setFilterOpen(false)} className="text-gray-600 hover:text-black text-xl bg-red-400 rounded">
+              <X size={20} />
             </button>
           </div>
 
@@ -199,7 +200,21 @@ export default function ProductsPage() {
       fallback={
         <main className="min-h-screen bg-white">
           <div className="max-w-360 mx-auto px-4 sm:px-6 py-4">
-            <p className="text-sm text-gray-500">Loading products...</p>
+            <div className="animate-pulse">
+              {/* Header */}
+              <div className="h-8 w-48 bg-gray-200 rounded mb-6" />
+
+              {/* Product grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="space-y-3">
+                    <div className="aspect-square bg-gray-200 rounded-lg" />
+                    <div className="h-4 bg-gray-200 rounded w-3/4" />
+                    <div className="h-4 bg-gray-200 rounded w-1/2" />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </main>
       }

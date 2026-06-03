@@ -20,8 +20,7 @@ export const metadata: Metadata = {
 
   openGraph: {
     title: "Nityagro",
-    description:
-      "Explore Nityagro's official store for premium agricultural products. Discover a wide range of high-quality seeds, fertilizers, and farming tools designed to boost your agricultural success. Shop now for the best in farming essentials.",
+    description: "Explore Nityagro's official store for premium agricultural products. Discover a wide range of high-quality seeds, fertilizers, and farming tools designed to boost your agricultural success. Shop now for the best in farming essentials.",
     url: "https://nityagro.com",
     siteName: "Nityagro",
     locale: "en_US",
@@ -35,11 +34,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
@@ -58,12 +53,9 @@ export default function RootLayout({
             }),
           }}
         />
-        <meta
-          name="google-site-verification"
-          content="4Pbvvp7u8ymUTbtietI_J_9ruHzdrzbDCRZofhLI2V4"
-        />
+        <meta name="google-site-verification" content="4Pbvvp7u8ymUTbtietI_J_9ruHzdrzbDCRZofhLI2V4" />
       </head>
-      <body suppressHydrationWarning={true} className="antialiased">
+      <body suppressHydrationWarning={true} className="overflow-x-hidden antialiased">
         <LayoutWrapper>{children}</LayoutWrapper>
       </body>
     </html>
