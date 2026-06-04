@@ -143,6 +143,7 @@ export default function ProductInfo({ product }) {
       }));
 
       try {
+        await fetch("/api/oms/auth", { cache: "no-store" }).catch(() => null);
         const response = await fetch(
           `/api/oms/stock?sku=${encodeURIComponent(activeProductCode)}`,
           { cache: "no-store" },
