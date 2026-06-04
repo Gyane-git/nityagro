@@ -97,6 +97,7 @@ export async function GET(req: Request) {
             productName: true,
             subGroupName: true,
             sellingPrice: true,
+            deliveryTargetDays: true,
           },
         },
         paymentDetails: {
@@ -158,12 +159,56 @@ export async function GET(req: Request) {
             serialNumber: null,
             product: {
               name: productName,
+              deliveryTargetDays:
+                order.product?.deliveryTargetDays === null ||
+                order.product?.deliveryTargetDays === undefined
+                  ? null
+                  : Number(order.product.deliveryTargetDays),
             },
           },
         ],
         updateLogs: [],
       };
     });
+
+    const missingDeliveryGroups = Array.from(
+      new Set(
+        orders
+          .filter((order) => order.product?.subGroupName && !order.product?.deliveryTargetDays)
+          .map((order) => String(order.product?.subGroupName || "")),
+      ),
+    );
+    const deliveryFallbackRows = missingDeliveryGroups.length
+      ? await prisma.products.findMany({
+          where: {
+            subGroupName: { in: missingDeliveryGroups },
+            deliveryTargetDays: { not: null },
+          },
+          select: {
+            subGroupName: true,
+            deliveryTargetDays: true,
+          },
+        })
+      : [];
+    const deliveryDaysByGroup = new Map(
+      deliveryFallbackRows.map((row) => [
+        String(row.subGroupName || ""),
+        Number(row.deliveryTargetDays || 0),
+      ]),
+    );
+
+    for (const row of mapped) {
+      const item = row.items?.[0];
+      const currentDays = Number(item?.product?.deliveryTargetDays || 0);
+      if (currentDays > 0) continue;
+
+      const sourceOrder = orders.find((order) => order.orderId.toString() === row.id);
+      const groupName = String(sourceOrder?.product?.subGroupName || "");
+      const fallbackDays = deliveryDaysByGroup.get(groupName);
+      if (fallbackDays && item?.product) {
+        item.product.deliveryTargetDays = fallbackDays;
+      }
+    }
 
     const dateAndSearchFiltered = mapped.filter((row) => {
       if (search) {

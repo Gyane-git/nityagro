@@ -31,6 +31,24 @@ function formatDate(dateStr) {
   return new Date(dateStr).toLocaleString();
 }
 
+function formatDeliveryDate(order) {
+  const placedAt = order?.createdAt ? new Date(order.createdAt) : null;
+  const targetDays = Number(order?.items?.[0]?.product?.deliveryTargetDays || 0);
+
+  if (!placedAt || Number.isNaN(placedAt.getTime()) || targetDays <= 0) {
+    return "-";
+  }
+
+  const deliveryDate = new Date(placedAt);
+  deliveryDate.setDate(deliveryDate.getDate() + targetDays);
+
+  return deliveryDate.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  });
+}
+
 function getFirstProduct(order) {
   const item = order?.items?.[0];
   return item?.product?.name || item?.productCode || "N/A";
@@ -597,7 +615,10 @@ export default function Ordermanagement() {
               </div>
               <div>
                 <div className="text-gray-500">Delivery Details</div>
-                <div>Delivery Date: 2026-06-10</div>
+                {/* <div>Delivery Date: {formatDeliveryDate(selectedOrder)}</div> */}
+                <div className="text-xs text-gray-500">
+                  Target Days: {selectedOrder.items?.[0]?.product?.deliveryTargetDays || "-"}
+                </div>
               </div>
             </div>
 

@@ -495,6 +495,12 @@ export async function PUT(req: Request) {
         data: {
           ...(productStatusRaw !== null && { productStatus }),
           ...(specialOfferRaw !== null && { specialOffer }),
+          ...(delivaryTargetDays !== undefined && {
+            deliveryTargetDays:
+              String(delivaryTargetDays || "").trim() === ""
+                ? null
+                : BigInt(Number(delivaryTargetDays)),
+          }),
         },
       });
     } else {
@@ -503,6 +509,12 @@ export async function PUT(req: Request) {
         data: {
           ...(productStatusRaw !== null && { productStatus }),
           ...(specialOfferRaw !== null && { specialOffer }),
+          ...(delivaryTargetDays !== undefined && {
+            deliveryTargetDays:
+              String(delivaryTargetDays || "").trim() === ""
+                ? null
+                : BigInt(Number(delivaryTargetDays)),
+          }),
         },
       });
     }

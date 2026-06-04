@@ -69,7 +69,13 @@ type AdminOrderRow = {
   totalAmount: number;
   createdAt: Date;
   users?: { name: string | null; email: string | null; phone: string | null } | null;
-  product?: { productCode: string; productName: string; subGroupName: string | null; sellingPrice?: number | null } | null;
+  product?: {
+    productCode: string;
+    productName: string;
+    subGroupName: string | null;
+    sellingPrice?: number | null;
+    deliveryTargetDays?: bigint | number | null;
+  } | null;
   paymentDetails?: Array<{
     paymentMode: string | null;
     transactionId: string | null;
@@ -131,6 +137,11 @@ function mapOrder(order: AdminOrderRow) {
         serialNumber: null,
         product: {
           name: getProductDisplayName(order.product || {}),
+          deliveryTargetDays:
+            order.product?.deliveryTargetDays === null ||
+            order.product?.deliveryTargetDays === undefined
+              ? null
+              : Number(order.product.deliveryTargetDays),
         },
       },
     ],
@@ -189,6 +200,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
             productName: true,
             subGroupName: true,
             sellingPrice: true,
+            deliveryTargetDays: true,
           },
         },
         paymentDetails: { orderBy: { paymentDetailsId: "desc" }, take: 1 },
@@ -310,6 +322,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             productCode: true,
             productName: true,
             subGroupName: true,
+            sellingPrice: true,
+            deliveryTargetDays: true,
           },
         },
         paymentDetails: { orderBy: { paymentDetailsId: "desc" }, take: 1 },
