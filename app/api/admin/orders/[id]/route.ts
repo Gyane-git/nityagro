@@ -10,7 +10,9 @@ const corsHeaders = {
 };
 
 function normalizeOrderStatus(value: string | null | undefined) {
-  const v = String(value || "").toLowerCase().trim();
+  const v = String(value || "")
+    .toLowerCase()
+    .trim();
   if (!v || v === "placed" || v === "pending") return "processing";
   if (["processing", "shipped", "delivered", "cancelled", "returns"].includes(v)) {
     return v;
@@ -25,7 +27,9 @@ function toDbOrderStatus(value: string | null | undefined) {
 }
 
 function normalizePaymentStatus(value: string | null | undefined) {
-  const v = String(value || "").toLowerCase().trim();
+  const v = String(value || "")
+    .toLowerCase()
+    .trim();
   if (!v || v === "pending") return "unpaid";
   if (["unpaid", "paid", "partial", "refunded"].includes(v)) return v;
   return "unpaid";
@@ -37,10 +41,7 @@ function toDbPaymentStatus(value: string | null | undefined) {
   return v.toUpperCase();
 }
 
-function getProductDisplayName(product: {
-  subGroupName?: string | null;
-  productName?: string | null;
-}) {
+function getProductDisplayName(product: { subGroupName?: string | null; productName?: string | null }) {
   const group = String(product?.subGroupName || "").trim();
   const variant = String(product?.productName || "").trim();
 
@@ -50,33 +51,12 @@ function getProductDisplayName(product: {
   return group || variant || "N/A";
 }
 
-function getOrderAmounts(order: {
-  quantity?: bigint | number | null;
-  unitPrice?: number | null;
-  productTotal?: number | null;
-  deliveryCharge?: number | null;
-  totalAmount?: number | null;
-  product?: { sellingPrice?: number | null } | null;
-}) {
+function getOrderAmounts(order: { quantity?: bigint | number | null; unitPrice?: number | null; productTotal?: number | null; deliveryCharge?: number | null; totalAmount?: number | null; product?: { sellingPrice?: number | null } | null }) {
   const qty = Math.max(1, Number(order.quantity || 1));
-  const unitPrice =
-    Number(order.unitPrice || 0) > 0
-      ? Number(order.unitPrice)
-      : Number(order.product?.sellingPrice || 0) > 0
-        ? Number(order.product?.sellingPrice)
-        : Number(order.totalAmount || 0) / qty;
-  const productTotal =
-    Number(order.productTotal || 0) > 0
-      ? Number(order.productTotal)
-      : Number((unitPrice * qty).toFixed(2));
-  const deliveryCharge =
-    Number(order.deliveryCharge || 0) > 0
-      ? Number(order.deliveryCharge)
-      : Math.max(0, Number(order.totalAmount || 0) - productTotal);
-  const totalAmount =
-    Number(order.totalAmount || 0) > 0
-      ? Number(order.totalAmount)
-      : Number((productTotal + deliveryCharge).toFixed(2));
+  const unitPrice = Number(order.unitPrice || 0) > 0 ? Number(order.unitPrice) : Number(order.product?.sellingPrice || 0) > 0 ? Number(order.product?.sellingPrice) : Number(order.totalAmount || 0) / qty;
+  const productTotal = Number(order.productTotal || 0) > 0 ? Number(order.productTotal) : Number((unitPrice * qty).toFixed(2));
+  const deliveryCharge = Number(order.deliveryCharge || 0) > 0 ? Number(order.deliveryCharge) : Math.max(0, Number(order.totalAmount || 0) - productTotal);
+  const totalAmount = Number(order.totalAmount || 0) > 0 ? Number(order.totalAmount) : Number((productTotal + deliveryCharge).toFixed(2));
 
   return { qty, unitPrice, productTotal, deliveryCharge, totalAmount };
 }
@@ -164,7 +144,8 @@ function mapOrder(order: AdminOrderRow) {
               toPaymentStatus: normalizePaymentStatus(payment.paymentStatus),
               paymentMode: payment.paymentMode,
               transactionId: payment.transactionId,
-              remark: null,
+              // remark: null,
+              remark: payment.paymentStatus ? `Payment ${payment.paymentStatus}` : "Payment updated",
               createdAt: payment.updatedAt,
             },
           ]
@@ -193,10 +174,7 @@ export async function OPTIONS() {
   return new Response(null, { status: 200, headers: corsHeaders });
 }
 
-export async function GET(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const orderId = BigInt(id);
@@ -219,37 +197,23 @@ export async function GET(
     });
 
     if (!order) {
-      return NextResponse.json(
-        { success: false, message: "Order not found" },
-        { status: 404, headers: corsHeaders },
-      );
+      return NextResponse.json({ success: false, message: "Order not found" }, { status: 404, headers: corsHeaders });
     }
 
-    return NextResponse.json(
-      { success: true, data: mapOrder(order) },
-      { status: 200, headers: corsHeaders },
-    );
+    return NextResponse.json({ success: true, data: mapOrder(order) }, { status: 200, headers: corsHeaders });
   } catch (error) {
-    return NextResponse.json(
-      { success: false, message: error instanceof Error ? error.message : "Failed to fetch order" },
-      { status: 500, headers: corsHeaders },
-    );
+    return NextResponse.json({ success: false, message: error instanceof Error ? error.message : "Failed to fetch order" }, { status: 500, headers: corsHeaders });
   }
 }
 
-export async function PATCH(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const orderId = BigInt(id);
     const body = await req.json();
 
     const orderStatus = body?.orderStatus ? String(body.orderStatus).toLowerCase() : null;
-    const paymentStatus = body?.paymentStatus
-      ? String(body.paymentStatus).toLowerCase()
-      : null;
+    const paymentStatus = body?.paymentStatus ? String(body.paymentStatus).toLowerCase() : null;
     const paymentMode = body?.paymentMode ? String(body.paymentMode) : null;
     const transactionId = body?.transactionId ? String(body.transactionId) : null;
 
@@ -262,10 +226,7 @@ export async function PATCH(
     });
 
     if (!current) {
-      return NextResponse.json(
-        { success: false, message: "Order not found" },
-        { status: 404, headers: corsHeaders },
-      );
+      return NextResponse.json({ success: false, message: "Order not found" }, { status: 404, headers: corsHeaders });
     }
 
     await prisma.$transaction(async (tx) => {
@@ -357,10 +318,7 @@ export async function PATCH(
     });
 
     if (!updated) {
-      return NextResponse.json(
-        { success: false, message: "Order not found after update" },
-        { status: 404, headers: corsHeaders },
-      );
+      return NextResponse.json({ success: false, message: "Order not found after update" }, { status: 404, headers: corsHeaders });
     }
 
     const mapped = mapOrder(updated);
@@ -387,14 +345,8 @@ export async function PATCH(
       console.error("Order status email send failed:", mailError);
     }
 
-    return NextResponse.json(
-      { success: true, data: mapped },
-      { status: 200, headers: corsHeaders },
-    );
+    return NextResponse.json({ success: true, data: mapped }, { status: 200, headers: corsHeaders });
   } catch (error) {
-    return NextResponse.json(
-      { success: false, message: error instanceof Error ? error.message : "Failed to update order" },
-      { status: 500, headers: corsHeaders },
-    );
+    return NextResponse.json({ success: false, message: error instanceof Error ? error.message : "Failed to update order" }, { status: 500, headers: corsHeaders });
   }
 }

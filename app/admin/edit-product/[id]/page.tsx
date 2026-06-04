@@ -1,18 +1,6 @@
 "use client";
 import { apiGetRequest, apiPutRequest } from "@/apihelper/apiHelper";
-import {
-  ChevronDown,
-  ChevronUp,
-  FileText,
-  ImageIcon,
-  Info,
-  Package,
-  Plus,
-  Save,
-  Tag,
-  Trash2,
-  Upload,
-} from "lucide-react";
+import { ChevronDown, ChevronUp, FileText, ImageIcon, Info, Package, Plus, Save, Tag, Trash2, Upload } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -68,6 +56,12 @@ export default function EditProductPage() {
   const [products, setProducts] = useState<Products>();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [productImageFile, setProductImageFile] = useState<File | null>(null);
+
+  const [galleryPreview, setGalleryPreview] = useState<string[]>([]);
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
 
   const [expandedSections, setExpandedSections] = useState<ExpandedSections>({
     basic: true,
@@ -179,6 +173,12 @@ export default function EditProductPage() {
     productImages: [],
     productCatalog: null,
   };
+
+  const resolveImageUrl = (url?: string | null) => {
+    if (!url) return "";
+    if (url.startsWith("http")) return url;
+    return url.startsWith("/") ? url : `/${url}`;
+  };
   const [formData, setFormData] = useState<ProductForm>(defaultForm);
   // Fetch Products
 
@@ -186,11 +186,10 @@ export default function EditProductPage() {
     const fetchProductById = async () => {
       setLoading(true);
       try {
-        const response = await apiGetRequest<Products>(
-          `/products/${productId}`,
-        );
+        const response = await apiGetRequest<Products>(`/products/${productId}`);
         if (response.success) {
           setProducts(response.data);
+          setPreviewImage(resolveImageUrl(response.data?.pImage));
 
           setFormData((prev) => ({
             ...prev,
@@ -203,10 +202,10 @@ export default function EditProductPage() {
             storageInstruction: response.data?.storageInstruction || "",
             actualPrice: String(response.data?.actualPrice) || "0.0",
             SellingPrice: String(response.data?.sellingPrice) || "0.0",
-            availableQuantity:
-              String(response.data?.availableQuantity) ?? "0.0",
+            availableQuantity: String(response.data?.availableQuantity) ?? "0.0",
             productStatus: response.data?.productStatus || false,
             specialOffer: Boolean(response.data?.specialOffer),
+            productImage: null,
           }));
         } else {
           toast.error(response.message || "Failed to load product");
@@ -224,17 +223,14 @@ export default function EditProductPage() {
   const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setFormData((prev) => ({
-      ...prev,
-      productImage: file,
-    }));
+
+    setProductImageFile(file);
+    setPreviewImage(URL.createObjectURL(file));
+
     toast.success("Main product image selected");
   };
 
-
-  const handleMultipleImageChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleMultipleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []) as File[];
     setFormData((prev) => ({ ...prev, productImages: files }));
     if (files.length > 0) {
@@ -262,26 +258,24 @@ export default function EditProductPage() {
     const saveToastId = toast.loading("Updating product...");
     setSaving(true);
 
-     const data = new FormData();
+    const data = new FormData();
 
-  data.append("productCode", formData.productCode);
-  data.append("productDescription", formData.productDescription);
-  data.append("nutritionalInformation", formData.nutritionalInformation);
-  data.append("cookingDescription", formData.cookingDescription);
-  data.append("storageInstruction", formData.storageInstruction);
-  data.append("productStatus", String(formData.productStatus));
-  data.append("specialOffer", String(formData.specialOffer));
-  data.append("subGroupName", formData.productName);
-  data.append("delivaryTargetDays", formData.delivaryTargetDays);
+    data.append("productCode", formData.productCode);
+    data.append("productDescription", formData.productDescription);
+    data.append("nutritionalInformation", formData.nutritionalInformation);
+    data.append("cookingDescription", formData.cookingDescription);
+    data.append("storageInstruction", formData.storageInstruction);
+    data.append("productStatus", String(formData.productStatus));
+    data.append("specialOffer", String(formData.specialOffer));
+    data.append("subGroupName", formData.productName);
+    data.append("delivaryTargetDays", formData.delivaryTargetDays);
 
-
-
-  if (formData.productImage) {
-    data.append("productImage", formData.productImage);
-  }
-  formData.productImages.forEach((file) => {
-    data.append("productImages", file);
-  });
+    if (productImageFile) {
+      data.append("productImage", productImageFile);
+    }
+    formData.productImages.forEach((file) => {
+      data.append("productImages", file);
+    });
 
     try {
       const response = await apiPutRequest("/products", data);
@@ -301,28 +295,14 @@ export default function EditProductPage() {
     }
   };
   // Shared style tokens ──
-  const inputClass =
-    "w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white placeholder-gray-400";
-  const labelClass =
-    "block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide";
-  const selectClass =
-    "w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white";
-  const textareaClass =
-    "w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none bg-white placeholder-gray-400";
-  const cardClass =
-    "bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden";
+  const inputClass = "w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white placeholder-gray-400";
+  const labelClass = "block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide";
+  const selectClass = "w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white";
+  const textareaClass = "w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none bg-white placeholder-gray-400";
+  const cardClass = "bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden";
 
-  const SectionHeader = ({
-    title,
-    icon: Icon,
-    sectionKey,
-    color = "blue",
-  }: SectionHeaderProps) => (
-    <button
-      type="button"
-      onClick={() => toggleSection(sectionKey)}
-      className="w-full flex items-center justify-between p-5 text-left hover:bg-gray-50 transition-colors rounded-t-xl"
-    >
+  const SectionHeader = ({ title, icon: Icon, sectionKey, color = "blue" }: SectionHeaderProps) => (
+    <button type="button" onClick={() => toggleSection(sectionKey)} className="w-full flex items-center justify-between p-5 text-left hover:bg-gray-50 transition-colors rounded-t-xl">
       <div className="flex items-center gap-3">
         <div className={`p-2 bg-${color}-50 rounded-lg`}>
           <Icon className={`w-4 h-4 text-${color}-600`} />
@@ -331,11 +311,7 @@ export default function EditProductPage() {
         <h2 className="text-base font-semibold text-gray-900">{title}</h2>
       </div>
 
-      {expandedSections[sectionKey] ? (
-        <ChevronUp className="w-4 h-4 text-gray-400" />
-      ) : (
-        <ChevronDown className="w-4 h-4 text-gray-400" />
-      )}
+      {expandedSections[sectionKey] ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
     </button>
   );
 
@@ -344,19 +320,9 @@ export default function EditProductPage() {
       {/* Top Bar */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-900">
-            Update New Product
-          </h1>
+          <h1 className="text-xl font-bold text-gray-900">Update New Product</h1>
           <div className="flex items-center gap-4">
-            <button
-              onClick={handleSubmit}
-              disabled={saving || loading}
-              className={`px-5 py-2 text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-sm ${
-                saving || loading
-                  ? "bg-blue-300 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
-              }`}
-            >
+            <button onClick={handleSubmit} disabled={saving || loading} className={`px-5 py-2 text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-sm ${saving || loading ? "bg-blue-300 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}>
               <Save className="w-4 h-4" /> {saving ? "Saving..." : "Save Product"}
             </button>
           </div>
@@ -367,11 +333,7 @@ export default function EditProductPage() {
             <div className="lg:col-span-2 space-y-5">
               {/* Basic Information */}
               <div className={cardClass}>
-                <SectionHeader
-                  title="Basic Information"
-                  icon={Package}
-                  sectionKey="basic"
-                />
+                <SectionHeader title="Basic Information" icon={Package} sectionKey="basic" />
                 {expandedSections.basic && (
                   <div className="px-5 pb-5 border-t border-gray-100">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
@@ -382,15 +344,7 @@ export default function EditProductPage() {
                         <label className={labelClass}>
                           Product Code <span className="text-red-500">*</span>
                         </label>
-                        <input
-                          readOnly
-                          type="text"
-                          name="productCode"
-                          value={formData.productCode}
-                          onChange={(e) => ({})}
-                          placeholder="e.g. productCode"
-                          className={inputClass}
-                        />
+                        <input readOnly type="text" name="productCode" value={formData.productCode} onChange={(e) => ({})} placeholder="e.g. productCode" className={inputClass} />
                       </div>
 
                       {/* to be added to model */}
@@ -398,15 +352,7 @@ export default function EditProductPage() {
                         <label className={labelClass}>
                           Product Name <span className="text-red-500">*</span>
                         </label>
-                        <input
-                          readOnly
-                          type="text"
-                          name="productName"
-                          value={formData.productName}
-                          onChange={(e) => ({})}
-                          placeholder="e.g. Red Chilli Powder"
-                          className={inputClass}
-                        />
+                        <input readOnly type="text" name="productName" value={formData.productName} onChange={(e) => ({})} placeholder="e.g. Red Chilli Powder" className={inputClass} />
                       </div>
 
                       {/* model: productStatus (Boolean) */}
@@ -430,9 +376,7 @@ export default function EditProductPage() {
 
                       {/* model: delivaryTargetDays — typo preserved to match Prisma */}
                       <div>
-                        <label className={labelClass}>
-                          Delivery Target Days
-                        </label>
+                        <label className={labelClass}>Delivery Target Days</label>
                         <input
                           type="number"
                           name="delivaryTargetDays"
@@ -450,11 +394,8 @@ export default function EditProductPage() {
                         />
                       </div>
 
-
                       <div>
-                        <label className={labelClass}>
-                          Best Seller
-                        </label>
+                        <label className={labelClass}>Best Seller</label>
                         <input
                           type="checkbox"
                           name="bestSeller"
@@ -475,12 +416,7 @@ export default function EditProductPage() {
 
               {/* Descriptions & Specs */}
               <div className={cardClass}>
-                <SectionHeader
-                  title="Descriptions & Specifications"
-                  icon={FileText}
-                  sectionKey="description"
-                  color="orange"
-                />
+                <SectionHeader title="Descriptions & Specifications" icon={FileText} sectionKey="description" color="orange" />
                 {expandedSections.description && (
                   <div className="border-t border-gray-100">
                     <div className="flex border-b border-gray-200 px-5 gap-1 overflow-x-auto">
@@ -496,16 +432,7 @@ export default function EditProductPage() {
                         },
                         { key: "storage", label: "Storage Instructions" },
                       ].map((t) => (
-                        <button
-                          key={t.key}
-                          type="button"
-                          onClick={() => setActiveDescTab(t.key)}
-                          className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                            activeDescTab === t.key
-                              ? "border-green-700 text-green-700"
-                              : "border-transparent text-gray-500 hover:text-gray-700"
-                          }`}
-                        >
+                        <button key={t.key} type="button" onClick={() => setActiveDescTab(t.key)} className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeDescTab === t.key ? "border-green-700 text-green-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
                           {t.label}
                         </button>
                       ))}
@@ -517,9 +444,7 @@ export default function EditProductPage() {
                         <div className="space-y-4">
                           {/* model: productDescription */}
                           <div>
-                            <label className={labelClass}>
-                              Product Description
-                            </label>
+                            <label className={labelClass}>Product Description</label>
                             <textarea
                               name="productDescription"
                               value={formData.productDescription}
@@ -533,9 +458,7 @@ export default function EditProductPage() {
                               placeholder="Our products are crafted with a deep respect for tradition and purity..."
                               className={textareaClass}
                             />
-                            <p className="text-xs text-gray-400 mt-1">
-                              Shown as paragraphs on the product page
-                            </p>
+                            <p className="text-xs text-gray-400 mt-1">Shown as paragraphs on the product page</p>
                           </div>
                         </div>
                       )}
@@ -545,9 +468,7 @@ export default function EditProductPage() {
                         <div className="space-y-4">
                           {/* model: productDescription */}
                           <div>
-                            <label className={labelClass}>
-                              Nutritional Information
-                            </label>
+                            <label className={labelClass}>Nutritional Information</label>
                             <textarea
                               name="nutritionalInformation"
                               value={formData.nutritionalInformation}
@@ -561,9 +482,7 @@ export default function EditProductPage() {
                               placeholder="Our products are crafted with a deep respect for tradition and purity..."
                               className={textareaClass}
                             />
-                            <p className="text-xs text-gray-400 mt-1">
-                              Shown as paragraphs on the nutirition page
-                            </p>
+                            <p className="text-xs text-gray-400 mt-1">Shown as paragraphs on the nutirition page</p>
                           </div>
                         </div>
                       )}
@@ -572,9 +491,7 @@ export default function EditProductPage() {
                       {activeDescTab === "cooking" && (
                         <div className="space-y-4">
                           <div>
-                            <label className={labelClass}>
-                              Cooking Instructions / Usage
-                            </label>
+                            <label className={labelClass}>Cooking Instructions / Usage</label>
 
                             <textarea
                               name="cookingDescription"
@@ -597,9 +514,7 @@ export default function EditProductPage() {
                       {activeDescTab === "storage" && (
                         <div className="space-y-3">
                           <div>
-                            <label className={labelClass}>
-                              Storage Instructions
-                            </label>
+                            <label className={labelClass}>Storage Instructions</label>
 
                             <textarea
                               name="storageInstruction"
@@ -611,9 +526,7 @@ export default function EditProductPage() {
                                 }))
                               }
                               rows={7}
-                              placeholder={
-                                "Store in a cool, dry place away from direct sunlight\nKeep the bottle tightly sealed after each use\nDo not store near heat sources or open flames\nBest used within 12 months of manufacture date"
-                              }
+                              placeholder={"Store in a cool, dry place away from direct sunlight\nKeep the bottle tightly sealed after each use\nDo not store near heat sources or open flames\nBest used within 12 months of manufacture date"}
                               className={textareaClass}
                             />
                           </div>
@@ -629,72 +542,37 @@ export default function EditProductPage() {
             <div className="space-y-5">
               {/* Pricing & Inventory */}
               <div className={cardClass}>
-                <SectionHeader
-                  title="Pricing & Inventory"
-                  icon={Tag}
-                  sectionKey="pricing"
-                  color="green"
-                />
+                <SectionHeader title="Pricing & Inventory" icon={Tag} sectionKey="pricing" color="green" />
                 {expandedSections.pricing && (
                   <div className="px-5 pb-5 border-t border-gray-100 space-y-3 mt-4">
                     {/* model: actualPrice */}
                     <div className="mt-2">
                       <label className={labelClass}>Actual Price (NRP)</label>
-                      <input
-                        readOnly
-                        type="number"
-                        name="actualPrice"
-                        value={formData.actualPrice}
-                        onChange={handleInputChange}
-                        placeholder="0.00"
-                        min="0"
-                        className={inputClass}
-                      />
+                      <input readOnly type="number" name="actualPrice" value={formData.actualPrice} onChange={handleInputChange} placeholder="0.00" min="0" className={inputClass} />
                     </div>
 
                     {/* model: SellingPrice — capital S matches Prisma schema */}
                     <div>
                       <label className={labelClass}>Selling Price (NRP)</label>
-                      <input
-                        readOnly
-                        type="number"
-                        name="SellingPrice"
-                        value={formData.SellingPrice}
-                        onChange={handleInputChange}
-                        placeholder="0.00"
-                        min="0"
-                        className={inputClass}
-                      />
+                      <input readOnly type="number" name="SellingPrice" value={formData.SellingPrice} onChange={handleInputChange} placeholder="0.00" min="0" className={inputClass} />
                     </div>
 
-                    {formData.actualPrice &&
-                      formData.SellingPrice &&
-                      Number(formData.SellingPrice) <
-                        Number(formData.actualPrice) && (
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-2 text-xs text-green-700">
-                          Discount:{" "}
-                          {/* {Math.round(
+                    {formData.actualPrice && formData.SellingPrice && Number(formData.SellingPrice) < Number(formData.actualPrice) && (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-2 text-xs text-green-700">
+                        Discount:{" "}
+                        {/* {Math.round(
                             ((formData.actualPrice - formData.SellingPrice) /
                               formData.actualPrice) *
                               100,
                           )} */}
-                          % off
-                        </div>
-                      )}
+                        % off
+                      </div>
+                    )}
 
                     {/* model: availableQuantity */}
                     <div>
                       <label className={labelClass}>Available Quantity</label>
-                      <input
-                        readOnly
-                        type="number"
-                        name="availableQuantity"
-                        value={formData.availableQuantity}
-                        onChange={handleInputChange}
-                        placeholder="0"
-                        min="0"
-                        className={inputClass}
-                      />
+                      <input readOnly type="number" name="availableQuantity" value={formData.availableQuantity} onChange={handleInputChange} placeholder="0" min="0" className={inputClass} />
                     </div>
                   </div>
                 )}
@@ -702,63 +580,31 @@ export default function EditProductPage() {
 
               {/* Images & Media */}
               <div className={cardClass}>
-                <SectionHeader
-                  title="Images & Media"
-                  icon={ImageIcon}
-                  sectionKey="media"
-                  color="pink"
-                />
+                <SectionHeader title="Images & Media" icon={ImageIcon} sectionKey="media" color="pink" />
                 {expandedSections.media && (
                   <div className="px-5 pb-5 border-t border-gray-100 space-y-4 mt-4">
                     {/* model: productImage */}
                     <div>
-                      {formData.productImage && (
-                        <img
-                          src={URL.createObjectURL(formData.productImage)}
-                          alt="preview"
-                          className="w-32 h-32 object-cover"
-                        />
-                      )}
+                      {previewImage && <img src={previewImage} alt="preview" className="w-32 h-32 object-cover rounded-lg border" />}
                       <label htmlFor="productImage" className={labelClass}>
                         {" "}
                         Main Image
                       </label>
-                      <input
-                        type="file"
-                        id="productImage"
-                        accept="image/*"
-                        onChange={handleMainImageChange}
-                        className="hidden"
-                      />
-                      <label
-                        htmlFor="productImage"
-                        className={`cursor-pointer flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-5 transition-colors ${
-                          formData.productImage
-                            ? "border-green-400 bg-green-50"
-                            : "border-gray-300 hover:border-blue-400 hover:bg-blue-50"
-                        }`}
-                      >
+                      <input type="file" id="productImage" accept="image/*" onChange={handleMainImageChange} className="hidden" />
+                      <label htmlFor="productImage" className={`cursor-pointer flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-5 transition-colors ${formData.productImage ? "border-green-400 bg-green-50" : "border-gray-300 hover:border-blue-400 hover:bg-blue-50"}`}>
                         {formData.productImage ? (
                           <>
                             <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mb-2">
                               <ImageIcon className="w-5 h-5 text-green-600" />
                             </div>
-                            <p className="text-sm text-green-700 font-medium text-center truncate max-w-full px-2">
-                              {/* {formData.productImage.name} */}
-                            </p>
-                            <p className="text-xs text-green-500 mt-1">
-                              Click to change
-                            </p>
+                            <p className="text-sm text-green-700 font-medium text-center truncate max-w-full px-2">{/* {formData.productImage.name} */}</p>
+                            <p className="text-xs text-green-500 mt-1">Click to change</p>
                           </>
                         ) : (
                           <>
                             <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                            <p className="text-sm text-gray-600 font-medium">
-                              Upload Main Image
-                            </p>
-                            <p className="text-xs text-gray-400 mt-1">
-                              PNG, JPG up to 10MB
-                            </p>
+                            <p className="text-sm text-gray-600 font-medium">Upload Main Image</p>
+                            <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 10MB</p>
                           </>
                         )}
                       </label>
@@ -767,22 +613,8 @@ export default function EditProductPage() {
                     {/* to be added to model: gallery images */}
                     <div>
                       <label className={labelClass}>Product Gallery</label>
-                      <input
-                        type="file"
-                        id="productImages"
-                        multiple
-                        accept="image/*"
-                        onChange={handleMultipleImageChange}
-                        className="hidden"
-                      />
-                      <label
-                        htmlFor="productImages"
-                        className={`cursor-pointer flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-5 transition-colors ${
-                          formData.productImages.length > 0
-                            ? "border-green-400 bg-green-50"
-                            : "border-gray-300 hover:border-blue-400 hover:bg-blue-50"
-                        }`}
-                      >
+                      <input type="file" id="productImages" multiple accept="image/*" onChange={handleMultipleImageChange} className="hidden" />
+                      <label htmlFor="productImages" className={`cursor-pointer flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-5 transition-colors ${formData.productImages.length > 0 ? "border-green-400 bg-green-50" : "border-gray-300 hover:border-blue-400 hover:bg-blue-50"}`}>
                         {formData.productImages.length > 0 ? (
                           <>
                             <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mb-2">
@@ -790,24 +622,15 @@ export default function EditProductPage() {
                             </div>
                             <p className="text-sm text-green-700 font-medium">
                               {formData.productImages.length} image
-                              {formData.productImages.length > 1
-                                ? "s"
-                                : ""}{" "}
-                              selected
+                              {formData.productImages.length > 1 ? "s" : ""} selected
                             </p>
-                            <p className="text-xs text-green-500 mt-1">
-                              Click to change
-                            </p>
+                            <p className="text-xs text-green-500 mt-1">Click to change</p>
                           </>
                         ) : (
                           <>
                             <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                            <p className="text-sm text-gray-600 font-medium">
-                              Upload Gallery Images
-                            </p>
-                            <p className="text-xs text-gray-400 mt-1">
-                              Select multiple images
-                            </p>
+                            <p className="text-sm text-gray-600 font-medium">Upload Gallery Images</p>
+                            <p className="text-xs text-gray-400 mt-1">Select multiple images</p>
                           </>
                         )}
                       </label>

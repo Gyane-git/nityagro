@@ -126,8 +126,8 @@ export default function MyProfile({ user, userId = "1", onProfileUpdated }) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <input type="text" placeholder="City" value={form.city} onChange={set("city")} className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-sm text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
         <input type="text" placeholder="State" value={form.state} onChange={set("state")} className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-sm text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
+        <input type="text" placeholder="City" value={form.city} onChange={set("city")} className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-sm text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
         <input type="text" placeholder="Zip Code" value={form.zipCode} onChange={set("zipCode")} className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-sm text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
         <input type="text" placeholder="Country" value={form.country} onChange={set("country")} className="w-full px-4 py-2.5 bg-[#f9f6f0] border border-transparent rounded-md text-sm text-gray-700 outline-none focus:border-[#DB8F00] transition-colors" />
       </div>
