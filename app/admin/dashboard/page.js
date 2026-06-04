@@ -202,7 +202,7 @@ export default function DashboardPage() {
             <StatCard icon={MessageSquareWarning} title="Inquiries" value={metrics.totalInquiries} subtitle="Contact form grievances" tone="slate" />
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 text-gray-700">
             <div className="xl:col-span-2 rounded-2xl border bg-white p-5 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-gray-900">Recent Orders</h2>
