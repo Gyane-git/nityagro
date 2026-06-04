@@ -1,4 +1,0 @@
-ALTER TABLE `faqs`
-  ADD COLUMN `faqSection` VARCHAR(191) NOT NULL DEFAULT 'products-quality',
-  ADD COLUMN `showOnHome` BOOLEAN NOT NULL DEFAULT false,
-  ADD COLUMN `sortOrder` BIGINT NOT NULL DEFAULT 0;

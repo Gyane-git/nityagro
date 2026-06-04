@@ -1,3 +1,0 @@
-ALTER TABLE `faqs`
-  MODIFY COLUMN `question` TEXT NOT NULL,
-  MODIFY COLUMN `answer` TEXT NULL;

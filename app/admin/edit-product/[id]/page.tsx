@@ -127,6 +127,7 @@ export default function EditProductPage() {
     productImages: File[];
     productCatalog: File | null;
   };
+
   const defaultForm: ProductForm = {
     productCode: "",
     productName: "",
@@ -181,7 +182,7 @@ export default function EditProductPage() {
   };
   const [formData, setFormData] = useState<ProductForm>(defaultForm);
   // Fetch Products
-
+  const [existingGalleryImages, setExistingGalleryImages] = useState<string[]>([]);
   useEffect(() => {
     const fetchProductById = async () => {
       setLoading(true);
@@ -190,6 +191,25 @@ export default function EditProductPage() {
         if (response.success) {
           setProducts(response.data);
           setPreviewImage(resolveImageUrl(response.data?.pImage));
+
+          const rawImages = response.data?.productImages;
+
+          let images: string[] = [];
+
+          if (Array.isArray(rawImages)) {
+            images = rawImages;
+          } else if (typeof rawImages === "string") {
+            images = rawImages.split(",").filter(Boolean);
+          } else if (rawImages && typeof rawImages === "object") {
+            images = rawImages.map((img: any) => img.url || img);
+          }
+
+          setExistingGalleryImages(images);
+
+          const normalized = images.map((img: any) => resolveImageUrl(typeof img === "string" ? img : img?.url));
+
+          setExistingGalleryImages(images);
+          setGalleryPreview(normalized);
 
           setFormData((prev) => ({
             ...prev,
@@ -231,12 +251,24 @@ export default function EditProductPage() {
   };
 
   const handleMultipleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []) as File[];
-    setFormData((prev) => ({ ...prev, productImages: files }));
-    if (files.length > 0) {
-      toast.success(`${files.length} gallery image${files.length > 1 ? "s" : ""} selected`);
-    }
+    const files = Array.from(e.target.files || []);
+
+    if (!files.length) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      productImages: [...prev.productImages, ...files], // ✅ append instead of replace
+    }));
+
+    setGalleryFiles((prev) => [...prev, ...files]); // optional but consistent
+
+    const newPreviews = files.map((file) => URL.createObjectURL(file));
+
+    setGalleryPreview((prev) => [...prev, ...newPreviews]);
+
+    toast.success(`${files.length} image(s) added`);
   };
+
   const handleReset = () => {
     setActiveDescTab("productDetails");
     toast("Description tab reset");
@@ -273,7 +305,12 @@ export default function EditProductPage() {
     if (productImageFile) {
       data.append("productImage", productImageFile);
     }
-    formData.productImages.forEach((file) => {
+
+    existingGalleryImages.forEach((img) => {
+      data.append("existingImages", img);
+    });
+
+    galleryFiles.forEach((file) => {
       data.append("productImages", file);
     });
 
@@ -614,16 +651,27 @@ export default function EditProductPage() {
                     <div>
                       <label className={labelClass}>Product Gallery</label>
                       <input type="file" id="productImages" multiple accept="image/*" onChange={handleMultipleImageChange} className="hidden" />
+
                       <label htmlFor="productImages" className={`cursor-pointer flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-5 transition-colors ${formData.productImages.length > 0 ? "border-green-400 bg-green-50" : "border-gray-300 hover:border-blue-400 hover:bg-blue-50"}`}>
-                        {formData.productImages.length > 0 ? (
+                        {/* Gallery Preview */}
+                        {galleryPreview.length > 0 && (
+                          <div className="grid grid-cols-3 gap-2 mb-3">
+                            {galleryPreview.map((img, index) => (
+                              <img key={index} src={img} alt={`gallery-${index}`} className="w-full h-20 object-cover rounded border" />
+                            ))}
+                          </div>
+                        )}
+                        {existingGalleryImages.length + galleryFiles.length > 0 ? (
                           <>
                             <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mb-2">
                               <ImageIcon className="w-5 h-5 text-green-600" />
                             </div>
+
                             <p className="text-sm text-green-700 font-medium">
-                              {formData.productImages.length} image
-                              {formData.productImages.length > 1 ? "s" : ""} selected
+                              {existingGalleryImages.length + galleryFiles.length} image
+                              {existingGalleryImages.length + galleryFiles.length > 1 ? "s" : ""} selected
                             </p>
+
                             <p className="text-xs text-green-500 mt-1">Click to change</p>
                           </>
                         ) : (

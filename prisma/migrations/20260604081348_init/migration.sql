@@ -95,7 +95,6 @@ CREATE TABLE `comboProduct` (
     `discount` DOUBLE NULL,
     `slug` VARCHAR(191) NULL,
     `comboDescription` VARCHAR(191) NULL,
-    `comboImage` VARCHAR(191) NULL,
     `comboStatus` BOOLEAN NOT NULL DEFAULT true,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
@@ -135,6 +134,10 @@ CREATE TABLE `orders` (
     `orderId` BIGINT NOT NULL AUTO_INCREMENT,
     `userId` BIGINT NOT NULL,
     `productId` BIGINT NOT NULL,
+    `quantity` BIGINT NOT NULL DEFAULT 1,
+    `unitPrice` DOUBLE NOT NULL DEFAULT 0,
+    `productTotal` DOUBLE NOT NULL DEFAULT 0,
+    `deliveryCharge` DOUBLE NOT NULL DEFAULT 0,
     `totalAmount` DOUBLE NOT NULL,
     `orderStatus` VARCHAR(191) NULL,
     `paymentStatus` VARCHAR(191) NULL,
@@ -144,6 +147,84 @@ CREATE TABLE `orders` (
     INDEX `orders_productId_fkey`(`productId`),
     INDEX `orders_userId_fkey`(`userId`),
     PRIMARY KEY (`orderId`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `comboOrders` (
+    `comboOrderId` BIGINT NOT NULL AUTO_INCREMENT,
+    `userId` BIGINT NOT NULL,
+    `comboProductId` BIGINT NOT NULL,
+    `quantity` BIGINT NOT NULL DEFAULT 1,
+    `unitPrice` DOUBLE NOT NULL DEFAULT 0,
+    `productTotal` DOUBLE NOT NULL DEFAULT 0,
+    `deliveryCharge` DOUBLE NOT NULL DEFAULT 0,
+    `totalAmount` DOUBLE NOT NULL,
+    `orderStatus` VARCHAR(191) NULL,
+    `paymentStatus` VARCHAR(191) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    INDEX `comboOrders_comboProductId_fkey`(`comboProductId`),
+    INDEX `comboOrders_userId_fkey`(`userId`),
+    PRIMARY KEY (`comboOrderId`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `comboOrderCancellation` (
+    `comboOrderCancellationId` BIGINT NOT NULL AUTO_INCREMENT,
+    `comboOrderId` BIGINT NOT NULL,
+    `userId` BIGINT NOT NULL,
+    `comboProductId` BIGINT NOT NULL,
+    `comboName` VARCHAR(191) NULL,
+    `comboItems` VARCHAR(191) NULL,
+    `cancellationReason` VARCHAR(191) NULL,
+    `adminCancellationReason` VARCHAR(191) NULL,
+    `cancellationStatus` BOOLEAN NOT NULL DEFAULT true,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    INDEX `comboOrderCancellation_comboOrderId_fkey`(`comboOrderId`),
+    INDEX `comboOrderCancellation_comboProductId_fkey`(`comboProductId`),
+    INDEX `comboOrderCancellation_userId_fkey`(`userId`),
+    PRIMARY KEY (`comboOrderCancellationId`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `comboOrderReturn` (
+    `comboOrderReturnId` BIGINT NOT NULL AUTO_INCREMENT,
+    `comboOrderId` BIGINT NOT NULL,
+    `userId` BIGINT NOT NULL,
+    `comboProductId` BIGINT NOT NULL,
+    `comboName` VARCHAR(191) NULL,
+    `comboItems` VARCHAR(191) NULL,
+    `reason` VARCHAR(191) NULL,
+    `returnImage` VARCHAR(191) NULL,
+    `returnStatus` BOOLEAN NOT NULL DEFAULT true,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    INDEX `comboOrderReturn_comboOrderId_fkey`(`comboOrderId`),
+    INDEX `comboOrderReturn_comboProductId_fkey`(`comboProductId`),
+    INDEX `comboOrderReturn_userId_fkey`(`userId`),
+    PRIMARY KEY (`comboOrderReturnId`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `omsOrderSyncLog` (
+    `omsOrderSyncLogId` BIGINT NOT NULL AUTO_INCREMENT,
+    `orderType` VARCHAR(191) NOT NULL,
+    `localOrderIds` VARCHAR(191) NULL,
+    `status` VARCHAR(191) NOT NULL DEFAULT 'PENDING',
+    `attempts` INTEGER NOT NULL DEFAULT 0,
+    `payload` JSON NOT NULL,
+    `response` JSON NULL,
+    `errorMessage` TEXT NULL,
+    `lastTriedAt` DATETIME(3) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    INDEX `omsOrderSyncLog_status_idx`(`status`),
+    PRIMARY KEY (`omsOrderSyncLogId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
@@ -165,8 +246,11 @@ CREATE TABLE `banner` (
 -- CreateTable
 CREATE TABLE `faqs` (
     `faqsId` BIGINT NOT NULL AUTO_INCREMENT,
-    `question` VARCHAR(191) NOT NULL,
-    `answer` VARCHAR(191) NULL,
+    `question` TEXT NOT NULL,
+    `answer` TEXT NULL,
+    `faqSection` VARCHAR(191) NOT NULL DEFAULT 'products-quality',
+    `showOnHome` BOOLEAN NOT NULL DEFAULT false,
+    `sortOrder` BIGINT NOT NULL DEFAULT 0,
     `faqStatus` BOOLEAN NOT NULL DEFAULT true,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
@@ -203,7 +287,7 @@ CREATE TABLE `testimonials` (
     `name` VARCHAR(191) NOT NULL,
     `userId` BIGINT NOT NULL,
     `title` VARCHAR(191) NULL,
-    `message` VARCHAR(191) NULL,
+    `message` TEXT NULL,
     `image` VARCHAR(191) NULL,
     `designation` VARCHAR(191) NULL,
     `starRating` BIGINT NULL,
@@ -397,14 +481,17 @@ CREATE TABLE `inquiry` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `productImage` (
+CREATE TABLE `ProductImage` (
     `productImageId` BIGINT NOT NULL AUTO_INCREMENT,
-    `productId` BIGINT NOT NULL,
+    `productId` BIGINT NULL,
+    `comboProductId` BIGINT NULL,
     `imageUrl` VARCHAR(191) NOT NULL,
+    `isMain` BOOLEAN NOT NULL DEFAULT false,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
-    INDEX `productImage_productId_fkey`(`productId`),
+    INDEX `ProductImage_productId_idx`(`productId`),
+    INDEX `ProductImage_comboProductId_idx`(`comboProductId`),
     PRIMARY KEY (`productImageId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -500,6 +587,30 @@ ALTER TABLE `orders` ADD CONSTRAINT `orders_productId_fkey` FOREIGN KEY (`produc
 ALTER TABLE `orders` ADD CONSTRAINT `orders_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`userId`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `comboOrders` ADD CONSTRAINT `comboOrders_comboProductId_fkey` FOREIGN KEY (`comboProductId`) REFERENCES `comboProduct`(`comboProductId`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `comboOrders` ADD CONSTRAINT `comboOrders_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`userId`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `comboOrderCancellation` ADD CONSTRAINT `comboOrderCancellation_comboOrderId_fkey` FOREIGN KEY (`comboOrderId`) REFERENCES `comboOrders`(`comboOrderId`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `comboOrderCancellation` ADD CONSTRAINT `comboOrderCancellation_comboProductId_fkey` FOREIGN KEY (`comboProductId`) REFERENCES `comboProduct`(`comboProductId`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `comboOrderCancellation` ADD CONSTRAINT `comboOrderCancellation_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`userId`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `comboOrderReturn` ADD CONSTRAINT `comboOrderReturn_comboOrderId_fkey` FOREIGN KEY (`comboOrderId`) REFERENCES `comboOrders`(`comboOrderId`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `comboOrderReturn` ADD CONSTRAINT `comboOrderReturn_comboProductId_fkey` FOREIGN KEY (`comboProductId`) REFERENCES `comboProduct`(`comboProductId`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `comboOrderReturn` ADD CONSTRAINT `comboOrderReturn_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`userId`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `testimonials` ADD CONSTRAINT `testimonials_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`userId`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -545,7 +656,10 @@ ALTER TABLE `paymentDetails` ADD CONSTRAINT `paymentDetails_orderId_fkey` FOREIG
 ALTER TABLE `paymentDetails` ADD CONSTRAINT `paymentDetails_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`userId`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `productImage` ADD CONSTRAINT `productImage_productId_fkey` FOREIGN KEY (`productId`) REFERENCES `products`(`productId`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `ProductImage` ADD CONSTRAINT `ProductImage_productId_fkey` FOREIGN KEY (`productId`) REFERENCES `products`(`productId`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ProductImage` ADD CONSTRAINT `ProductImage_comboProductId_fkey` FOREIGN KEY (`comboProductId`) REFERENCES `comboProduct`(`comboProductId`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `setShippingCost` ADD CONSTRAINT `setShippingCost_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`userId`) ON DELETE RESTRICT ON UPDATE CASCADE;
