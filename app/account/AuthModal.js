@@ -7,51 +7,38 @@ const XIcon = () => (
   </svg>
 );
 
-/**
- * AuthModal
- * Base wrapper for all auth popups (Login, Signup, OTP, Forgot, Reset)
- *
- * Props:
- *  - isOpen   {boolean}
- *  - onClose  {function}
- *  - children {ReactNode}
- */
 export default function AuthModal({ isOpen, onClose, children }) {
   if (!isOpen) return null;
 
   return (
     <>
-      {/* ── Backdrop ── */}
-      <div
-        className="fixed inset-0 z-40"
-        style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(3px)" }}
-        onClick={onClose}
-      />
+      {/* Backdrop */}
+      <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-[3px]" onClick={onClose} />
 
-      {/* ── Modal panel ── */}
-      <div
-        className="fixed z-50 bg-white"
-        style={{
-          width: "448px",
-          minHeight: "340px",
-          borderRadius: "12px",
-          border: "1px solid #E6E6E6",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          boxShadow: "0 20px 60px rgba(0,0,0,0.18)",
-        }}
-      >
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-1 rounded-full hover:bg-gray-100 transition-colors z-10"
-          aria-label="Close"
+      {/* Modal Wrapper */}
+      <div className="fixed inset-0 z-50 flex items-center sm:items-start md:items-center justify-center p-3 sm:p-4 pb-20 sm:pb-4">
+        {/* Modal Box */}
+        <div
+          className="
+            relative
+            w-full
+            max-w-[92vw] sm:max-w-[420px] md:max-w-[460px]
+            max-h-[80dvh] sm:max-h-[80dvh] md:max-h-[92dvh]
+            bg-white
+            rounded-xl
+            overflow-hidden
+            flex flex-col
+            shadow-2xl
+            "
         >
-          <XIcon />
-        </button>
+          {/* Close button */}
+          <button onClick={onClose} className="absolute top-3 right-3 sm:top-4 sm:right-4 p-1 rounded-full hover:bg-gray-100 transition" aria-label="Close">
+            <XIcon />
+          </button>
 
-        {children}
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto overscroll-contain px-1 sm:px-0 pb-6 sm:pb-0">{children}</div>
+        </div>
       </div>
     </>
   );
