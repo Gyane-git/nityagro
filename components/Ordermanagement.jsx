@@ -396,7 +396,7 @@ export default function Ordermanagement() {
         })}
       </div>
 
-      <div className="bg-white border rounded-xl p-3 md:p-4">
+      <div className="bg-white border rounded-xl p-3 md:p-4 text-gray-700">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-2 md:items-center">
           <input value={searchInput} onChange={(e) => setSearchInput(e.target.value)} placeholder="Search by order no, customer, email, product" className="w-full rounded-lg border text-gray-700 border-gray-700 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-200 md:col-span-2" />
           <select
@@ -422,7 +422,7 @@ export default function Ordermanagement() {
               setStatusFilter("processing");
               setPage(1);
             }}
-            className="w-full bg-gray-600 rounded-lg border px-3 py-2 text-sm hover:bg-gray-800"
+            className="w-full bg-gray-600 rounded-lg border px-3 py-2 text-sm hover:bg-gray-800 text-white transition"
           >
             Reset Filters
           </button>
