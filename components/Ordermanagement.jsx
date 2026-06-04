@@ -653,7 +653,7 @@ export default function Ordermanagement() {
                           {/* <td className="px-3 py-2 capitalize">{log.fromPaymentStatus || "-"}</td> */}
                           {/* <td className="px-3 py-2 capitalize font-medium">{log.toPaymentStatus || "-"}</td> */}
                           <td className="px-3 py-2">{log.paymentMode || "-"}</td>
-                          <td className="px-3 py-2 font-mono">{log.transactionId || "-"}</td>
+                          <td className="px-3 py-2 font-mono">{ log.transactionId || "-"}</td>
                           <td className="px-3 py-2">{log.remark || "-"}</td>
                           <td className="px-3 py-2 text-center">{formatDate(log.createdAt)}</td>
                         </tr>
@@ -671,8 +671,8 @@ export default function Ordermanagement() {
                   <table className="w-full text-xs">
                     <thead className="bg-gray-50 border-b">
                       <tr className="text-left">
-                        <th className="px-3 py-2">From</th>
-                        <th className="px-3 py-2">To</th>
+                        {/* <th className="px-3 py-2">From</th> */}
+                        <th className="px-3 py-2">Status</th>
                         <th className="px-3 py-2">Courier</th>
                         <th className="px-3 py-2">CN Number</th>
                         <th className="px-3 py-2">CN Date</th>
@@ -683,7 +683,7 @@ export default function Ordermanagement() {
                     <tbody>
                       {detailLogGroups.shipped.map((log) => (
                         <tr key={`s-${log.id}`} className="border-b last:border-0">
-                          <td className="px-3 py-2 capitalize">{log.fromOrderStatus || "-"}</td>
+                         
                           <td className="px-3 py-2 capitalize font-medium">{log.toOrderStatus || "-"}</td>
                           <td className="px-3 py-2">{log.courierName || "-"}</td>
                           <td className="px-3 py-2">{log.cnNumber || "-"}</td>
@@ -733,8 +733,8 @@ export default function Ordermanagement() {
                       <table className="w-full text-xs">
                         <thead className="bg-gray-50 border-b">
                           <tr className="text-left">
-                            <th className="px-3 py-2">From</th>
-                            <th className="px-3 py-2">To</th>
+                            {/* <th className="px-3 py-2">From</th> */}
+                            <th className="px-3 py-2">Status</th>
                             <th className="px-3 py-2">Remark</th>
                             <th className="px-3 py-2">Date</th>
                           </tr>
@@ -742,7 +742,7 @@ export default function Ordermanagement() {
                         <tbody>
                           {detailLogGroups.returns.map((log) => (
                             <tr key={`r-${log.id}`} className="border-b last:border-0">
-                              <td className="px-3 py-2 capitalize">{log.fromOrderStatus || "-"}</td>
+                              {/* <td className="px-3 py-2 capitalize">{log.fromOrderStatus || "-"}</td> */}
                               <td className="px-3 py-2 capitalize font-medium">{log.toOrderStatus || "-"}</td>
                               <td className="px-3 py-2">{log.remark || "-"}</td>
                               <td className="px-3 py-2">{formatDate(log.createdAt)}</td>
