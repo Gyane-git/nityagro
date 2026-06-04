@@ -3,6 +3,8 @@ import { prisma as defaultPrisma } from "@/lib/prisma";
 const DEFAULT_OMS_TOKEN_URL = "http://nityamecomapi.globaltech.com.np/token";
 const DEFAULT_OMS_PLACE_ORDER_URL =
   "http://nityamecomapi.globaltech.com.np/api/v1/placeEcomOrder";
+const DEFAULT_OMS_CANCEL_ORDER_URL =
+  "http://nityamecomapi.globaltech.com.np/api/v1/CancelOrder";
 
 type PrismaLike = typeof defaultPrisma;
 
@@ -37,6 +39,7 @@ type OmsSyncArgs = {
 };
 
 type OmsOrderPayload = ReturnType<typeof buildOmsOrderPayload>;
+type OmsCancelPayload = OmsOrderPayload;
 
 let tokenCache: { token: string; expiresAt: number } | null = null;
 
@@ -252,6 +255,51 @@ async function postOmsOrder(payload: OmsOrderPayload) {
   return data;
 }
 
+function getOmsResponseOrderNumber(response: unknown) {
+  const data = response as Record<string, unknown> | null | undefined;
+  return String(data?.orderNumber || data?.OrderNumber || data?.orderNo || "").trim();
+}
+
+function buildOmsCancelPayload(
+  originalPayload: OmsOrderPayload,
+  omsOrderNumber: string,
+  reason?: string,
+): OmsCancelPayload {
+  return {
+    ...originalPayload,
+    orderNumber: omsOrderNumber,
+    orderId: omsOrderNumber,
+    Updated: new Date().toISOString(),
+    remarks: reason || "Website order cancelled",
+    Order: Array.isArray(originalPayload.Order) ? originalPayload.Order : [],
+  };
+}
+
+async function postOmsCancelOrder(payload: OmsCancelPayload) {
+  const url = env("OMS_CANCEL_ORDER_URL", DEFAULT_OMS_CANCEL_ORDER_URL);
+  const token = await getOmsToken();
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await parseResponse(response);
+  if (!response.ok) {
+    throw new Error(`OMS CancelOrder failed (${response.status}): ${JSON.stringify(data)}`);
+  }
+
+  if (!isOmsSuccess(data)) {
+    throw new Error(`OMS CancelOrder rejected payload: ${JSON.stringify(data)}`);
+  }
+
+  return data;
+}
+
 async function tryPostWithRetry(payload: OmsOrderPayload, retries = 1) {
   let lastError: unknown;
   for (let attempt = 0; attempt <= retries; attempt += 1) {
@@ -352,6 +400,108 @@ export async function retryOmsOrderSync(id: string | number | bigint, db: Prisma
         status: "FAILED",
         attempts: row.attempts + 2,
         errorMessage: error instanceof Error ? error.message : "OMS order sync retry failed",
+        lastTriedAt: now,
+      },
+    });
+  }
+}
+
+export async function cancelOmsOrderSafely(args: {
+  prisma?: PrismaLike;
+  localOrderId: string | number | bigint;
+  reason?: string;
+  sourceOrderType?: "ORDER" | "COMBO_ORDER" | string;
+}) {
+  const db = args.prisma || defaultPrisma;
+  const localOrderId = args.localOrderId.toString();
+  const now = new Date();
+  const sourceOrderType = String(args.sourceOrderType || "ORDER");
+  const cancelOrderType =
+    sourceOrderType === "COMBO_ORDER" ? "COMBO_ORDER_CANCEL" : "ORDER_CANCEL";
+
+  const logs = await db.omsOrderSyncLog.findMany({
+    where: {
+      orderType: sourceOrderType,
+      status: "SUCCESS",
+      localOrderIds: {
+        contains: localOrderId,
+      },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 10,
+  });
+
+  const orderLog = logs.find((log) =>
+    String(log.localOrderIds || "")
+      .split(",")
+      .map((id) => id.trim())
+      .includes(localOrderId),
+  );
+
+  if (!orderLog) {
+    return await db.omsOrderSyncLog.create({
+      data: {
+        orderType: cancelOrderType,
+        localOrderIds: localOrderId,
+        status: "FAILED",
+        attempts: 0,
+        payload: {
+          localOrderId,
+          reason: args.reason || "Website order cancelled",
+        },
+        errorMessage:
+          "OMS cancellation skipped because successful OMS order sync log was not found.",
+        lastTriedAt: now,
+      },
+    });
+  }
+
+  const omsOrderNumber = getOmsResponseOrderNumber(orderLog.response);
+  if (!omsOrderNumber) {
+    return await db.omsOrderSyncLog.create({
+      data: {
+        orderType: cancelOrderType,
+        localOrderIds: localOrderId,
+        status: "FAILED",
+        attempts: 0,
+        payload: orderLog.payload as object,
+        errorMessage:
+          "OMS cancellation skipped because OMS orderNumber was missing in order sync response.",
+        lastTriedAt: now,
+      },
+    });
+  }
+
+  const payload = buildOmsCancelPayload(
+    orderLog.payload as OmsOrderPayload,
+    omsOrderNumber,
+    args.reason,
+  );
+
+  try {
+    const response = await postOmsCancelOrder(payload);
+    return await db.omsOrderSyncLog.create({
+      data: {
+        orderType: cancelOrderType,
+        localOrderIds: localOrderId,
+        status: "SUCCESS",
+        attempts: 1,
+        payload,
+        response: response as object,
+        lastTriedAt: now,
+      },
+    });
+  } catch (error) {
+    console.error("OMS order cancellation failed:", error);
+    return await db.omsOrderSyncLog.create({
+      data: {
+        orderType: cancelOrderType,
+        localOrderIds: localOrderId,
+        status: "FAILED",
+        attempts: 1,
+        payload,
+        errorMessage:
+          error instanceof Error ? error.message : "OMS order cancellation failed",
         lastTriedAt: now,
       },
     });

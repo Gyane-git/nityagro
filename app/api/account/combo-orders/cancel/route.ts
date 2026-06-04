@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { resolveComboItems, restoreComboItemsStock } from "@/lib/comboItems";
+import { cancelOmsOrderSafely } from "@/lib/omsOrderSync";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,9 +11,24 @@ const corsHeaders = {
 };
 
 const CANCELLABLE_STATUSES = new Set(["processing", "pending", "placed"]);
+const MAX_COMBO_ITEMS_LENGTH = 190;
 
 export async function OPTIONS() {
   return new Response(null, { status: 200, headers: corsHeaders });
+}
+
+function buildComboItemsSummary(items: any[]) {
+  const summary = (Array.isArray(items) ? items : [])
+    .map((item) => {
+      const code = String(item?.code || item?.pCode || item?.productCode || "").trim();
+      const name = String(item?.name || item?.variationName || item?.productName || code).trim();
+      return [code, name].filter(Boolean).join(":");
+    })
+    .filter(Boolean)
+    .join(", ");
+
+  if (summary.length <= MAX_COMBO_ITEMS_LENGTH) return summary;
+  return `${summary.slice(0, MAX_COMBO_ITEMS_LENGTH - 3)}...`;
 }
 
 async function findExistingCancellation(client: any, comboOrderId: bigint, userId: bigint) {
@@ -122,6 +138,7 @@ export async function POST(req: Request) {
     }
 
     const comboItems = await resolveComboItems(prisma, order.comboProduct.productCodes);
+    const comboItemsSummary = buildComboItemsSummary(comboItems);
     const qty = Number(order.quantity || 1);
 
     const result = await prisma.$transaction(async (tx) => {
@@ -130,7 +147,7 @@ export async function POST(req: Request) {
         userId,
         comboProductId: order.comboProductId,
         comboName: order.comboProduct.comboName,
-        comboItems: JSON.stringify(comboItems),
+        comboItems: comboItemsSummary,
         cancellationReason: reason,
       });
 
@@ -144,13 +161,27 @@ export async function POST(req: Request) {
       return { cancellation, updatedOrder };
     });
 
+    const omsCancelLog = await cancelOmsOrderSafely({
+      prisma,
+      localOrderId: order.comboOrderId,
+      reason,
+      sourceOrderType: "COMBO_ORDER",
+    }).catch((error) => {
+      console.error("OMS combo cancellation log failed:", error);
+      return null;
+    });
+
     return NextResponse.json(
       {
         success: true,
-        message: "Combo cancellation request submitted successfully",
+        message:
+          omsCancelLog?.status === "SUCCESS"
+            ? "Combo cancellation request submitted successfully"
+            : "Combo cancellation saved locally. OMS cancellation will need retry from admin.",
         data: {
           id: result.cancellation.comboOrderCancellationId.toString(),
           orderStatus: result.updatedOrder.orderStatus,
+          omsCancelStatus: omsCancelLog?.status || "FAILED",
         },
       },
       { status: 200, headers: corsHeaders },
