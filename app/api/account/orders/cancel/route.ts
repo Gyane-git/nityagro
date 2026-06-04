@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
+import { cancelOmsOrderSafely } from "@/lib/omsOrderSync";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -111,13 +112,26 @@ export async function POST(req: Request) {
       return { cancellation, updatedOrder };
     });
 
+    const omsCancelLog = await cancelOmsOrderSafely({
+      prisma,
+      localOrderId: order.orderId,
+      reason,
+    }).catch((error) => {
+      console.error("OMS cancellation log failed:", error);
+      return null;
+    });
+
     return NextResponse.json(
       {
         success: true,
-        message: "Cancellation request submitted successfully",
+        message:
+          omsCancelLog?.status === "SUCCESS"
+            ? "Cancellation request submitted successfully"
+            : "Cancellation saved locally. OMS cancellation will need retry from admin.",
         data: {
           id: result.cancellation.orderCancellationId.toString(),
           orderStatus: result.updatedOrder.orderStatus,
+          omsCancelStatus: omsCancelLog?.status || "FAILED",
         },
       },
       { status: 200, headers: corsHeaders },

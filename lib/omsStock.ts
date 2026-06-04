@@ -5,7 +5,8 @@ const DEFAULT_OMS_STOCK_URL =
   "http://nityamecomapi.globaltech.com.np/api/v1/full-reset";
 const DEFAULT_OMS_TOKEN_URL = "http://nityamecomapi.globaltech.com.np/token";
 const DEFAULT_STORE_CODE = "NITYAM8201";
-let stockTokenCache: { token: string; expiresAt: number } | null = null;
+let stockTokenCache: { token: string; tokenType: string; expiresAt: number } | null =
+  null;
 
 type StockRow = {
   PCode?: unknown;
@@ -66,7 +67,7 @@ async function parseJsonResponse(response: Response) {
 
 async function getOmsStockToken() {
   if (stockTokenCache?.token && stockTokenCache.expiresAt > Date.now() + 60_000) {
-    return stockTokenCache.token;
+    return stockTokenCache;
   }
 
   const url = env("OMS_TOKEN_URL", DEFAULT_OMS_TOKEN_URL);
@@ -107,13 +108,26 @@ async function getOmsStockToken() {
     throw new Error("OMS stock token response missing access_token");
   }
 
+  const tokenType = String((data as { token_type?: unknown })?.token_type || "bearer")
+    .trim()
+    .toLowerCase();
   const expiresIn = Number((data as { expires_in?: unknown })?.expires_in || 3600);
   stockTokenCache = {
     token,
+    tokenType,
     expiresAt: Date.now() + Math.max(60, expiresIn - 120) * 1000,
   };
 
-  return token;
+  return stockTokenCache;
+}
+
+export async function warmOmsStockAuth() {
+  const token = await getOmsStockToken();
+  return {
+    authenticated: true,
+    tokenType: token.tokenType,
+    expiresAt: token.expiresAt,
+  };
 }
 
 export function normalizeOmsStockRows(payload: unknown): NormalizedOmsStockRow[] {
@@ -169,6 +183,11 @@ type FetchOmsStockRowsArgs = {
   storeCode?: string;
 };
 
+function createStockError(status: number, payload: unknown) {
+  const detail = JSON.stringify(payload).slice(0, 700);
+  return new Error(`OMS stock API failed with status ${status}: ${detail}`);
+}
+
 export async function fetchOmsStockRows(args: FetchOmsStockRowsArgs = {}) {
   const upstreamUrl = new URL(env("OMS_STOCK_URL", DEFAULT_OMS_STOCK_URL));
   upstreamUrl.searchParams.set(
@@ -179,25 +198,48 @@ export async function fetchOmsStockRows(args: FetchOmsStockRowsArgs = {}) {
   const cleanSku = String(args.sku || "").trim();
   if (cleanSku) upstreamUrl.searchParams.set("sku", cleanSku);
 
-  const token = await getOmsStockToken();
-  const response = await fetch(upstreamUrl.toString(), {
-    cache: "no-store",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  const { token, tokenType } = await getOmsStockToken();
+  const username = env("OMS_USERNAME");
+  const password = env("OMS_PASSWORD");
+  const grantType = env("OMS_GRANT_TYPE", "password");
+  const authCandidates = Array.from(
+    new Set([
+      `${tokenType} ${token}`,
+      `Bearer ${token}`,
+      `bearer ${token}`,
+      token,
+    ]),
+  );
 
-  const payload = await parseJsonResponse(response);
+  let payload: unknown = null;
+  let lastStatus = 500;
 
-  if (!response.ok) {
-    throw new Error(`OMS stock API failed with status ${response.status}`);
+  for (const authorization of authCandidates) {
+    const response = await fetch(upstreamUrl.toString(), {
+      cache: "no-store",
+      headers: {
+        Accept: "application/json",
+        Authorization: authorization,
+        username,
+        password,
+        grant_type: grantType,
+      },
+    });
+
+    payload = await parseJsonResponse(response);
+
+    if (response.ok) {
+      return {
+        rows: normalizeOmsStockRows(payload),
+        raw: payload,
+      };
+    }
+
+    lastStatus = response.status;
+    if (![401, 403, 500].includes(response.status)) break;
   }
 
-  return {
-    rows: normalizeOmsStockRows(payload),
-    raw: payload,
-  };
+  throw createStockError(lastStatus, payload);
 }
 
 export async function fetchOmsStockMap(productCodes: Array<string | null | undefined>) {
