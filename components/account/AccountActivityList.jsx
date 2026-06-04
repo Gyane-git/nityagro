@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 import toast from "react-hot-toast";
 
 const CONFIG = {
@@ -45,6 +44,12 @@ function getBadgeClass(type) {
   return "bg-[#2e5e2e]/10 text-[#2e5e2e] border-[#2e5e2e]/15";
 }
 
+function resolveImageUrl(imageUrl, fallback = "/no-image.png") {
+  if (!imageUrl) return fallback;
+  if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
+  return imageUrl.startsWith("/") ? imageUrl : `/${imageUrl}`;
+}
+
 function Stars({ rating }) {
   const safeRating = Math.max(0, Math.min(5, Number(rating || 0)));
   return (
@@ -72,19 +77,20 @@ function parseComboItems(value) {
 function ActivityCard({ item, type }) {
   const isReview = type === "reviews";
   const isCombo = item.orderType === "combo";
-  const imageSrc = item.image || "/no-image.png";
+  const imageSrc = resolveImageUrl(item.image);
   const includedItems = parseComboItems(item.comboItems);
 
   return (
     <div className="rounded-lg border border-gray-100 bg-white px-4 py-4 shadow-sm">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
         <div className="relative h-18 w-18 shrink-0 overflow-hidden rounded-lg border border-amber-100 bg-amber-50">
-          <Image
+          <img
             src={imageSrc}
             alt={item.productName || "Product"}
-            fill
-            className="object-contain p-1"
-            unoptimized={imageSrc.startsWith("/uploads/") || imageSrc.startsWith("/categories/")}
+            className="h-full w-full object-contain p-1"
+            onError={(event) => {
+              event.currentTarget.src = "/no-image.png";
+            }}
           />
         </div>
 
@@ -191,18 +197,19 @@ function RequestTable({ title, items, type, emptyText }) {
             <tbody>
               {items.map((item) => {
                 const includedItems = parseComboItems(item.comboItems);
-                const imageSrc = item.image || "/no-image.png";
+                const imageSrc = resolveImageUrl(item.image);
                 return (
                   <tr key={item.id} className="border-t border-gray-100">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-md border border-amber-100 bg-amber-50">
-                          <Image
+                          <img
                             src={imageSrc}
                             alt={item.productName || "Product"}
-                            fill
-                            className="object-contain p-1"
-                            unoptimized={imageSrc.startsWith("/uploads/") || imageSrc.startsWith("/categories/")}
+                            className="h-full w-full object-contain p-1"
+                            onError={(event) => {
+                              event.currentTarget.src = "/no-image.png";
+                            }}
                           />
                         </div>
                         <div className="min-w-0">

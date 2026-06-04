@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 import { apiGetRequest } from "@/apihelper/apiHelper";
 import toast from "react-hot-toast";
 
@@ -62,6 +61,12 @@ function daysSince(value) {
   const date = value ? new Date(value) : null;
   if (!date || Number.isNaN(date.getTime())) return Infinity;
   return Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function resolveImageUrl(imageUrl, fallback = "/no-image.png") {
+  if (!imageUrl) return fallback;
+  if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
+  return imageUrl.startsWith("/") ? imageUrl : `/${imageUrl}`;
 }
 
 function OrderActions({ order, onAction, onReview }) {
@@ -290,12 +295,19 @@ function OrderCard({ order, onAction, onReview, onTrackOrder }) {
   const qty = Number(firstItem?.qty || 1);
   const unitPrice = Number(firstItem?.unitPrice ?? order?.totalAmount ?? 0);
   const isCombo = order?.orderType === "combo";
-  const imageSrc = firstItem?.image || "/products/mustard-oil.png";
+  const imageSrc = resolveImageUrl(firstItem?.image);
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 px-5 py-4 flex items-center gap-4">
       <div className="w-16 h-16 rounded-md bg-amber-50 border border-amber-100 shrink-0 flex items-center justify-center overflow-hidden relative">
-        <Image src={imageSrc} alt={firstItem?.name || "Product"} fill className="object-contain p-1" unoptimized={imageSrc.startsWith("/uploads/")} />
+        <img
+          src={imageSrc}
+          alt={firstItem?.name || "Product"}
+          className="h-full w-full object-contain p-1"
+          onError={(event) => {
+            event.currentTarget.src = "/no-image.png";
+          }}
+        />
       </div>
 
       <div className="w-55 shrink-0">

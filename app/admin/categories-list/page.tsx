@@ -123,6 +123,12 @@ export default function CategoriesListPage() {
     null,
   );
 
+  const resolveImageUrl = (imageUrl: string | null | undefined) => {
+    if (!imageUrl) return "/no-image.png";
+    if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
+    return imageUrl.startsWith("/") ? imageUrl : `/${imageUrl}`;
+  };
+
   const fetchCategories = async () => {
     setLoading(true);
     try {
@@ -505,9 +511,12 @@ export default function CategoriesListPage() {
                       {category.categoryImage ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={category.categoryImage}
+                          src={resolveImageUrl(category.categoryImage)}
                           alt=""
                           className="h-12 w-12 rounded object-cover border mx-auto"
+                          onError={(event) => {
+                            event.currentTarget.src = "/no-image.png";
+                          }}
                         />
                       ) : (
                         "N/A"
@@ -517,9 +526,12 @@ export default function CategoriesListPage() {
                       {category.categoryLogo ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={category.categoryLogo}
+                          src={resolveImageUrl(category.categoryLogo)}
                           alt=""
                           className="h-12 w-12 rounded object-cover border mx-auto"
+                          onError={(event) => {
+                            event.currentTarget.src = "/no-image.png";
+                          }}
                         />
                       ) : (
                         "N/A"
@@ -529,9 +541,12 @@ export default function CategoriesListPage() {
                       {category.categoryBanner ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={category.categoryBanner}
+                          src={resolveImageUrl(category.categoryBanner)}
                           alt=""
                           className="h-12 w-24 rounded object-cover border mx-auto"
+                          onError={(event) => {
+                            event.currentTarget.src = "/no-image.png";
+                          }}
                         />
                       ) : (
                         "N/A"

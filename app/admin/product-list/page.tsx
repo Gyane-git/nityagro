@@ -212,7 +212,14 @@ export default function ProductListPage() {
                 <td className="p-1 text-center">
                   <div className="inline-flex justify-center w-full">
                     <div className="w-8 h-8 relative rounded-lg overflow-hidden bg-gray-100">
-                      <img src={resolveImageUrl(product.pImage)} alt={product.productName} className="w-full h-full object-cover" />
+                      <img
+                        src={resolveImageUrl(product.pImage)}
+                        alt={product.productName}
+                        className="w-full h-full object-cover"
+                        onError={(event) => {
+                          event.currentTarget.src = "/no-image.png";
+                        }}
+                      />
                     </div>
                   </div>
                 </td>
