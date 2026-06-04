@@ -140,7 +140,6 @@ export default function Ordermanagement() {
 
       const response = await fetch(`/api/admin/orders?${query.toString()}`);
       console.log(response);
-      
 
       const payload = await response.json();
 
@@ -560,7 +559,7 @@ export default function Ordermanagement() {
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-2 text-gray-800">
         <button disabled={page <= 1 || loading} onClick={() => setPage((p) => Math.max(1, p - 1))} className="rounded-md border px-3 py-2 text-sm disabled:opacity-40">
           Previous
         </button>

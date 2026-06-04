@@ -42,19 +42,17 @@ interface ProductVariant {
   pCode: string;
   subGroupName: string;
   variationName: string;
-  stockQuantity:number,
+  stockQuantity: number;
   salesRate: number;
   createdAt: string;
   updatedAt: string;
 }
 interface ProductVariantDetails {
-  
   pCode: string;
   subGroupName: string;
   variationName: string;
   salesRate: number;
-  stockQuantity:number
-  
+  stockQuantity: number;
 }
 
 export default function ProductListPage() {
@@ -66,13 +64,11 @@ export default function ProductListPage() {
   const [loading, setLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [productVariantDetails, setProductVariantDetails] = useState<ProductVariantDetails>({
-
-  pCode: "",
-  subGroupName: "",
-  variationName: "",
-  salesRate: 0,
-  stockQuantity:0
-  
+    pCode: "",
+    subGroupName: "",
+    variationName: "",
+    salesRate: 0,
+    stockQuantity: 0,
   });
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
@@ -113,9 +109,7 @@ export default function ProductListPage() {
     const variantToastId = toast.loading("Loading product variants...");
     setLoading(true);
     try {
-      const response = await apiGetRequest<ProductVariant[]>(
-        `/subcategories/${productId}`,
-      );
+      const response = await apiGetRequest<ProductVariant[]>(`/subcategories/${productId}`);
       if (response.success) {
         setOpen(true);
         const variants = response.data || [];
@@ -145,22 +139,15 @@ export default function ProductListPage() {
 
   // Filter Products by search & category
   const filteredProducts = products.filter((p) => {
-    const matchesSearch =
-      p.productName.toLowerCase().includes(search.toLowerCase()) ||
-      (p.productCode || "").toLowerCase().includes(search.toLowerCase());
-    const matchesCategory =
-      selectedCategory === "" ||
-      String(p.categoryId || p.categoryId || "") === String(selectedCategory);
+    const matchesSearch = p.productName.toLowerCase().includes(search.toLowerCase()) || (p.productCode || "").toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = selectedCategory === "" || String(p.categoryId || p.categoryId || "") === String(selectedCategory);
     return matchesSearch && matchesCategory;
   });
 
   // Pagination
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentItems = filteredProducts.slice(
-    startIndex,
-    startIndex + itemsPerPage,
-  );
+  const currentItems = filteredProducts.slice(startIndex, startIndex + itemsPerPage);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -168,22 +155,11 @@ export default function ProductListPage() {
       <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
         <div className="flex  gap-4">
           <div className="relative flex text-gray-900 ">
-            <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-              size={20}
-            />
-            <input
-              type="text"
-              placeholder="Search products..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className=" pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <input type="text" placeholder="Search products..." value={search} onChange={(e) => setSearch(e.target.value)} className=" pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
 
-          <div className="flex-1 text-center  items-center text-2xl text-gray-800 font-semibold">
-            Products
-          </div>
+          <div className="flex-1 text-center  items-center text-2xl text-gray-800 font-semibold">Products</div>
           {/* 
           <select
             value={selectedCategory}
@@ -219,10 +195,7 @@ export default function ProductListPage() {
           </thead>
           <tbody className="divide-y divide-gray-200">
             {currentItems.map((product, index) => (
-              <tr
-                key={product.productCode}
-                className="hover:bg-green-100 text-sm text-gray-900 cursor-pointer"
-              >
+              <tr key={product.productCode} className="hover:bg-green-100 text-sm text-gray-900 cursor-pointer">
                 <td className="p-1 text-center">{index + 1}</td>
 
                 {/* Catalog */}
@@ -233,66 +206,38 @@ export default function ProductListPage() {
 
                 {/* Code */}
                 <td className="p-1 text-center">
-                  <span className="text-sm font-medium text-gray-900">
-                    {product.productCode}
-                  </span>
+                  <span className="text-sm font-medium text-gray-900">{product.productCode}</span>
                 </td>
                 {/* Image */}
                 <td className="p-1 text-center">
-                  <div className="w-8 h-8 relative rounded-lg overflow-hidden bg-gray-100">
-                    <img
-                      src={resolveImageUrl(product.pImage)}
-                      alt={product.productName}
-                      className="object-cover"
-                    />
+                  <div className="inline-flex justify-center w-full">
+                    <div className="w-8 h-8 relative rounded-lg overflow-hidden bg-gray-100">
+                      <img src={resolveImageUrl(product.pImage)} alt={product.productName} className="w-full h-full object-cover" />
+                    </div>
                   </div>
                 </td>
                 {/* Product Name */}
                 <td className="p-1 text-center">
                   <div>
-                    <div className="text-sm font-semibold text-gray-900">
-                      {product.categoryId || "Yuemi"}
-                    </div>
+                    <div className="text-sm font-semibold text-gray-900">{product.categoryId || "Yuemi"}</div>
                   </div>
                 </td>
 
                 {/* Price */}
                 <td className="p-1 text-center">
                   <div>
-                    <div className="text-xs text-gray-400 line-through text-nowrap">
-                      Rs. {product.actualPrice}
-                    </div>
-                    <div className="text-sm font-bold text-gray-900 text-nowrap">
-                      Rs. {product.sellingPrice}
-                    </div>
+                    <div className="text-xs text-gray-400 line-through text-nowrap">Rs. {product.actualPrice}</div>
+                    <div className="text-sm font-bold text-gray-900 text-nowrap">Rs. {product.sellingPrice}</div>
                   </div>
                 </td>
 
                 {/* Subgroup Status */}
                 <td className="p-1 text-center">
-                  <span
-                    className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${
-                      product.productStatus
-                        ? "bg-green-100 text-green-700"
-                        : "bg-gray-100 text-gray-600"
-                    }`}
-                  >
-                    {product.productStatus ? "Active" : "Inactive"}
-                  </span>
+                  <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${product.productStatus ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>{product.productStatus ? "Active" : "Inactive"}</span>
                 </td>
 
                 {/* Inventory */}
-                <td className="p-1 text-center">
-                  {Number(product.availableQuantity) > 0 ? (
-                    <span className="inline-flex px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
-                      In Stock
-                    </span>
-                  ) : (
-                    <span className="inline-flex px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-700">
-                      Out of Stock
-                    </span>
-                  )}
-                </td>
+                <td className="p-1 text-center">{Number(product.availableQuantity) > 0 ? <span className="inline-flex px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">In Stock</span> : <span className="inline-flex px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-700">Out of Stock</span>}</td>
 
                 {/* Actions */}
                 <td className="p-1 text-center">
@@ -306,11 +251,7 @@ export default function ProductListPage() {
                     >
                       <Info size={18} />
                     </button>
-                    <Link
-                      href={`/admin/edit-product/${product.productCode}`}
-                      onClick={() => toast("Opening product editor...")}
-                      className="p-1 text-green-600 hover:bg-green-50 rounded-lg transition"
-                    >
+                    <Link href={`/admin/edit-product/${product.productCode}`} onClick={() => toast("Opening product editor...")} className="p-1 text-green-600 hover:bg-green-50 rounded-lg transition">
                       <Edit size={18} />
                     </Link>
                   </div>
@@ -332,15 +273,7 @@ export default function ProductListPage() {
       {totalPages > 1 && (
         <div className="flex justify-center mt-6 gap-2">
           {Array.from({ length: totalPages }, (_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrentPage(i + 1)}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
-                currentPage === i + 1
-                  ? "bg-blue-600 text-white"
-                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-              }`}
-            >
+            <button key={i} onClick={() => setCurrentPage(i + 1)} className={`px-4 py-2 rounded-lg font-medium transition ${currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"}`}>
               {i + 1}
             </button>
           ))}
@@ -352,10 +285,7 @@ export default function ProductListPage() {
           <div className="bg-white p-4 rounded w-[500px]">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold mb-4">{subGroupName}</h2>
-              <X
-                onClick={() => setOpen(false)}
-                className="bg-slate-400 cursor-pointer text-black hover:bg-green-700 hover:text-white"
-              ></X>
+              <X onClick={() => setOpen(false)} className="bg-slate-400 cursor-pointer text-black hover:bg-green-700 hover:text-white"></X>
             </div>
 
             {productsVariant.length > 0 ? (
@@ -393,14 +323,13 @@ export default function ProductListPage() {
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold mb-4">{subGroupName}</h2>
               <X
-                onClick={() => setProductVariantDetails((prev) => ({
-                        ...prev,
-                        
-                        subGroupName: "",
+                onClick={() =>
+                  setProductVariantDetails((prev) => ({
+                    ...prev,
 
-                        
-                      }))
-                    }
+                    subGroupName: "",
+                  }))
+                }
                 className="bg-slate-400 cursor-pointer text-black hover:bg-green-700 hover:text-white"
               ></X>
             </div>
