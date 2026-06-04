@@ -34,9 +34,26 @@ export async function GET(
       );
     }
 
-    const category = await prisma.products.findUnique({
-      where: { productCode: id },
-    });
+    const isNumericId = /^\d+$/.test(String(id));
+    const category = isNumericId
+      ? await prisma.products.findFirst({
+          where: {
+            OR: [{ productId: BigInt(id) }, { productCode: id }],
+          },
+          include: {
+            images: {
+              orderBy: { productImageId: "asc" },
+            },
+          },
+        })
+      : await prisma.products.findUnique({
+          where: { productCode: id },
+          include: {
+            images: {
+              orderBy: { productImageId: "asc" },
+            },
+          },
+        });
 
     if (!category) {
       return NextResponse.json(
@@ -64,10 +81,22 @@ export async function GET(
             availableQuantity: BigInt(liveQuantity),
             omsAvailableQty: liveQuantity,
           };
+    const productImages = Array.isArray(data.images)
+      ? data.images.map((image) => ({
+          productImageId: image.productImageId,
+          imageUrl: image.imageUrl,
+          isMain: image.isMain,
+        }))
+      : [];
 
     const safeData = JSON.parse(
-      JSON.stringify(data, (_, value) =>
-        typeof value === "bigint" ? value.toString() : value,
+      JSON.stringify(
+        {
+          ...data,
+          productImages,
+          galleryImages: productImages.map((image) => image.imageUrl).filter(Boolean),
+        },
+        (_, value) => (typeof value === "bigint" ? value.toString() : value),
       ),
     );
 

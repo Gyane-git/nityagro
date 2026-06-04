@@ -1,7 +1,7 @@
 "use client";
 import { apiGetRequest, apiPutRequest } from "@/apihelper/apiHelper";
 import { ChevronDown, ChevronUp, FileText, ImageIcon, Info, Package, Plus, Save, Tag, Trash2, Upload } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -29,6 +29,9 @@ interface Products {
   specialOffer: boolean;
   createdAt: string;
   updatedAt: string;
+  images?: Array<{ imageUrl?: string | null; url?: string | null }>;
+  productImages?: Array<string | { imageUrl?: string | null; url?: string | null }> | string;
+  galleryImages?: string[];
 }
 type ExpandedSections = {
   basic: boolean;
@@ -50,6 +53,7 @@ type SectionHeaderProps = {
 };
 export default function EditProductPage() {
   const params = useParams();
+  const router = useRouter();
 
   const productId = Array.isArray(params?.id) ? params.id[0] : params?.id;
 
@@ -192,19 +196,22 @@ export default function EditProductPage() {
           setProducts(response.data);
           setPreviewImage(resolveImageUrl(response.data?.pImage));
 
-          const rawImages = response.data?.productImages;
+          const rawImages =
+            response.data?.galleryImages ||
+            response.data?.productImages ||
+            response.data?.images;
 
           let images: string[] = [];
 
           if (Array.isArray(rawImages)) {
-            images = rawImages;
+            images = rawImages
+              .map((img: any) =>
+                typeof img === "string" ? img : img?.imageUrl || img?.url || "",
+              )
+              .filter(Boolean);
           } else if (typeof rawImages === "string") {
             images = rawImages.split(",").filter(Boolean);
-          } else if (rawImages && typeof rawImages === "object") {
-            images = rawImages.map((img: any) => img.url || img);
           }
-
-          setExistingGalleryImages(images);
 
           const normalized = images.map((img: any) => resolveImageUrl(typeof img === "string" ? img : img?.url));
 
@@ -220,9 +227,16 @@ export default function EditProductPage() {
             nutritionalInformation: response.data?.nutritionInfo || "",
             cookingDescription: response.data?.cookingInstruction || "",
             storageInstruction: response.data?.storageInstruction || "",
+            productVariation: response.data?.productVariation || "",
+            delivaryTargetDays:
+              response.data?.deliveryTargetDays === null ||
+              response.data?.deliveryTargetDays === undefined
+                ? ""
+                : String(response.data.deliveryTargetDays),
             actualPrice: String(response.data?.actualPrice) || "0.0",
             SellingPrice: String(response.data?.sellingPrice) || "0.0",
             availableQuantity: String(response.data?.availableQuantity) ?? "0.0",
+            stockQuantity: String(response.data?.stockQuantity ?? ""),
             productStatus: response.data?.productStatus || false,
             specialOffer: Boolean(response.data?.specialOffer),
             productImage: null,
@@ -320,6 +334,7 @@ export default function EditProductPage() {
         toast.success(response.message || "Product updated successfully", {
           id: saveToastId,
         });
+        router.push("/admin/product-list");
       } else {
         toast.error(response.message || "Product update failed", {
           id: saveToastId,
