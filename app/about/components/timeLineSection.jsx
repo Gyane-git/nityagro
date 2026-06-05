@@ -1,36 +1,24 @@
-import React from "react";
-import { TrendingUp } from "lucide-react";
-import { timeline } from "./data";
+"use client";
 
-export default function TimelineSection() {
+import Image from "next/image";
+//import revolutionImg from "./assets/timeline.png"; // replace with your actual image path
+
+export default function JoinTheMovement() {
   return (
-    <section className="max-w-[1250px] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-10 lg:py-8 rounded-lg bg-yellow-50">
-      {/* Heading */}
-      <div className="text-center">
-        <p className="uppercase tracking-[2px] sm:tracking-[3px] text-[#5c7e54] font-semibold text-xs sm:text-sm">Our Journey</p>
-
-        <h3 className="text-2xl sm:text-3xl md:text-4xl lg:text-[50px] font-bold mt-3 sm:mt-4 leading-tight">Growing Stronger Every Day</h3>
+    <section className="relative w-full mt-5 bg-[#2d5f4f] overflow-hidden">
+      {/* Header */}
+      <div className="text-center pt-10 pb-2 px-4">
+        <h2 className="text-[#c8a951] font-serif italic text-[32px] sm:text-[38px] md:text-[44px] font-semibold leading-tight">Join the Movement</h2>
+        <p className="text-white text-sm sm:text-base leading-[1.8] mt-3 max-w-[780px] mx-auto">
+          Switch to clean staples. Try ghee that tastes like your nani made it. Use oils that don&apos;t just sizzle, but nourish.
+          <br className="hidden sm:block" />
+          Let&apos;s rebuild the food system. One conscious kitchen at a time.
+        </p>
       </div>
 
-      {/* Timeline */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 sm:gap-10 lg:gap-8 mt-10 sm:mt-12 md:mt-14 lg:mt-16">
-        {timeline.map((item, i) => (
-          <div key={i} className="text-center relative px-2 sm:px-1 bg-gray-100 rounded-2xl p-2">
-            {/* Icon */}
-            <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 mx-auto rounded-full bg-[#eef4ea] flex items-center justify-center text-[#4d7c41]">
-              <TrendingUp size={20} className="sm:w-5 sm:h-5 lg:w-7 lg:h-7" />
-            </div>
-
-            {/* Year */}
-            <h4 className="font-bold text-xl sm:text-2xl lg:text-[28px] mt-4 sm:mt-5 lg:mt-6">{item.year}</h4>
-
-            {/* Title */}
-            <p className="font-semibold text-sm sm:text-base lg:text-base mt-2 sm:mt-3">{item.title}</p>
-
-            {/* Description */}
-            <p className="text-[#666] text-xs sm:text-sm lg:text-base mt-2 sm:mt-3 leading-[22px] sm:leading-[26px] lg:leading-[28px]">{item.desc}</p>
-          </div>
-        ))}
+      {/* Full banner image */}
+      <div className="relative w-full sm:-mt-10 md:-mt-20 lg:-mt-20 ">
+        <Image src="/assets/timeline.png" alt="Join the Movement — Anveshan products" width={1280} height={520} className="w-full h-auto object-cover object-bottom" priority />
       </div>
     </section>
   );
