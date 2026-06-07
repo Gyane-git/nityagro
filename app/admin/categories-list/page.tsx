@@ -49,7 +49,8 @@ type OmsSubGroupName = {
   PCode: string;
   PDesc: string;
   SubGroupName: string;
-  SalesRate: number;
+  //SalesRate: number;
+  MRP: number;
   Qty:number;
   StockQty:number
 
@@ -82,7 +83,9 @@ type SubGroupSyncPayload = {
   pCode: string;
   subGroupName: string;
   variationName: string;
-  salesRate: number;
+  //salesRate: number;
+  MRP: number;
+
 };
 
 type EditForm = {
@@ -211,8 +214,8 @@ export default function CategoriesListPage() {
             storageInstruction: null,
             pImage: null,
             productStatus: false,
-            actualPrice: item.MRP,
-            sellingPrice: item.SalesRate,
+            actualPrice: item.TradeRate,
+            sellingPrice: item.MRP,
             deliveryTargetDays: null,
           };
           return acc;
@@ -227,7 +230,8 @@ export default function CategoriesListPage() {
             pCode: key,
             subGroupName: String(item.SubGroupName || "").trim(),
             variationName: String(item.PDesc || "").trim(),
-            salesRate: item.SalesRate,
+           // salesRate: item.SalesRate,
+            MRP: item.MRP,
           };
           return acc;
         }, {} as Record<string, SubGroupSyncPayload>),

@@ -47,6 +47,11 @@ const ShareIcon = () => (
   </svg>
 );
 
+function getVariantButtonLabel(label) {
+  const text = String(label || "").trim();
+  return text.split(/\s+/)[0] || text;
+}
+
 export default function ProductInfo({ product }) {
   const [qty, setQty] = useState(1);
   const [variantsFromApi, setVariantsFromApi] = useState([]);
@@ -83,8 +88,8 @@ export default function ProductInfo({ product }) {
           variantId: Number(item.variantId),
           productCode: item.pCode || "",
           label: item.variationName || item.pCode || "Variant",
-          price: String(item.pCode || "") === String(p.productCode || "") ? Number(p.price ?? item.salesRate ?? 0) : Number(item.salesRate ?? p.price ?? 0),
-          actualPrice: String(item.pCode || "") === String(p.productCode || "") ? Number(p.actualPrice ?? p.price ?? item.salesRate ?? 0) : Number(item.salesRate ?? p.price ?? 0),
+          price: String(item.pCode || "") === String(p.productCode || "") ? Number(p.price ?? item.MRP ?? 0) : Number(item.MRP ?? p.price ?? 0),
+          actualPrice: String(item.pCode || "") === String(p.productCode || "") ? Number(p.actualPrice ?? p.price ?? item.MRP ?? 0) : Number(item.MRP ?? p.price ?? 0),
           image: item.productImage || p.image || p.images?.[0] || "/products/mustard-oil.png",
           omsAvailableQty: Number(item.omsAvailableQty ?? item.productAvailableQuantity ?? item.stockQuantity ?? 0),
           stockQuantity: Number(item.omsAvailableQty ?? item.productStockQuantity ?? item.stockQuantity ?? 0),
@@ -362,7 +367,7 @@ export default function ProductInfo({ product }) {
                   minWidth: "78px",
                 }}
               >
-                {variant.label}
+                {getVariantButtonLabel(variant.label)}
               </button>
             );
           })}

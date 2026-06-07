@@ -43,7 +43,8 @@ interface ProductVariant {
   subGroupName: string;
   variationName: string;
   stockQuantity: number;
-  salesRate: number;
+  //salesRate: number;
+  MRP: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -51,7 +52,8 @@ interface ProductVariantDetails {
   pCode: string;
   subGroupName: string;
   variationName: string;
-  salesRate: number;
+  //salesRate: number;
+  MRP: number;
   stockQuantity: number;
 }
 
@@ -67,7 +69,8 @@ export default function ProductListPage() {
     pCode: "",
     subGroupName: "",
     variationName: "",
-    salesRate: 0,
+    //salesRate: 0,
+    MRP: 0,
     stockQuantity: 0,
   });
   const [currentPage, setCurrentPage] = useState(1);
@@ -305,7 +308,8 @@ export default function ProductListPage() {
                         pCode: item.pCode,
                         subGroupName: item.subGroupName,
                         variationName: item.variationName,
-                        salesRate: item.salesRate,
+                        //salesRate: item.salesRate,
+                        MRP: item.MRP,
                         stockQuantity: item.stockQuantity,
                       }));
                     }}
@@ -342,7 +346,8 @@ export default function ProductListPage() {
             </div>
 
             <p>Name{productVariantDetails.subGroupName}</p>
-            <p>Sale RATE{productVariantDetails.salesRate}</p>
+            <p>Sale RATE{productVariantDetails.MRP}</p>
+                
             <p>STOCK{productVariantDetails.stockQuantity}</p>
           </div>
         </div>

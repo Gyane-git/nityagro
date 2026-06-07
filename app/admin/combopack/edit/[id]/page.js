@@ -112,7 +112,7 @@ export default function EditComboPackPage() {
                 productCode: String(variant.pCode || product.productCode || ""),
                 subGroupName,
                 variationName: String(variant.variationName || ""),
-                price: Number(variant.salesRate || 0),
+                price: Number(variant.MRP || 0),
                 stockQuantity: Number(variant.stockQuantity || 0),
                 image: product.pImage || "/no-image.png",
               })),

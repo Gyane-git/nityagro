@@ -10,7 +10,9 @@ type SubCategoryDTO = {
   pCode: string;
   subGroupName: string;
   variationName: string;
-  salesRate: number;
+  //salesRate: number;
+  MRP: number;
+
   stockQuantity?: number;
 };
 // ✅ Preflight handler
@@ -74,7 +76,8 @@ export async function POST(req: Request) {
         pCode: key,
         subGroupName: String(row?.subGroupName || "").trim(),
         variationName: String(row?.variationName || "").trim(),
-        salesRate: Number(row?.salesRate ?? 0),
+        //salesRate: Number(row?.salesRate ?? 0),
+        MRP: Number(row?.MRP ?? 0),
         stockQuantity:
           row?.stockQuantity === undefined || row?.stockQuantity === null
             ? undefined
@@ -114,7 +117,8 @@ export async function POST(req: Request) {
           pCode: p.pCode,
           subGroupName: p.subGroupName,
           variationName: p.variationName,
-          salesRate: p.salesRate,
+          //salesRate: p.salesRate,
+          MRP: p.MRP,
           stockQuantity: BigInt(Number(p.stockQuantity ?? 0)),
         })),
         skipDuplicates: true,
@@ -128,7 +132,8 @@ export async function POST(req: Request) {
         data: {
           subGroupName: row.subGroupName,
           variationName: row.variationName,
-          salesRate: row.salesRate,
+          //salesRate: row.salesRate,
+          MRP: row.MRP,
           ...(row.stockQuantity === undefined
             ? {}
             : { stockQuantity: BigInt(Number(row.stockQuantity ?? 0)) }),
