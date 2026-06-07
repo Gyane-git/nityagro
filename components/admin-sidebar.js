@@ -93,6 +93,8 @@ export default function SideHeaderBar() {
 
     { icon: Users, label: "Customers", path: "/admin/customers" },
 
+    { icon: BarChart3, label: "Returns", path: "/admin/returns" },
+
     {
       icon: MapPin,
       label: "Set Shipping charges",

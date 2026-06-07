@@ -75,9 +75,11 @@ async function getComboStatusOverrides(orderIds: bigint[]) {
       WHERE comboOrderId IN (${Prisma.join(orderIds)})
     `;
     const returns = await prisma.$queryRaw`
-      SELECT comboOrderId
-      FROM comboOrderReturn
-      WHERE comboOrderId IN (${Prisma.join(orderIds)})
+      SELECT cor.comboOrderId
+      FROM comboOrderReturn cor
+      INNER JOIN comboOrders co ON co.comboOrderId = cor.comboOrderId
+      WHERE cor.comboOrderId IN (${Prisma.join(orderIds)})
+        AND LOWER(COALESCE(co.orderStatus, '')) <> 'shipped'
     `;
 
     if (Array.isArray(cancellations)) {

@@ -66,9 +66,11 @@ async function getComboStatusOverride(comboOrderId: bigint) {
     }
 
     const returns = await prisma.$queryRaw`
-      SELECT comboOrderId
-      FROM comboOrderReturn
-      WHERE comboOrderId = ${comboOrderId}
+      SELECT cor.comboOrderId
+      FROM comboOrderReturn cor
+      INNER JOIN comboOrders co ON co.comboOrderId = cor.comboOrderId
+      WHERE cor.comboOrderId = ${comboOrderId}
+        AND LOWER(COALESCE(co.orderStatus, '')) <> 'shipped'
       LIMIT 1
     `;
     if (Array.isArray(returns) && returns.length) {

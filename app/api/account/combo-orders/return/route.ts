@@ -13,8 +13,24 @@ function daysSince(value: Date) {
   return Math.floor((Date.now() - value.getTime()) / (1000 * 60 * 60 * 24));
 }
 
+const MAX_COMBO_ITEMS_LENGTH = 190;
+
 export async function OPTIONS() {
   return new Response(null, { status: 200, headers: corsHeaders });
+}
+
+function buildComboItemsSummary(items: any[]) {
+  const summary = (Array.isArray(items) ? items : [])
+    .map((item) => {
+      const code = String(item?.code || item?.pCode || item?.productCode || "").trim();
+      const name = String(item?.name || item?.variationName || item?.productName || code).trim();
+      return [code, name].filter(Boolean).join(":");
+    })
+    .filter(Boolean)
+    .join(", ");
+
+  if (summary.length <= MAX_COMBO_ITEMS_LENGTH) return summary;
+  return `${summary.slice(0, MAX_COMBO_ITEMS_LENGTH - 3)}...`;
 }
 
 async function findExistingReturn(client: any, comboOrderId: bigint, userId: bigint) {
@@ -131,6 +147,7 @@ export async function POST(req: Request) {
     }
 
     const comboItems = await resolveComboItems(prisma, order.comboProduct.productCodes);
+    const comboItemsSummary = buildComboItemsSummary(comboItems);
     const qty = Number(order.quantity || 1);
 
     const result = await prisma.$transaction(async (tx) => {
@@ -139,7 +156,7 @@ export async function POST(req: Request) {
         userId,
         comboProductId: order.comboProductId,
         comboName: order.comboProduct.comboName,
-        comboItems: JSON.stringify(comboItems),
+        comboItems: comboItemsSummary,
         reason,
       });
 
