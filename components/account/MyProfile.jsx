@@ -133,7 +133,7 @@ export default function MyProfile({ user, userId = "1", onProfileUpdated }) {
       </div>
 
       <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
-        <button onClick={() => setForm(initial)} className="px-6 py-2.5 text-sm border border-gray-100 hover:bg-[#fce7be] rounded-md text-[#0A0A0A] hover:text-gray-700 transition-colors">
+        <button onClick={() => setForm(initial)} className="px-6 py-2.5 text-sm border border-gray-100 hover:bg-[#f5af86] rounded-md text-[#0A0A0A] hover:text-gray-700 transition-colors">
           Cancel
         </button>
         <button onClick={handleSubmit} disabled={saving} className="px-3 py-2 bg-[#2e5e2e] text-white text-sm font-normal rounded-md hover:opacity-90 transition-opacity disabled:opacity-60">

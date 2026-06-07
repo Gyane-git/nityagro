@@ -37,19 +37,7 @@ export default function MyAccountPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
-    if (
-      tab &&
-      [
-        "profile",
-        "address",
-        "history",
-        "tracking",
-        "cancellations",
-        "returns",
-        "reviews",
-        "password",
-      ].includes(tab)
-    ) {
+    if (tab && ["profile", "address", "history", "tracking", "cancellations", "returns", "reviews", "password"].includes(tab)) {
       setActiveTab(tab);
     }
   }, []);
@@ -156,20 +144,21 @@ export default function MyAccountPage() {
   return (
     <div className="min-h-screen bg-gray-100 font-sans">
       {/* Breadcrumb */}
-      <nav className="px-4 sm:px-6 py-3 text-[13px] flex items-center text-gray-500">
-        <span>Home</span>
+      <div className="flex items-center">
+        {/* Mobile Header */}
+        <div className="lg:hidden ps-4 sm:ps-6">
+          <button onClick={() => setSidebarOpen(true)} className="flex items-center gap-1 px-2 py-2 bg-white rounded-lg border border-gray-200">
+            <Menu size={14} className="text-gray-900" />
+            <span className="hidden sm:inline text-xs font-medium text-gray-900">Menu</span>
+          </button>
+        </div>
+        <nav className="px-2 lg:px-6 py-3 text-[13px] flex items-center text-gray-500">
+          <span>Home</span>
 
-        <span className="mx-1 text-gray-400 text-lg font-semibold">›</span>
+          <span className="mx-1 text-gray-400 text-lg font-semibold">›</span>
 
-        <span className="text-gray-800 font-semibold">My Account</span>
-      </nav>
-
-      {/* Mobile Header */}
-      <div className="lg:hidden px-4 sm:px-6 mb-2">
-        <button onClick={() => setSidebarOpen(true)} className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg shadow-sm border border-gray-200">
-          <Menu size={22} className="text-gray-900" />
-          <span className="hidden sm:inline text-sm font-medium text-gray-900">Menu</span>
-        </button>
+          <span className="text-gray-800 font-semibold">My Account</span>
+        </nav>
       </div>
 
       {/* Mobile Overlay */}

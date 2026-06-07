@@ -420,17 +420,13 @@ export default function Header() {
                     <Badge count={cartCount} />
                   </Link>
 
-                  <Link href={accountHref} className="flex items-center gap-1.5 text-[15px] font-medium hover:text-[#00462C] transition-colors" title={authUser?.name || "My Account"}>
-                    <UserIcon />
+                  <Link href={accountHref} className="hidden lg:flex items-center gap-1.5 text-[15px] font-medium hover:text-[#00462C] transition-colors" title={authUser?.name || "My Account"}>
+                    {/* <UserIcon /> */}
                     <span className="hidden sm:inline max-w-28 truncate text-sm">{authUser?.name || "Account"}</span>
                   </Link>
-
-                  <button type="button" onClick={handleLogout} className="hidden sm:inline-flex text-xs font-semibold text-red-500 hover:text-red-600 transition-colors">
-                    Logout
-                  </button>
                 </>
               ) : (
-                <button className="flex items-center gap-1.5 text-[15px] font-medium hover:text-[#00462C] transition-colors" onClick={auth.openLogin}>
+                <button className="hidden lg:flex items-center gap-1.5 text-[15px] font-medium hover:text-[#00462C] transition-colors" onClick={auth.openLogin}>
                   <UserIcon />
                   <span className="hidden sm:inline text-lg">Log in</span>
                 </button>
