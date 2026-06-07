@@ -345,10 +345,9 @@ export default function ProductListPage() {
               ></X>
             </div>
 
-            <p>Name{productVariantDetails.subGroupName}</p>
-            <p>Sale RATE{productVariantDetails.MRP}</p>
-                
-            <p>STOCK{productVariantDetails.stockQuantity}</p>
+            <p>Name: {productVariantDetails.subGroupName}</p>
+            <p>Sale Price: {productVariantDetails.MRP}</p>
+            <p>Stock Quantity: {productVariantDetails.stockQuantity}</p>
           </div>
         </div>
       )}
