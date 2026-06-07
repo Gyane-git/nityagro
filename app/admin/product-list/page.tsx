@@ -74,7 +74,7 @@ export default function ProductListPage() {
     stockQuantity: 0,
   });
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
+  const itemsPerPage = 25;
   // const [showConfirm, setShowConfirm] = useState(false);
   // const [deleteId, setDeleteId] = useState(null);
   const openConfirm = useConfirmModalStore((state) => state.open);
