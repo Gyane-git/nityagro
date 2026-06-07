@@ -1,12 +1,849 @@
-### categories###POST
-POST http://192.168.1.95:3000/api/categories
+# ============================================================
+# NITYAGRO API HANDOFF FOR MOBILE APP
+# ============================================================
+# Usage:
+# 1. For local testing keep @baseUrl = http://localhost:3000
+# 2. For live testing change @baseUrl = https://nityagro.globaltech.com.np
+# 3. Login API returns data.token. Mobile app should store that token securely.
+# 4. Send auth token as: Authorization: Bearer {{userToken}}
+# 5. Admin APIs need admin login token as: Authorization: Bearer {{adminToken}}
+# 6. IDs returned by APIs are usually strings because DB uses BigInt.
+
+@baseUrl = http://localhost:3000
+@liveUrl = https://nityagro.globaltech.com.np
+@api = {{baseUrl}}/api
+@userToken = paste_user_login_token_here
+@adminToken = paste_admin_login_token_here
+
+# ============================================================
+# 1) AUTH APIs
+# ============================================================
+
+### Signup Step 1: Send OTP to email
+POST {{api}}/auth/signup/send-otp
 Content-Type: application/json
 
 {
-  "categoryName":"Mobilef",
-  "userId":1,
+  "name": "Ram Sharma",
+  "phone": "9800000000",
+  "email": "ram@example.com",
+  "password": "Password@123"
 }
 
-### categories###GET
-GET http://192.168.1.95:3000/api/categories
+### Signup Step 2: Verify OTP and create user
+POST {{api}}/auth/signup/verify
 Content-Type: application/json
+
+{
+  "name": "Ram Sharma",
+  "phone": "9800000000",
+  "email": "ram@example.com",
+  "password": "Password@123",
+  "otp": "123456"
+}
+
+### Login: user/admin role wise redirect data returns
+POST {{api}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "ram@example.com",
+  "password": "Password@123"
+}
+
+### Get logged-in user profile from token/cookie
+GET {{api}}/auth/me
+Authorization: Bearer {{userToken}}
+
+### Logout logged-in user
+POST {{api}}/auth/logout
+Authorization: Bearer {{userToken}}
+
+{}
+
+### Forgot password: send reset OTP
+POST {{api}}/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "ram@example.com"
+}
+
+### Verify reset OTP: creates reset session cookie
+POST {{api}}/auth/verify-reset-otp
+Content-Type: application/json
+
+{
+  "email": "ram@example.com",
+  "otp": "123456"
+}
+
+### Reset password after OTP verification
+POST {{api}}/auth/reset-password
+Content-Type: application/json
+
+{
+  "email": "ram@example.com",
+  "password": "NewPassword@123"
+}
+
+### Google login start URL
+# Open this URL in browser/webview. Callback redirects based on login result.
+GET {{api}}/auth/google
+
+
+# ============================================================
+# 2) USER PROFILE + ADDRESS BOOK APIs
+# ============================================================
+
+### Get my profile
+GET {{api}}/account/profile
+Authorization: Bearer {{userToken}}
+
+### Update my profile
+PATCH {{api}}/account/profile
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "name": "Ram Sharma",
+  "phone": "9800000000",
+  "email": "ram@example.com"
+}
+
+### Change password
+PATCH {{api}}/account/password
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "currentPassword": "Password@123",
+  "newPassword": "NewPassword@123"
+}
+
+### Get address book
+GET {{api}}/account/addresses
+Authorization: Bearer {{userToken}}
+
+### Add address
+# region = province name, colony = ward number/name, area = locality
+POST {{api}}/account/addresses
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "fullName": "Ram Sharma",
+  "phone": "9800000000",
+  "email": "ram@example.com",
+  "region": "Bagmati",
+  "district": "Kathmandu",
+  "city": "Kathmandu Metropolitan City",
+  "area": "New Road",
+  "colony": "22",
+  "addType": "Home",
+  "zipCode": "44600"
+}
+
+### Update address
+PUT {{api}}/account/addresses
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "id": 1,
+  "fullName": "Ram Sharma",
+  "phone": "9800000000",
+  "email": "ram@example.com",
+  "region": "Bagmati",
+  "district": "Kathmandu",
+  "city": "Kathmandu Metropolitan City",
+  "area": "New Road",
+  "colony": "22",
+  "addType": "Office",
+  "zipCode": "44600"
+}
+
+### Delete address
+DELETE {{api}}/account/addresses
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "id": 1
+}
+
+
+# ============================================================
+# 3) LOCATION + SHIPPING APIs
+# ============================================================
+
+### Province list
+GET {{api}}/location/provinces
+
+### District list by province id
+GET {{api}}/location/districts?province=1
+
+### Municipality/city list by district id
+GET {{api}}/location/municipalities?district=2
+
+### Calculate delivery charge for selected address
+POST {{api}}/shipping-charge
+Content-Type: application/json
+
+{
+  "address": {
+    "region": "Bagmati",
+    "district": "Kathmandu",
+    "city": "Kathmandu Metropolitan City"
+  }
+}
+
+
+# ============================================================
+# 4) CATALOG APIs: CATEGORIES, PRODUCTS, COMBOS, CONTENT
+# ============================================================
+
+### Categories list
+GET {{api}}/categories
+
+### Product list
+# Optional query examples: ?category=Oils or ?categoryId=11
+GET {{api}}/products
+
+### Product details by productId
+GET {{api}}/products/1
+
+### Variant list by subgroup/product name
+# Example: Red Chilli Powder, Yellow Mustard Oil
+GET {{api}}/subcategories/Red%20Chilli%20Powder
+
+### All subcategories/product groups
+GET {{api}}/subcategories
+
+### Combo product list
+GET {{api}}/combo-products
+
+### Banner list
+GET {{api}}/banners
+
+### Popup ads / top text slider
+GET {{api}}/popup-ads
+
+### FAQ list
+GET {{api}}/faqs
+
+### Testimonials / customer reviews list
+GET {{api}}/testimonials
+
+### Contact inquiry submit
+POST {{api}}/inquiries
+Content-Type: application/json
+
+{
+  "name": "Ram Sharma",
+  "email": "ram@example.com",
+  "phone": "9800000000",
+  "subject": "Product inquiry",
+  "message": "I want to know more about mustard oil."
+}
+
+### Live OMS stock by SKU/product code
+# Backend uses OMS token internally where needed. Mobile should call this backend API, not OMS directly.
+GET {{api}}/oms/stock?sku=1
+
+
+# ============================================================
+# 5) CART + WISHLIST APIs
+# ============================================================
+
+### Get my cart
+GET {{api}}/account/cart
+Authorization: Bearer {{userToken}}
+
+### Add product to cart
+# productId can be productId or variantId; backend resolves it.
+POST {{api}}/account/cart
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "quantity": 2
+}
+
+### Update cart product quantity
+PUT {{api}}/account/cart
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "quantity": 3
+}
+
+### Remove one product from cart
+DELETE {{api}}/account/cart
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "productId": 1
+}
+
+### Clear full cart
+DELETE {{api}}/account/cart
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "clear": true
+}
+
+### Get my wishlist
+GET {{api}}/account/wishlist
+Authorization: Bearer {{userToken}}
+
+### Add product to wishlist
+POST {{api}}/account/wishlist
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "productId": 1
+}
+
+### Remove product from wishlist
+DELETE {{api}}/account/wishlist
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "productId": 1
+}
+
+### Clear wishlist
+DELETE {{api}}/account/wishlist
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "clear": true
+}
+
+
+# ============================================================
+# 6) CHECKOUT + ORDER APIs
+# ============================================================
+
+### Place COD order for normal product/cart checkout
+# IMPORTANT: address is required. Do not send hardcoded address from mobile.
+# id = productId, qty = selected quantity, unitPrice = selling price, total = unitPrice * qty
+POST {{api}}/orders/cod
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "paymentMethod": "COD",
+  "deliveryCharge": 100,
+  "address": {
+    "fullName": "Ram Sharma",
+    "phone": "9800000000",
+    "address": "New Road, Ward 22, Kathmandu",
+    "city": "Kathmandu Metropolitan City",
+    "region": "Bagmati",
+    "area": "New Road"
+  },
+  "items": [
+    {
+      "id": 1,
+      "qty": 2,
+      "unitPrice": 150,
+      "total": 300,
+      "name": "Red Chilli Powder (R 100gm)"
+    }
+  ]
+}
+
+### Place COD order for combo checkout through same checkout flow
+POST {{api}}/orders/cod
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "paymentMethod": "COD",
+  "deliveryCharge": 100,
+  "address": {
+    "fullName": "Ram Sharma",
+    "phone": "9800000000",
+    "address": "New Road, Ward 22, Kathmandu",
+    "city": "Kathmandu Metropolitan City",
+    "region": "Bagmati",
+    "area": "New Road"
+  },
+  "items": [
+    {
+      "type": "combo",
+      "comboProductId": 2,
+      "id": 2,
+      "qty": 1,
+      "unitPrice": 999,
+      "total": 999,
+      "name": "Family Combo Pack"
+    }
+  ]
+}
+
+### Get my normal orders / order history
+GET {{api}}/orders
+Authorization: Bearer {{userToken}}
+
+### Get my combo orders / combo order history
+GET {{api}}/combo-orders
+Authorization: Bearer {{userToken}}
+
+### Direct combo order create without checkout page
+# Prefer /orders/cod for full checkout flow. This API creates combo order directly.
+POST {{api}}/combo-orders
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "comboProductId": 2,
+  "qty": 1
+}
+
+### Cancel normal order from profile
+POST {{api}}/account/orders/cancel
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "orderId": 1,
+  "reason": "I ordered by mistake"
+}
+
+### Return normal order from profile
+POST {{api}}/account/orders/return
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "orderId": 1,
+  "reason": "Product was damaged"
+}
+
+### Review delivered normal order
+POST {{api}}/account/orders/review
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "orderId": 1,
+  "rating": 5,
+  "review": "Very good product and packaging."
+}
+
+### Cancel combo order from profile
+POST {{api}}/account/combo-orders/cancel
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "comboOrderId": 2,
+  "reason": "I ordered by mistake"
+}
+
+### Return combo order from profile
+POST {{api}}/account/combo-orders/return
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "comboOrderId": 2,
+  "reason": "Some combo item was damaged"
+}
+
+### My cancellation list
+GET {{api}}/account/cancellations
+Authorization: Bearer {{userToken}}
+
+### My return list
+GET {{api}}/account/returns
+Authorization: Bearer {{userToken}}
+
+### My review list
+GET {{api}}/account/reviews
+Authorization: Bearer {{userToken}}
+
+
+# ============================================================
+# 7) CONNECTIPS PAYMENT APIs
+# ============================================================
+
+### Initiate ConnectIPS payment
+# Usually called from checkout payment screen. Server returns form/payment data.
+POST {{baseUrl}}/connectips/initiate
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{
+  "amount": 400,
+  "deliveryCharge": 100,
+  "address": {
+    "fullName": "Ram Sharma",
+    "phone": "9800000000",
+    "address": "New Road, Ward 22, Kathmandu",
+    "city": "Kathmandu Metropolitan City",
+    "region": "Bagmati",
+    "area": "New Road"
+  },
+  "items": [
+    {
+      "id": 1,
+      "qty": 2,
+      "unitPrice": 150,
+      "total": 300,
+      "name": "Red Chilli Powder (R 100gm)"
+    }
+  ]
+}
+
+### ConnectIPS validation callback / manual validate
+# Usually browser/payment gateway callback handles this. Keep for backend testing only.
+POST {{baseUrl}}/connectips/validate
+Content-Type: application/json
+
+{
+  "TXNID": "CONNECTIPS_TXN_ID",
+  "TOKEN": "CONNECTIPS_TOKEN"
+}
+
+### ConnectIPS transaction details
+POST {{baseUrl}}/connectips/get_details
+Content-Type: application/json
+
+{
+  "txnId": "CONNECTIPS_TXN_ID"
+}
+
+
+# ============================================================
+# 8) ADMIN ORDER MANAGEMENT APIs
+# ============================================================
+
+### Admin: order list
+# Optional query examples: ?status=processing, ?status=shipped, ?status=delivered
+GET {{api}}/admin/orders
+Authorization: Bearer {{adminToken}}
+
+### Admin: single order details
+GET {{api}}/admin/orders/1
+Authorization: Bearer {{adminToken}}
+
+### Admin: update normal order status/payment/shipping
+# orderStatus: processing | shipped | delivered | cancelled | returns
+# paymentStatus: unpaid | paid | partial | refunded
+PATCH {{api}}/admin/orders/1
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "orderStatus": "shipped",
+  "paymentStatus": "paid",
+  "paymentMode": "COD",
+  "transactionId": "",
+  "courierName": "Local Delivery",
+  "cnNumber": "CN123456",
+  "cnDate": "2026-06-07",
+  "remark": "Order shipped from warehouse"
+}
+
+### Admin: combo order list
+GET {{api}}/admin/combo-orders
+Authorization: Bearer {{adminToken}}
+
+### Admin: single combo order details
+GET {{api}}/admin/combo-orders/1
+Authorization: Bearer {{adminToken}}
+
+### Admin: update combo order status/payment
+PATCH {{api}}/admin/combo-orders/1
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "orderStatus": "SHIPPED",
+  "paymentStatus": "PAID",
+  "remark": "Combo order shipped"
+}
+
+### Admin: OMS failed/pending order sync logs
+GET {{api}}/admin/oms-order-syncs
+Authorization: Bearer {{adminToken}}
+
+
+# ============================================================
+# 9) ADMIN RETURN MANAGEMENT APIs
+# ============================================================
+
+### Admin: return list including normal and combo returns
+# Optional: ?status=new | ?status=shipped | ?status=cancelled | ?status=refunded
+GET {{api}}/admin/returns
+Authorization: Bearer {{adminToken}}
+
+### Admin: ship normal return request
+PATCH {{api}}/admin/returns/1
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "shipped",
+  "courierName": "Local Delivery",
+  "cnNumber": "RET-CN-1001",
+  "cnDate": "2026-06-07",
+  "remark": "Return shipment accepted"
+}
+
+### Admin: cancel normal return request with reason
+PATCH {{api}}/admin/returns/1
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "cancelled",
+  "adminReason": "Return rejected because product is outside return policy"
+}
+
+### Admin: refund normal return request
+PATCH {{api}}/admin/returns/1
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "refunded",
+  "refundMode": "Bank Transfer",
+  "transactionId": "REF123456",
+  "amount": 300,
+  "remark": "Refund completed"
+}
+
+### Admin: ship combo return request
+# Combo return ids use combo- prefix.
+PATCH {{api}}/admin/returns/combo-2
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "shipped",
+  "courierName": "Local Delivery",
+  "cnNumber": "RET-COMBO-1002",
+  "cnDate": "2026-06-07",
+  "remark": "Combo return shipment accepted"
+}
+
+### Admin: cancel combo return request
+PATCH {{api}}/admin/returns/combo-2
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "cancelled",
+  "adminReason": "Combo return rejected by admin"
+}
+
+### Admin: refund combo return request
+PATCH {{api}}/admin/returns/combo-2
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "refunded",
+  "refundMode": "ConnectIPS",
+  "transactionId": "REF-COMBO-123",
+  "amount": 999,
+  "remark": "Combo refund completed"
+}
+
+
+# ============================================================
+# 10) ADMIN SHIPPING CHARGE APIs
+# ============================================================
+
+### Admin: delivery charge list
+GET {{api}}/admin/shipping-costs
+Authorization: Bearer {{adminToken}}
+
+### Admin: add/update city delivery charge
+POST {{api}}/admin/shipping-costs
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "provinceId": "1",
+  "provinceName": "Bagmati",
+  "districtId": "2",
+  "districtName": "Kathmandu",
+  "cityId": "20",
+  "cityName": "Kathmandu Metropolitan City",
+  "shippingCost": 100
+}
+
+### Admin: delete delivery charge
+DELETE {{api}}/admin/shipping-costs
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "id": 1
+}
+
+
+# ============================================================
+# 11) ADMIN CONTENT APIs: BANNERS, POPUP ADS, FAQS, TESTIMONIALS
+# ============================================================
+
+### Admin/Public: banner list
+GET {{api}}/banners
+
+### Admin: add banner
+POST {{api}}/banners
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "bannerName": "Home Hero Banner",
+  "slug": "home-hero-banner",
+  "bannerDescription": "Main home page banner",
+  "bannerImageforWeb": "/banners/web-banner.jpg",
+  "bannerImageforMobile": "/banners/mobile-banner.jpg",
+  "cardImage": "/banners/card-banner.jpg",
+  "bannerStatus": true
+}
+
+### Admin: update banner
+PUT {{api}}/banners/1
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "bannerName": "Updated Banner",
+  "slug": "updated-banner",
+  "bannerDescription": "Updated description",
+  "bannerImageforWeb": "/banners/web-banner.jpg",
+  "bannerImageforMobile": "/banners/mobile-banner.jpg",
+  "cardImage": "/banners/card-banner.jpg",
+  "bannerStatus": true
+}
+
+### Admin: delete banner
+DELETE {{api}}/banners/1
+Authorization: Bearer {{adminToken}}
+
+### Admin/Public: popup ads list
+GET {{api}}/popup-ads
+
+### Admin: add popup ad/top text
+POST {{api}}/popup-ads
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "popupName": "Offer Text",
+  "popupDescription": "12% OFF above Rs. 1000 - Code NEW12",
+  "popupImage": "/popup/offer.jpg",
+  "popupStatus": true
+}
+
+### Admin: update popup ad/top text
+PUT {{api}}/popup-ads/1
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "popupName": "Updated Offer",
+  "popupDescription": "Free delivery inside Kathmandu",
+  "popupImage": "/popup/offer.jpg",
+  "popupStatus": true
+}
+
+### Admin: delete popup ad
+DELETE {{api}}/popup-ads/1
+Authorization: Bearer {{adminToken}}
+
+### FAQ list
+GET {{api}}/faqs
+
+### Admin: add FAQ
+POST {{api}}/faqs
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "question": "How long does delivery take?",
+  "answer": "Delivery time depends on city and selected product target days.",
+  "faqSection": "shipping-delivery",
+  "showOnHome": true,
+  "sortOrder": 1,
+  "faqStatus": true
+}
+
+### Admin: update FAQ
+PUT {{api}}/faqs/1
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "question": "Updated question?",
+  "answer": "Updated answer.",
+  "faqSection": "product-info",
+  "showOnHome": false,
+  "sortOrder": 2,
+  "faqStatus": true
+}
+
+### Admin: delete FAQ
+DELETE {{api}}/faqs/1
+Authorization: Bearer {{adminToken}}
+
+### Testimonials list
+GET {{api}}/testimonials
+
+### Admin: add testimonial
+POST {{api}}/testimonials
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "title": "Pure Aroma, Authentic Taste!",
+  "name": "Hari Sharma",
+  "userName": "Hari Sharma",
+  "description": "I trust Nityagro products because they are pure and clean.",
+  "destination": "Kathmandu",
+  "image": "/uploads/testimonials/testimonial.jpg",
+  "rating": 5,
+  "testimonialStatus": true
+}
+
+
+# ============================================================
+# 12) ADMIN PRODUCT/CATEGORY SYNC + UPLOAD NOTES
+# ============================================================
+
+### OMS token helper
+GET {{api}}/oms/auth
+Authorization: Bearer {{adminToken}}
+
+### OMS product/stock helper
+GET {{api}}/oms/products
+Authorization: Bearer {{adminToken}}
+
+### Upload category assets
+# Multipart/form-data route. Use form fields depending on admin UI:
+# categoryImage = file, categoryLogo = file, categoryBanner = file
+POST {{api}}/uploads/category-assets
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data
+
+# NOTE FOR MOBILE TEAM:
+# Admin image upload APIs are mainly for web admin panel.
+# Mobile customer app usually needs only GET catalog/content/order APIs.

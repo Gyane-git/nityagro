@@ -14,6 +14,13 @@ export function getPublicUploadDir(...segments: string[]) {
         )
       : null;
 
-  const publicRoot = configuredRoot || path.join(process.cwd(), "public");
-  return path.join(publicRoot, ...segments);
+  if (configuredRoot) {
+    return path.join(configuredRoot, ...segments);
+  }
+
+  return path.join(
+    /* turbopackIgnore: true */ process.cwd(),
+    "public",
+    ...segments,
+  );
 }

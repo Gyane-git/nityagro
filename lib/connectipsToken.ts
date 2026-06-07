@@ -3,28 +3,29 @@ import fs from "fs";
 import path from "path";
 import { execFileSync } from "child_process";
 
+const fromProjectRoot = (...segments: string[]) =>
+  path.join(/* turbopackIgnore: true */ process.cwd(), ...segments);
+
 const resolvePfxPath = (): string => {
   const customPath = String(process.env.CONNECTIPS_PFX_PATH || "").trim();
   if (customPath) {
-    return path.isAbsolute(customPath)
-      ? customPath
-      : path.join(process.cwd(), customPath);
+    return path.isAbsolute(customPath) ? customPath : fromProjectRoot(customPath);
   }
 
   const fileName = String(process.env.CONNECTIPS_PFX_FILE || "").trim();
   if (fileName) {
-    return path.join(process.cwd(), "signatures", fileName);
+    return fromProjectRoot("signatures", fileName);
   }
 
   const candidates = ["CREDITOR.pfx", "CREDITOR1.pfx"];
   for (const candidate of candidates) {
-    const candidatePath = path.join(process.cwd(), "signatures", candidate);
+    const candidatePath = fromProjectRoot("signatures", candidate);
     if (fs.existsSync(candidatePath)) {
       return candidatePath;
     }
   }
 
-  return path.join(process.cwd(), "signatures", "CREDITOR.pfx");
+  return fromProjectRoot("signatures", "CREDITOR.pfx");
 };
 
 const readPkcs12WithPass = (pfxPath: string, password: string): string => {

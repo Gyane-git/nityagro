@@ -259,9 +259,17 @@ export default function CheckoutPaymentPage() {
         window.sessionStorage.setItem("connectips_last_reference", referenceId);
       }
 
+      const gatewayUrl = String(initData.gatewayUrl || "").trim();
+      if (!gatewayUrl || !/^https?:\/\//i.test(gatewayUrl)) {
+        toast.error("ConnectIPS gateway URL is not configured properly");
+        return;
+      }
+
       const form = document.createElement("form");
       form.method = "POST";
-      form.action = initData.gatewayUrl;
+      form.action = gatewayUrl;
+      form.target = "_self";
+      form.acceptCharset = "UTF-8";
       form.style.display = "none";
 
       Object.entries(initData.payload || {}).forEach(([key, value]) => {
