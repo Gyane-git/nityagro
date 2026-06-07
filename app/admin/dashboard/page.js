@@ -178,7 +178,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,#fff7ed_0%,#f8fafc_40%,#f8fafc_100%)] p-4 md:p-6 space-y-6">
-      <div className="rounded-3xl border border-orange-100 bg-linear-to-r from-orange-500 via-amber-500 to-yellow-500 p-6 text-white shadow-lg">
+      <div className="rounded-3xl border border-orange-100 bg-linear-to-r from-green-900 via-green-500 to-green-700 p-6 text-white shadow-lg">
         <p className="text-xs uppercase tracking-[0.2em] text-white/90">Admin Command Center</p>
         <h1 className="mt-2 text-3xl font-black">Dashboard Overview</h1>
         <p className="mt-2 text-sm text-white/90">Real-time snapshot of orders, customers, inquiries and revenue.</p>

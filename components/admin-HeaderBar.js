@@ -45,7 +45,7 @@ export default function AdminHeaderBar() {
 
         {/* Right */}
         <div className="flex items-center gap-5">
-          <button className="text-gray-600 hover:text-blue-600 transition">
+          {/* <button className="text-gray-600 hover:text-blue-600 transition">
             <Bell size={22} />
           </button>
 
@@ -54,7 +54,7 @@ export default function AdminHeaderBar() {
             className="text-gray-600 hover:text-blue-600 transition"
           >
             <User size={22} />
-          </button>
+          </button> */}
 
           <button
             onClick={handleLogout}
