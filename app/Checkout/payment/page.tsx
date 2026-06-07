@@ -21,6 +21,60 @@ type CheckoutSourceItem = {
   name?: string;
 };
 
+function FullScreenPaymentLoader({ paymentMethod }: { paymentMethod: string }) {
+  const isConnectIps = paymentMethod === "connectips";
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-[#041f16]/85 px-4 backdrop-blur-md">
+      <div className="absolute -left-24 top-10 h-72 w-72 rounded-full bg-[#DB8F00]/25 blur-3xl" />
+      <div className="absolute -right-24 bottom-6 h-80 w-80 rounded-full bg-[#65A30D]/20 blur-3xl" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.12),transparent_45%)]" />
+
+      <div className="relative w-full max-w-md rounded-3xl border border-white/20 bg-white/95 p-8 text-center shadow-2xl">
+        <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-[#FFF8E7]">
+          <div className="relative h-16 w-16">
+            <span className="absolute inset-0 rounded-full border-4 border-[#00462C]/15" />
+            <span className="absolute inset-0 animate-spin rounded-full border-4 border-transparent border-t-[#00462C] border-r-[#DB8F00]" />
+            <span className="absolute inset-4 rounded-full bg-[#00462C]" />
+            <span className="absolute inset-[23px] rounded-full bg-[#DB8F00]" />
+          </div>
+        </div>
+
+        <p className="text-xs font-bold uppercase tracking-[0.35em] text-[#DB8F00]">
+          Secure Checkout
+        </p>
+        <h2 className="mt-3 text-2xl font-extrabold text-[#00462C]">
+          {isConnectIps ? "Opening ConnectIPS..." : "Placing Your Order..."}
+        </h2>
+        <p className="mt-3 text-sm leading-6 text-gray-600">
+          {isConnectIps
+            ? "Please wait while we prepare your secure payment gateway."
+            : "We are confirming stock, delivery address, and saving your order."}
+        </p>
+
+        <div className="mt-6 h-2 overflow-hidden rounded-full bg-gray-100">
+          <div className="h-full w-1/2 animate-[paymentBar_1.3s_ease-in-out_infinite] rounded-full bg-gradient-to-r from-[#00462C] via-[#DB8F00] to-[#65A30D]" />
+        </div>
+
+        <p className="mt-4 text-xs font-medium text-gray-400">
+          Do not refresh or close this page.
+        </p>
+      </div>
+
+      <style jsx>{`
+        @keyframes paymentBar {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(220%);
+          }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 export default function CheckoutPaymentPage() {
   const router = useRouter();
   const [paymentMethod, setPaymentMethod] = useState("cod");
@@ -251,6 +305,8 @@ export default function CheckoutPaymentPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      {processing && <FullScreenPaymentLoader paymentMethod={paymentMethod} />}
+
       <div className="mx-auto px-4 sm:px-6 lg:px-10 py-6 sm:py-8 lg:py-10 max-w-[1440px]">
         {/* Header */}
         <div className="mb-5">
