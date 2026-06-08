@@ -136,7 +136,7 @@ const MOBILE_NAV = [
   { label: "Home", href: "/", icon: HomeIcon },
   { label: "Products", href: "/products", icon: ProductsIcon },
   { label: "Wishlist", href: "/wishlist", icon: WishlistIcon },
-  { label: "Account", href: "/account", icon: AccountIcon },
+  { label: "Account", href: "/profile", icon: AccountIcon },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
