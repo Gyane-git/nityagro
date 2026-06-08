@@ -118,12 +118,12 @@ model ComboProduct {
   comboCode        String
   comboName        String
   productId        BigInt
-  productCodes     String
+  productCodes     String         @db.LongText
   productPrices    Float
   comboPrice       Float
   discount         Float?
   slug             String?
-  comboDescription String?
+  comboDescription String?        @db.LongText
   comboStatus      Boolean        @default(true)
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt

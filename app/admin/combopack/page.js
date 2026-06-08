@@ -10,6 +10,23 @@ function generateComboCode() {
 
 const money = (value) => `Rs. ${Number(value || 0).toFixed(2)}`;
 
+function readVariantMrpPrice(variant, fallback = 0) {
+  const values = [
+    variant?.productSellingPrice,
+    variant?.salesRate,
+    variant?.MRP,
+    variant?.mrp,
+    variant?.price,
+    fallback,
+  ];
+  for (const value of values) {
+    if (value === undefined || value === null || value === "") continue;
+    const parsed = Number(value);
+    if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  }
+  return 0;
+}
+
 export default function Page() {
   const [comboCode, setComboCode] = useState("");
   const [comboName, setComboName] = useState("");
@@ -71,7 +88,7 @@ export default function Page() {
                 productCode: String(variant.pCode || product.productCode || ""),
                 subGroupName,
                 variationName: String(variant.variationName || ""),
-                price: Number(variant.MRP || 0),
+                price: readVariantMrpPrice(variant, product.sellingPrice),
                 stockQuantity: Number(variant.stockQuantity || 0),
                 image: product.pImage || "/no-image.png",
               })),
