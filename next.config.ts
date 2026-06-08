@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   allowedDevOrigins: [
-    
     "nityagro.com",
+    "www.nityagro.com",
     "localhost:3000",
   ],
 
@@ -10,12 +10,12 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "https://nityagro.com",
+        hostname: "nityagro.com",
         pathname: "/**",
       },
       {
-        protocol: "http",
-        hostname: "nityagro.com",
+        protocol: "https",
+        hostname: "www.nityagro.com",
         pathname: "/**",
       },
     ],
