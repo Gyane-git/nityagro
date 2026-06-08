@@ -771,9 +771,12 @@ export default function CategoriesListPage() {
                       {item.current ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={item.current}
+                          src={resolveImageUrl(item.current)}
                           alt=""
                           className="mx-auto mb-2 h-14 w-14 rounded border object-cover"
+                          onError={(event) => {
+                            event.currentTarget.src = "/no-image.png";
+                          }}
                         />
                       ) : (
                         <div className="text-3xl mb-2">📁</div>

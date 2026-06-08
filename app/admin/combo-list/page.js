@@ -147,7 +147,14 @@ export default function ComboPackList() {
                       <td className="px-5 py-4 text-xs text-gray-400 font-medium">{index + 1}</td>
                       <td className="px-5 py-4">
                         {image ? (
-                          <img src={image} alt={combo.comboName || "Combo"} className="w-14 h-14 rounded-xl object-cover border border-gray-100" />
+                          <img
+                            src={image}
+                            alt={combo.comboName || "Combo"}
+                            className="w-14 h-14 rounded-xl object-cover border border-gray-100"
+                            onError={(event) => {
+                              event.currentTarget.src = "/no-image.png";
+                            }}
+                          />
                         ) : (
                           <div className="w-14 h-14 rounded-xl border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center">
                             <ImageIcon className="w-5 h-5 text-gray-300" />

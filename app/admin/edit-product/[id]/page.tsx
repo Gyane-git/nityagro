@@ -637,7 +637,16 @@ export default function EditProductPage() {
                   <div className="px-5 pb-5 border-t border-gray-100 space-y-4 mt-4">
                     {/* model: productImage */}
                     <div>
-                      {previewImage && <img src={previewImage} alt="preview" className="w-32 h-32 object-cover rounded-lg border" />}
+                      {previewImage && (
+                        <img
+                          src={previewImage}
+                          alt="preview"
+                          className="w-32 h-32 object-cover rounded-lg border"
+                          onError={(event) => {
+                            event.currentTarget.src = "/no-image.png";
+                          }}
+                        />
+                      )}
                       <label htmlFor="productImage" className={labelClass}>
                         {" "}
                         Main Image
@@ -672,7 +681,15 @@ export default function EditProductPage() {
                         {galleryPreview.length > 0 && (
                           <div className="grid grid-cols-3 gap-2 mb-3">
                             {galleryPreview.map((img, index) => (
-                              <img key={index} src={img} alt={`gallery-${index}`} className="w-full h-20 object-cover rounded border" />
+                              <img
+                                key={index}
+                                src={img}
+                                alt={`gallery-${index}`}
+                                className="w-full h-20 object-cover rounded border"
+                                onError={(event) => {
+                                  event.currentTarget.src = "/no-image.png";
+                                }}
+                              />
                             ))}
                           </div>
                         )}

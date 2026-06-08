@@ -15,11 +15,18 @@ export default function ProductImageGallery({ images = [] }) {
   const [selected, setSelected] = useState(0);
   const [zoomActive, setZoomActive] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
+  const [failedImages, setFailedImages] = useState({});
 
   const fallback = ["/products/mustard-oil.png", "/products/red-chilli.png", "/products/chickpea-flour.png", "/products/jaggery.png", "/products/red-chilli-2.png"];
 
   const imgs = images.length > 0 ? images : fallback;
   const selectedImageUrl = imgs[selected] || imgs[0];
+  const displayImageUrl = failedImages[selectedImageUrl] ? "/no-image.png" : selectedImageUrl;
+
+  const markImageFailed = (src) => {
+    if (!src || src === "/no-image.png") return;
+    setFailedImages((prev) => ({ ...prev, [src]: true }));
+  };
 
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -135,7 +142,7 @@ export default function ProductImageGallery({ images = [] }) {
                 background: "#F9FAFB",
               }}
             >
-              <Image src={src} alt={`Thumbnail ${i + 1}`} fill className="object-contain p-2" sizes="90px" />
+              <Image src={failedImages[src] ? "/no-image.png" : src} alt={`Thumbnail ${i + 1}`} fill className="object-contain p-2" sizes="90px" onError={() => markImageFailed(src)} />
               {i === 1 && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                   <PlayIcon />
@@ -161,7 +168,7 @@ export default function ProductImageGallery({ images = [] }) {
             });
           }}
         >
-          <Image src={selectedImageUrl} alt="Product main" fill className={`object-contain sm:object-contain md:object-contain lg:object-contain p-2 transition-transform duration-500 ${zoomActive ? "scale-110" : "scale-100"}`} sizes="(max-width: 1024px) 100vw, 310px" priority />
+          <Image src={displayImageUrl} alt="Product main" fill className={`object-contain sm:object-contain md:object-contain lg:object-contain p-2 transition-transform duration-500 ${zoomActive ? "scale-110" : "scale-100"}`} sizes="(max-width: 1024px) 100vw, 310px" priority onError={() => markImageFailed(selectedImageUrl)} />
 
           {zoomActive && (
             <div
@@ -192,7 +199,7 @@ export default function ProductImageGallery({ images = [] }) {
               background: "#F9FAFB",
             }}
           >
-            <Image src={src} alt={`Thumbnail ${i + 1}`} fill className="object-contain p-2" sizes="72px" />
+            <Image src={failedImages[src] ? "/no-image.png" : src} alt={`Thumbnail ${i + 1}`} fill className="object-contain p-2" sizes="72px" onError={() => markImageFailed(src)} />
             {i === 1 && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                 <PlayIcon />
@@ -206,7 +213,7 @@ export default function ProductImageGallery({ images = [] }) {
         <div
           className="hidden lg:block absolute top-0 left-[calc(100%+24px)] w-[500px] h-[320px] border border-orange-300 rounded-lg bg-white shadow-lg pointer-events-none z-40"
           style={{
-            backgroundImage: `url(${selectedImageUrl})`,
+            backgroundImage: `url(${displayImageUrl})`,
             backgroundRepeat: "no-repeat",
             backgroundSize: "140%",
             backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,

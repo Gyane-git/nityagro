@@ -486,7 +486,14 @@ export default function EditComboPackPage() {
             <label htmlFor="comboImage" className={`cursor-pointer flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-5 transition-colors ${mainPreview ? "border-emerald-400 bg-emerald-50" : "border-gray-200 hover:border-emerald-400 hover:bg-emerald-50"}`}>
               {mainPreview ? (
                 <>
-                  <img src={mainPreview} alt="preview" className="w-20 h-20 object-cover rounded-xl mb-2" />
+                  <img
+                    src={mainPreview}
+                    alt="preview"
+                    className="w-20 h-20 object-cover rounded-xl mb-2"
+                    onError={(event) => {
+                      event.currentTarget.src = "/no-image.png";
+                    }}
+                  />
                   <p className="text-xs text-emerald-600 font-medium">Click to change</p>
                 </>
               ) : (
@@ -509,7 +516,15 @@ export default function EditComboPackPage() {
                 <>
                   <div className="flex gap-2 flex-wrap justify-center mb-2">
                     {galleryPreviews.map((src, index) => (
-                      <img key={`${src}-${index}`} src={src} alt="" className="w-14 h-14 object-cover rounded-lg" />
+                      <img
+                        key={`${src}-${index}`}
+                        src={src}
+                        alt=""
+                        className="w-14 h-14 object-cover rounded-lg"
+                        onError={(event) => {
+                          event.currentTarget.src = "/no-image.png";
+                        }}
+                      />
                     ))}
                   </div>
                   <p className="text-xs text-emerald-600 font-medium">{galleryPreviews.length} image{galleryPreviews.length > 1 ? "s" : ""} selected</p>
