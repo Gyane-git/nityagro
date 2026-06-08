@@ -109,6 +109,7 @@ export default function Header() {
   const [promoMessages, setPromoMessages] = useState(["12% OFF above · Code: NEW12"]);
   const [promoIndex, setPromoIndex] = useState(0);
   const [authUser, setAuthUser] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
 
   const auth = useAuthModal();
   const cartItems = useCartStore((state) => state.items);
@@ -250,6 +251,8 @@ export default function Header() {
         }
       } catch {
         setAuthUser(null);
+      } finally {
+        setAuthReady(true);
       }
     };
 
@@ -408,7 +411,9 @@ export default function Header() {
                 <SearchIcon className="text-[#266A3F]" />
               </button>
 
-              {isLoggedIn ? (
+              {!authReady ? (
+                <span className="hidden lg:block h-7 w-18 rounded-md bg-gray-100" aria-hidden="true" />
+              ) : isLoggedIn ? (
                 <>
                   <Link href="/wishlist" className="relative hover:text-[#00462C] transition-colors" aria-label="Wishlist">
                     <WishlistIcon />
@@ -522,7 +527,12 @@ export default function Header() {
           <div className="mx-5 h-px bg-[#E6ECF0] my-1" />
 
           <div className="px-5">
-            {isLoggedIn ? (
+            {!authReady ? (
+              <div className="space-y-2 py-3">
+                <div className="h-4 w-28 rounded bg-gray-100" />
+                <div className="h-4 w-24 rounded bg-gray-100" />
+              </div>
+            ) : isLoggedIn ? (
               <div className="space-y-1">
                 <Link href={accountHref} onClick={() => setMobileMenuOpen(false)} className="w-full flex items-center gap-3 py-3 text-[15px] font-medium text-[#266A3F] hover:text-[#00462C] transition-colors">
                   <UserIcon className="text-[#266A3F]" />
