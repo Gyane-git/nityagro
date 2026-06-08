@@ -83,10 +83,10 @@ model Products {
   subGroupName       String?
   slug               String?
   productVariation   String?
-  productDescription String?
-  nutritionInfo      String?
-  cookingInstruction String?
-  storageInstruction String?
+  productDescription String?             @db.LongText
+  nutritionInfo      String?             @db.LongText
+  cookingInstruction String?             @db.LongText
+  storageInstruction String?             @db.LongText
   pImage             String?
   productStatus      Boolean             @default(true)
   actualPrice        Float
