@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { MailIcon, PhoneIcon } from "lucide-react";
 
 // ─── Social Icons ─────────────────────────────────────────────────────────────
@@ -143,6 +144,11 @@ const MOBILE_NAV = [
 
 export default function Footer() {
   const pathname = usePathname();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   return (
     <>
@@ -305,7 +311,10 @@ export default function Footer() {
         <div className="flex items-center justify-around px-2 py-2">
           {MOBILE_NAV.map(({ label, href, icon: Icon }) => {
             const isActive =
-              href === "/" ? pathname === "/" : pathname.startsWith(href);
+              isMounted &&
+              (href === "/"
+                ? pathname === "/"
+                : pathname === href || pathname.startsWith(`${href}/`));
             return (
               <Link
                 key={label}
