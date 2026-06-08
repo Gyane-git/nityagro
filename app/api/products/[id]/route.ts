@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { refreshLocalStockFromOms } from "@/lib/omsStock";
+import { applyOmsPriceOverlay, fetchOmsProductPrices } from "@/lib/omsProductPrices";
 import { NextResponse } from "next/server";
 
 const corsHeaders = {
@@ -71,12 +72,22 @@ export async function GET(
         return new Map<string, number>();
       },
     );
+    const livePrices = await fetchOmsProductPrices([category.productCode]).catch(
+      (error) => {
+        console.warn("Live OMS price refresh for product API failed", error);
+        return new Map<string, { actualPrice?: number; sellingPrice?: number }>();
+      },
+    );
     const liveQuantity = liveStock.get(category.productCode);
+    const withPrice = applyOmsPriceOverlay(
+      category,
+      livePrices.get(category.productCode),
+    );
     const data =
       liveQuantity === undefined
-        ? category
+        ? withPrice
         : {
-            ...category,
+            ...withPrice,
             stockQuantity: BigInt(liveQuantity),
             availableQuantity: BigInt(liveQuantity),
             omsAvailableQty: liveQuantity,

@@ -110,6 +110,15 @@ const emptyForm: EditForm = {
   categoryStatus: false,
 };
 
+function readOmsNumber(...values: unknown[]) {
+  for (const value of values) {
+    if (value === undefined || value === null || value === "") continue;
+    const parsed = Number(value);
+    if (Number.isFinite(parsed) && parsed >= 0) return parsed;
+  }
+  return 0;
+}
+
 export default function CategoriesListPage() {
   const openConfirm = useConfirmModalStore((state) => state.open);
 
@@ -214,8 +223,18 @@ export default function CategoriesListPage() {
             storageInstruction: null,
             pImage: null,
             productStatus: false,
-            actualPrice: item.TradeRate,
-            sellingPrice: item.MRP,
+            actualPrice: readOmsNumber(
+              item.TradeRate,
+              (item as Record<string, unknown>).tradeRate,
+              (item as Record<string, unknown>).trade_rate,
+              item.BuyRate,
+            ),
+            sellingPrice: readOmsNumber(
+              item.MRP,
+              (item as Record<string, unknown>).mrp,
+              item.SalesRate,
+              (item as Record<string, unknown>).salesRate,
+            ),
             deliveryTargetDays: null,
           };
           return acc;
@@ -231,7 +250,12 @@ export default function CategoriesListPage() {
             subGroupName: String(item.SubGroupName || "").trim(),
             variationName: String(item.PDesc || "").trim(),
            // salesRate: item.SalesRate,
-            MRP: item.MRP,
+            MRP: readOmsNumber(
+              item.MRP,
+              (item as Record<string, unknown>).mrp,
+              (item as Record<string, unknown>).SalesRate,
+              (item as Record<string, unknown>).salesRate,
+            ),
           };
           return acc;
         }, {} as Record<string, SubGroupSyncPayload>),

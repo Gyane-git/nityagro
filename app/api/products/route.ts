@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { refreshLocalStockFromOms } from "@/lib/omsStock";
+import { applyOmsPriceOverlay, fetchOmsProductPrices } from "@/lib/omsProductPrices";
 import { getPublicUploadDir } from "@/lib/uploadPaths";
 import { NextResponse } from "next/server";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -141,11 +142,21 @@ export async function GET() {
       console.warn("Live OMS stock overlay failed", error);
       return new Map<string, number>();
     });
+    const livePriceByCode = await fetchOmsProductPrices(
+      productGroupWise.map((product) => product.productCode),
+    ).catch((error) => {
+      console.warn("Live OMS price overlay failed", error);
+      return new Map<string, { actualPrice?: number; sellingPrice?: number }>();
+    });
     const rows = productGroupWise.map((product) => {
       const liveStock = liveStockByCode.get(product.productCode);
-      if (liveStock === undefined) return product;
+      const withPrice = applyOmsPriceOverlay(
+        product,
+        livePriceByCode.get(product.productCode),
+      );
+      if (liveStock === undefined) return withPrice;
       return {
-        ...product,
+        ...withPrice,
         stockQuantity: liveStock,
         availableQuantity: liveStock,
         omsAvailableQty: liveStock,
@@ -265,8 +276,23 @@ export async function POST(req: Request) {
       const nextCategoryId = normalizeText(item.categoryId);
       const nextProductName = normalizeText(item.productName);
       const nextSubGroupName = normalizeText(item.subGroupName) || null;
-      const nextActualPrice = Number(item.actualPrice ?? 0);
-      const nextSellingPrice = Number(item.sellingPrice ?? 0);
+      const source = item as ProductDTO & Record<string, unknown>;
+      const nextActualPrice = Number(
+        source.actualPrice ??
+          source.TradeRate ??
+          source.tradeRate ??
+          source.trade_rate ??
+          source.BuyRate ??
+          0,
+      );
+      const nextSellingPrice = Number(
+        source.sellingPrice ??
+          source.MRP ??
+          source.mrp ??
+          source.SalesRate ??
+          source.salesRate ??
+          0,
+      );
       const nextDeliveryTargetDays = item.deliveryTargetDays !== undefined && item.deliveryTargetDays !== null ? nullableBigInt(item.deliveryTargetDays) : null;
       const nextStockQuantity = item.stockQuantity !== undefined && item.stockQuantity !== null ? nullableBigInt(item.stockQuantity) : null;
       const nextAvailableQuantity = item.availableQuantity !== undefined && item.availableQuantity !== null ? nullableBigInt(item.availableQuantity) : null;
