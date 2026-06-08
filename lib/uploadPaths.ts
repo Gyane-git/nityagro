@@ -6,16 +6,22 @@ const PUBLIC_UPLOAD_ROOT_ENV_KEYS = [
   "PUBLIC_ASSET_DIR",
 ];
 
-export function getPublicUploadDir(...segments: string[]) {
-  const configuredRoot =
-    process.env.NODE_ENV === "production"
-      ? PUBLIC_UPLOAD_ROOT_ENV_KEYS.map((key) => process.env[key]?.trim()).find(
-          Boolean,
-        )
-      : null;
+const DEFAULT_PRODUCTION_PUBLIC_UPLOAD_ROOT = "/var/www/nityagro/public";
 
-  if (configuredRoot) {
-    return path.join(configuredRoot, ...segments);
+export function getPublicUploadDir(...segments: string[]) {
+  const isProduction = process.env.NODE_ENV === "production";
+  const configuredRoot = isProduction
+    ? PUBLIC_UPLOAD_ROOT_ENV_KEYS.map((key) => process.env[key]?.trim()).find(
+        Boolean,
+      )
+    : null;
+
+  if (configuredRoot || isProduction) {
+    return path.join(
+      /* turbopackIgnore: true */ configuredRoot ||
+        DEFAULT_PRODUCTION_PUBLIC_UPLOAD_ROOT,
+      ...segments,
+    );
   }
 
   return path.join(
