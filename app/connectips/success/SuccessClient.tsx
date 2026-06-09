@@ -45,12 +45,19 @@ export default function SuccessClient() {
           `connectips_intent_${referenceId}`
         );
         const intent = intentRaw ? JSON.parse(intentRaw) : null;
-        const txnAmt =
-          txnAmtFromQuery ||
-          Number(intent?.connectIpsAmount || 0) ||
-          Math.round(Number(intent?.amount || 0) * 100);
+        const amountCandidates = Array.from(
+          new Set(
+            [
+              txnAmtFromQuery,
+              Number(intent?.gatewayAmount || 0),
+              Number(intent?.validationPaisaAmount || 0),
+              Number(intent?.amount || 0),
+              Math.round(Number(intent?.amount || 0) * 100),
+            ].filter((value) => Number.isFinite(value) && value > 0),
+          ),
+        );
 
-        if (!txnAmt) {
+        if (!amountCandidates.length) {
           setResult({
             status: "error",
             message: "Missing transaction amount for verification.",
@@ -58,22 +65,26 @@ export default function SuccessClient() {
           return;
         }
 
-        const validateRes = await fetch("/connectips/validate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            REFERENCEID: referenceId,
-            TXNID: txnId || referenceId,
-            TXNAMT: txnAmt,
-          }),
-        });
-        const validateData: ValidationResponse = await validateRes.json().catch(() => ({}));
-        const validateStatus = String(validateData?.status || "").toUpperCase();
-        let paymentVerified = validateRes.ok && validateStatus === "SUCCESS";
+        let paymentVerified = false;
+        let validateData: ValidationResponse = {};
+        let detailsData: ValidationResponse = {};
 
-        // Live gateways sometimes fail validate endpoint despite successful debit.
-        // Fallback to gettxndetail and accept known success credit statuses.
-        if (!paymentVerified) {
+        for (const txnAmt of amountCandidates) {
+          const validateRes = await fetch("/connectips/validate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              REFERENCEID: referenceId,
+              TXNID: txnId || referenceId,
+              TXNAMT: txnAmt,
+            }),
+          });
+          validateData = await validateRes.json().catch(() => ({}));
+          const validateStatus = String(validateData?.status || "").toUpperCase();
+          paymentVerified = validateRes.ok && validateStatus === "SUCCESS";
+
+          if (paymentVerified) break;
+
           const detailsRes = await fetch("/connectips/get_details", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -83,7 +94,7 @@ export default function SuccessClient() {
               TXNAMT: txnAmt,
             }),
           });
-          const detailsData: ValidationResponse = await detailsRes.json().catch(() => ({}));
+          detailsData = await detailsRes.json().catch(() => ({}));
           const detailsStatus = String(detailsData?.status || "").toUpperCase();
           const creditStatus = String(detailsData?.creditStatus || "").toUpperCase();
           paymentVerified =
@@ -93,16 +104,18 @@ export default function SuccessClient() {
               creditStatus === "999" ||
               creditStatus === "DEFER");
 
-          if (!paymentVerified) {
-            setResult({
-              status: "error",
-              message:
-                validateData?.statusDesc ||
-                detailsData?.statusDesc ||
-                "Payment validation failed at bank.",
-            });
-            return;
-          }
+          if (paymentVerified) break;
+        }
+
+        if (!paymentVerified) {
+          setResult({
+            status: "error",
+            message:
+              validateData?.statusDesc ||
+              detailsData?.statusDesc ||
+              "Payment validation failed at bank.",
+          });
+          return;
         }
 
         if (!intent?.addressId || !Array.isArray(intent?.items) || !intent.items.length) {

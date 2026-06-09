@@ -263,12 +263,14 @@ export default function CheckoutPaymentPage() {
 
       const txnId = String(initData.txnId || "");
       const referenceId = String(initData.referenceId || "");
-      const connectIpsAmount = Number(initData.connectIpsAmount || 0);
+      const gatewayAmount = Number(initData.gatewayAmount || initData.orderAmount || amount);
+      const validationPaisaAmount = Number(initData.validationPaisaAmount || 0);
       const intent = {
         txnId,
         referenceId,
         amount,
-        connectIpsAmount,
+        gatewayAmount,
+        validationPaisaAmount,
         addressId: Number(selectedAddress.id),
         address: selectedAddress,
         userId: Number.isFinite(parsedUserId) && parsedUserId > 0 ? parsedUserId : 1,

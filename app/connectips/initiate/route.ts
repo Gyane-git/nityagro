@@ -29,11 +29,6 @@ function normalizeAmount(amount: number) {
   return Number.isInteger(fixed) ? String(Math.trunc(fixed)) : String(fixed);
 }
 
-function normalizeConnectIpsAmount(amount: number) {
-  // ConnectIPS gateway expects TXNAMT in paisa. Example: NPR 630 => 63000.
-  return String(Math.round(Number(amount || 0) * 100));
-}
-
 function hasShippingAddress(address: any) {
   if (!address) return false;
   return Boolean(
@@ -99,7 +94,9 @@ export async function POST(req: Request) {
     const TXNID = `NGTXN${Date.now()}`;
     const REFERENCEID = `NGREF${Date.now()}`;
     const ORDERAMT = normalizeAmount(amount);
-    const TXNAMT = normalizeConnectIpsAmount(amount);
+    // Gateway login documentation shows TXNAMT in rupees (e.g. 500), while
+    // some validation docs mention paisa. Keep gateway post doc-exact here.
+    const TXNAMT = ORDERAMT;
     const TXNDATE = nowTxnDate();
     const REMARKS = "Nityagro order payment";
     const PARTICULARS = "Nityagro checkout";
@@ -146,7 +143,8 @@ export async function POST(req: Request) {
         appName: APPNAME,
         txnDate: TXNDATE,
         orderAmount: ORDERAMT,
-        connectIpsTxnAmount: TXNAMT,
+        gatewayTxnAmount: TXNAMT,
+        validationPaisaAmount: String(Math.round(amount * 100)),
         signingText: [
           `MERCHANTID=${Number(MERCHANTID)}`,
           `APPID=${APPID}`,
@@ -171,7 +169,8 @@ export async function POST(req: Request) {
       txnId: TXNID,
       referenceId: REFERENCEID,
       orderAmount: ORDERAMT,
-      connectIpsAmount: TXNAMT,
+      gatewayAmount: TXNAMT,
+      validationPaisaAmount: String(Math.round(amount * 100)),
       payload: {
         MERCHANTID: Number(MERCHANTID),
         APPID,
