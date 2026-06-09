@@ -29,6 +29,14 @@ function normalizeAmount(amount: number) {
   return Number.isInteger(fixed) ? String(Math.trunc(fixed)) : String(fixed);
 }
 
+function normalizeConnectIpsAmount(amount: number) {
+  return String(Math.round(Number(amount || 0) * 100));
+}
+
+function fitField(value: string, maxLength: number) {
+  return String(value || "").trim().slice(0, maxLength);
+}
+
 function hasShippingAddress(address: any) {
   if (!address) return false;
   return Boolean(
@@ -72,8 +80,10 @@ export async function POST(req: Request) {
     const APPID = unwrap(
       process.env.CONNECTIPS_APPID || process.env.NEXT_PUBLIC_CONNECTIPS_APPID,
     );
-    const APPNAME =
-      unwrap(process.env.NEXT_PUBLIC_CONNECTIPS_APPNAME) || "NITYAGRO";
+    const APPNAME = fitField(
+      unwrap(process.env.NEXT_PUBLIC_CONNECTIPS_APPNAME) || "NITYAGRO",
+      30,
+    );
     const GATEWAY_URL = unwrap(process.env.NEXT_PUBLIC_CONNECTIPS_API_URL);
     const HOSTNAME = unwrap(process.env.NEXT_PUBLIC_HOSTNAME) || new URL(req.url).origin;
 
@@ -91,15 +101,14 @@ export async function POST(req: Request) {
       );
     }
 
-    const TXNID = `NGTXN${Date.now()}`;
-    const REFERENCEID = `NGREF${Date.now()}`;
+    const uniqueSuffix = Date.now().toString().slice(-15);
+    const TXNID = fitField(`NG${uniqueSuffix}`, 20);
+    const REFERENCEID = fitField(`RF${uniqueSuffix}`, 20);
     const ORDERAMT = normalizeAmount(amount);
-    // Gateway login documentation shows TXNAMT in rupees (e.g. 500), while
-    // some validation docs mention paisa. Keep gateway post doc-exact here.
-    const TXNAMT = ORDERAMT;
+    const TXNAMT = normalizeConnectIpsAmount(amount);
     const TXNDATE = nowTxnDate();
-    const REMARKS = "Nityagro order payment";
-    const PARTICULARS = "Nityagro checkout";
+    const REMARKS = fitField("Nityagro order payment", 50);
+    const PARTICULARS = fitField("Nityagro checkout", 100);
     const SUCCESS_URL = `${HOSTNAME}/connectips/success`;
     const FAILURE_URL = `${HOSTNAME}/connectips/failure`;
 
@@ -144,7 +153,15 @@ export async function POST(req: Request) {
         txnDate: TXNDATE,
         orderAmount: ORDERAMT,
         gatewayTxnAmount: TXNAMT,
-        validationPaisaAmount: String(Math.round(amount * 100)),
+        validationPaisaAmount: TXNAMT,
+        fieldLengths: {
+          appName: APPNAME.length,
+          txnId: TXNID.length,
+          referenceId: REFERENCEID.length,
+          remarks: REMARKS.length,
+          particulars: PARTICULARS.length,
+          token: TOKEN.length,
+        },
         signingText: [
           `MERCHANTID=${Number(MERCHANTID)}`,
           `APPID=${APPID}`,
@@ -170,7 +187,7 @@ export async function POST(req: Request) {
       referenceId: REFERENCEID,
       orderAmount: ORDERAMT,
       gatewayAmount: TXNAMT,
-      validationPaisaAmount: String(Math.round(amount * 100)),
+      validationPaisaAmount: TXNAMT,
       payload: {
         MERCHANTID: Number(MERCHANTID),
         APPID,
