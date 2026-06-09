@@ -342,7 +342,7 @@ export default function Header() {
       <nav className="w-full bg-white" style={{ width: "100%", boxSizing: "border-box" }}>
         <div className="w-full max-w-360 mx-auto h-14 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
           {/* ── Left: Logo + Browse ── */}
-          <div className="flex flex-1 justify-between items-center min-w-0">
+          <div className="flex flex-1 items-center gap-6 lg:gap-10 min-w-0">
             <div className="flex items-center gap-3 lg:gap-6 shrink-0 ">
               <Link href="/" className="flex items-center">
                 <Image src="/logo.png" alt="Nityagro" width={110} height={40} className="object-contain w-22.5 sm:w-27.5" />
@@ -373,11 +373,11 @@ export default function Header() {
 
             {/* ── Center: Nav links (desktop only) ── */}
             {searchOpen ? (
-              <div className="hidden lg:flex flex-1 max-w-160 ml-6">
+              <div className="hidden lg:flex flex-1 max-w-160">
                 <SearchBar onClose={() => setSearchOpen(false)} />
               </div>
             ) : (
-              <div className="hidden lg:flex items-center gap-7 xl:gap-9">
+              <div className="hidden lg:flex items-center justify-start gap-7 xl:gap-9">
                 {NAV_LINKS.map((link) => (
                   <div key={link.label} className="relative flex items-center" ref={link.hasDropdown ? methodsRef : undefined}>
                     {link.hasDropdown ? (
