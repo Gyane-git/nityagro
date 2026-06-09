@@ -256,7 +256,7 @@ export default function Footer() {
 
                   {/* Bottom bar */}
                   <div className="flex flex-col md:flex-row items-center justify-between gap-4 py-4 text-white text-sm font-normal text-sm">
-                    <p>©️ 2022, Nityagro - All rights reserved</p>
+                    <p>©️ {new Date().getFullYear()}, Nityagro - All rights reserved</p>
                     <div className="flex items-center gap-4">
                       <span className="font-normal text-sm">Follow Us</span>
                       <div className="flex gap-3">
