@@ -56,7 +56,7 @@ const resolvePfxPath = (): string => {
     return fromProjectRoot("signatures", fileName);
   }
 
-  const candidates = ["BKGROUP.pfx", "BKGROUP.pfx"];
+  const candidates = ["CREDITOR.pfx", "BKGROUP.pfx"];
   for (const candidate of candidates) {
     const candidatePath = fromProjectRoot("signatures", candidate);
     if (fs.existsSync(candidatePath)) {
@@ -64,7 +64,7 @@ const resolvePfxPath = (): string => {
     }
   }
 
-  return fromProjectRoot("signatures", "BKGROUP.pfx");
+  return fromProjectRoot("signatures", "CREDITOR.pfx");
 };
 
 const readPkcs12WithPass = (pfxPath: string, password: string): string => {

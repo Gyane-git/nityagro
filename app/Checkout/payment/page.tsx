@@ -227,7 +227,10 @@ export default function CheckoutPaymentPage() {
       const normalizedItems = sourceItems.map((item) => ({
         id: Number(item.id),
         type: item.type,
-        comboProductId: Number(item.comboProductId || item.id),
+        comboProductId:
+          String(item.type || "").toLowerCase() === "combo" || Number(item.comboProductId || 0) > 0
+            ? Number(item.comboProductId || item.id)
+            : undefined,
         qty: Math.max(1, Number(item.qty ?? 1)),
         unitPrice: Number(item.unitPrice ?? item.total ?? 0),
         total: Number(item.total ?? item.unitPrice ?? 0),

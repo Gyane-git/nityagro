@@ -88,8 +88,8 @@ export async function POST(req: Request) {
 
     const isComboCheckout = items.every(
       (item) =>
-        String(item?.type || "").toLowerCase() === "combo" ||
-        Number(item?.comboProductId || 0) > 0,
+        String(item?.type || "").toLowerCase() === "combo" &&
+        Number(item?.comboProductId || item?.id || 0) > 0,
     );
 
     if (isComboCheckout) {
