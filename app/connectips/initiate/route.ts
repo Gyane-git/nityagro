@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { generateConnectIPSToken } from "@/lib/connectipsToken";
+import { logConnectIPSDebug } from "@/lib/connectipsDebug";
 
 const CURRENCY = "NPR";
 
@@ -26,6 +27,11 @@ function nowTxnDate() {
 function normalizeAmount(amount: number) {
   const fixed = Number(amount.toFixed(2));
   return Number.isInteger(fixed) ? String(Math.trunc(fixed)) : String(fixed);
+}
+
+function normalizeConnectIpsAmount(amount: number) {
+  // ConnectIPS gateway expects TXNAMT in paisa. Example: NPR 630 => 63000.
+  return String(Math.round(Number(amount || 0) * 100));
 }
 
 function hasShippingAddress(address: any) {
@@ -92,7 +98,8 @@ export async function POST(req: Request) {
 
     const TXNID = `NGTXN${Date.now()}`;
     const REFERENCEID = `NGREF${Date.now()}`;
-    const TXNAMT = normalizeAmount(amount);
+    const ORDERAMT = normalizeAmount(amount);
+    const TXNAMT = normalizeConnectIpsAmount(amount);
     const TXNDATE = nowTxnDate();
     const REMARKS = "Nityagro order payment";
     const PARTICULARS = "Nityagro checkout";
@@ -127,10 +134,44 @@ export async function POST(req: Request) {
       "TOKEN",
     ]);
 
+    await logConnectIPSDebug({
+      step: "initiate:payload_ready",
+      referenceId: REFERENCEID,
+      txnId: TXNID,
+      data: {
+        gatewayUrl: GATEWAY_URL,
+        hostname: HOSTNAME,
+        merchantId: MERCHANTID,
+        appId: APPID,
+        appName: APPNAME,
+        txnDate: TXNDATE,
+        orderAmount: ORDERAMT,
+        connectIpsTxnAmount: TXNAMT,
+        signingText: [
+          `MERCHANTID=${Number(MERCHANTID)}`,
+          `APPID=${APPID}`,
+          `APPNAME=${APPNAME}`,
+          `TXNID=${TXNID}`,
+          `TXNDATE=${TXNDATE}`,
+          `TXNCRNCY=${CURRENCY}`,
+          `TXNAMT=${TXNAMT}`,
+          `REFERENCEID=${REFERENCEID}`,
+          `REMARKS=${REMARKS}`,
+          `PARTICULARS=${PARTICULARS}`,
+          "TOKEN=TOKEN",
+        ].join(","),
+        formFields: "MERCHANTID,APPID,APPNAME,TXNID,TXNDATE,TXNCRNCY,TXNAMT,REFERENCEID,REMARKS,PARTICULARS,TOKEN",
+        signatureLength: TOKEN.length,
+      },
+    });
+
     return NextResponse.json({
       success: true,
       gatewayUrl: GATEWAY_URL,
+      txnId: TXNID,
       referenceId: REFERENCEID,
+      orderAmount: ORDERAMT,
+      connectIpsAmount: TXNAMT,
       payload: {
         MERCHANTID: Number(MERCHANTID),
         APPID,
@@ -143,15 +184,15 @@ export async function POST(req: Request) {
         REMARKS,
         PARTICULARS,
         TOKEN,
-        SUCCESS: SUCCESS_URL,
-        FAILURE: FAILURE_URL,
-        SUCCESSURL: SUCCESS_URL,
-        FAILUREURL: FAILURE_URL,
       },
     });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to initialize ConnectIPS";
+    await logConnectIPSDebug({
+      step: "initiate:error",
+      data: { message },
+    });
     return NextResponse.json(
       {
         success: false,

@@ -16,12 +16,12 @@ type ValidationResponse = {
 export default function SuccessClient() {
   const searchParams = useSearchParams();
   const txnId = searchParams.get("TXNID") || "";
-  const referenceId =
+  const gatewayReferenceId =
     searchParams.get("REFERENCEID") ||
     searchParams.get("REFID") ||
     searchParams.get("OID") ||
-    txnId ||
     "";
+  const referenceId = txnId || gatewayReferenceId;
   const txnAmtFromQuery = Number(searchParams.get("TXNAMT") || 0);
 
   const [result, setResult] = useState<{
@@ -45,7 +45,10 @@ export default function SuccessClient() {
           `connectips_intent_${referenceId}`
         );
         const intent = intentRaw ? JSON.parse(intentRaw) : null;
-        const txnAmt = txnAmtFromQuery || Number(intent?.amount || 0);
+        const txnAmt =
+          txnAmtFromQuery ||
+          Number(intent?.connectIpsAmount || 0) ||
+          Math.round(Number(intent?.amount || 0) * 100);
 
         if (!txnAmt) {
           setResult({
@@ -60,6 +63,7 @@ export default function SuccessClient() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             REFERENCEID: referenceId,
+            TXNID: txnId || referenceId,
             TXNAMT: txnAmt,
           }),
         });
@@ -75,6 +79,7 @@ export default function SuccessClient() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               REFERENCEID: referenceId,
+              TXNID: txnId || referenceId,
               TXNAMT: txnAmt,
             }),
           });

@@ -16,9 +16,19 @@ type CheckoutSourceItem = {
   type?: string;
   comboProductId?: number;
   qty?: number;
+  price?: number;
   unitPrice?: number;
   total?: number;
   name?: string;
+};
+
+const getLineTotal = (item: CheckoutSourceItem) => {
+  const qty = Math.max(1, Number(item.qty ?? 1));
+  const explicitTotal = Number(item.total ?? 0);
+  if (Number.isFinite(explicitTotal) && explicitTotal > 0) return explicitTotal;
+
+  const unitPrice = Number(item.unitPrice ?? item.price ?? 0);
+  return Number.isFinite(unitPrice) ? unitPrice * qty : 0;
 };
 
 function FullScreenPaymentLoader({ paymentMethod }: { paymentMethod: string }) {
@@ -117,7 +127,7 @@ export default function CheckoutPaymentPage() {
   }, [setAddressesFromServer]);
 
   const getTotalAmount = (sourceItems: CheckoutSourceItem[]) => {
-    const itemTotal = sourceItems.reduce((sum, item) => sum + Number(item.total ?? item.unitPrice ?? 0), 0);
+    const itemTotal = sourceItems.reduce((sum, item) => sum + getLineTotal(item), 0);
     return Number((itemTotal + deliveryCharge).toFixed(2));
   };
 
@@ -225,6 +235,11 @@ export default function CheckoutPaymentPage() {
       }));
 
       const amount = getTotalAmount(sourceItems);
+      if (amount < 10) {
+        toast.error("ConnectIPS payment amount must be at least NPR 10. Please check cart total.");
+        return;
+      }
+
       const initRes = await fetch("/connectips/initiate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -243,20 +258,28 @@ export default function CheckoutPaymentPage() {
         return;
       }
 
+      const txnId = String(initData.txnId || "");
       const referenceId = String(initData.referenceId || "");
-      if (referenceId) {
-        window.sessionStorage.setItem(
-          `connectips_intent_${referenceId}`,
-          JSON.stringify({
-            referenceId,
-            amount,
-            addressId: Number(selectedAddress.id),
-            address: selectedAddress,
-            userId: Number.isFinite(parsedUserId) && parsedUserId > 0 ? parsedUserId : 1,
-            items: normalizedItems,
-          }),
-        );
-        window.sessionStorage.setItem("connectips_last_reference", referenceId);
+      const connectIpsAmount = Number(initData.connectIpsAmount || 0);
+      const intent = {
+        txnId,
+        referenceId,
+        amount,
+        connectIpsAmount,
+        addressId: Number(selectedAddress.id),
+        address: selectedAddress,
+        userId: Number.isFinite(parsedUserId) && parsedUserId > 0 ? parsedUserId : 1,
+        items: normalizedItems,
+      };
+      if (txnId || referenceId) {
+        const serializedIntent = JSON.stringify(intent);
+        if (txnId) {
+          window.sessionStorage.setItem(`connectips_intent_${txnId}`, serializedIntent);
+          window.sessionStorage.setItem("connectips_last_reference", txnId);
+        }
+        if (referenceId) {
+          window.sessionStorage.setItem(`connectips_intent_${referenceId}`, serializedIntent);
+        }
       }
 
       const gatewayUrl = String(initData.gatewayUrl || "").trim();

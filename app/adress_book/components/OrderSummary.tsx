@@ -9,6 +9,22 @@ type OrderSummaryProps = {
   processing?: boolean;
 };
 
+type SummaryItem = {
+  qty?: number;
+  price?: number;
+  unitPrice?: number;
+  total?: number;
+};
+
+const getLineTotal = (item: SummaryItem) => {
+  const qty = Math.max(1, Number(item.qty ?? 1));
+  const explicitTotal = Number(item.total ?? 0);
+  if (Number.isFinite(explicitTotal) && explicitTotal > 0) return explicitTotal;
+
+  const unitPrice = Number(item.unitPrice ?? item.price ?? 0);
+  return Number.isFinite(unitPrice) ? unitPrice * qty : 0;
+};
+
 export default function OrderSummary({ onProceed, processing = false }: OrderSummaryProps) {
   const router = useRouter();
   const checkoutItems = useCheckoutStore((state) => state.checkoutItems);
@@ -18,7 +34,7 @@ export default function OrderSummary({ onProceed, processing = false }: OrderSum
   const setDeliveryCharge = useCheckoutStore((state) => state.setDeliveryCharge);
   const [loadingDelivery, setLoadingDelivery] = useState(false);
   const sourceItems = checkoutItems.length > 0 ? checkoutItems : checkoutItem ? [checkoutItem] : [];
-  const itemTotal = sourceItems.reduce((sum: number, item: { total?: number; unitPrice?: number }) => sum + Number(item.total ?? item.unitPrice ?? 0), 0);
+  const itemTotal = sourceItems.reduce((sum: number, item: SummaryItem) => sum + getLineTotal(item), 0);
   const discount = 0;
   const totalAmount = itemTotal - discount + deliveryCharge;
   const chargeKey = useMemo(

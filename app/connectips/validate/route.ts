@@ -63,7 +63,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const referenceId = String(body.REFERENCEID || "").trim();
+    const referenceId = String(body.TXNID || body.REFERENCEID || "").trim();
     const txnAmt = Number(body.TXNAMT || 0);
     if (!referenceId || !Number.isFinite(txnAmt) || txnAmt <= 0) {
       return NextResponse.json(
