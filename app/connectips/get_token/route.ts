@@ -66,7 +66,7 @@ export async function POST(request: Request) {
       {
         success: false,
         message: isPasswordError
-          ? "PKCS12 certificate password is invalid (CREDITOR1.pfx)"
+          ? "PKCS12 certificate password is invalid (BKGROUP.pfx)"
           : "Unable to generate ConnectIPS token",
       },
       { status: 500 }

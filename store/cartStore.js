@@ -30,7 +30,15 @@ const useCartStore = create(
 
           if (existing) {
             const items = state.items.map((item) =>
-              item.id === product.id ? { ...item, qty: item.qty + (product.qty ?? 1) } : item
+              item.id === product.id
+                ? {
+                    ...item,
+                    qty: item.qty + (product.qty ?? 1),
+                    availableQuantity:
+                      product.availableQuantity ?? item.availableQuantity,
+                    stockQuantity: product.stockQuantity ?? item.stockQuantity,
+                  }
+                : item
             );
             return {
               items,

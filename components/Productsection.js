@@ -92,6 +92,8 @@ function ProductCard({ product }) {
       image: product.image,
       qty: 1,
       weight: "100 gm",
+      availableQuantity: Number(product.availableQuantity ?? product.stockQuantity ?? 0),
+      stockQuantity: Number(product.stockQuantity ?? product.availableQuantity ?? 0),
     };
     addToCart(item);
     await addCartToDb(item).catch(() => null);
@@ -200,6 +202,8 @@ export default function ProductSection() {
           discount: Number(item.actualPrice || 0) > Number(item.sellingPrice || 0) ? `SAVE\n${Math.round(((Number(item.actualPrice) - Number(item.sellingPrice)) / Number(item.actualPrice)) * 100)}%` : null,
           image: item.pImage || "/products/mustard-oil.png",
           createdAt: item.createdAt || null,
+          stockQuantity: Number(item.stockQuantity ?? item.availableQuantity ?? 0),
+          availableQuantity: Number(item.availableQuantity ?? item.stockQuantity ?? 0),
         }));
 
       setCategories([...DEFAULT_CATEGORIES, ...mappedCategories.filter((c) => c.id)]);
