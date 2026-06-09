@@ -1,16 +1,15 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { Search, X } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation";
-import { apiRequest } from "@/utils/ApiSafeCalls";
+import { useRouter } from "next/navigation";
+import { apiRequest } from "@/utils/ApisafeCalls";
 
-export default function SearchBar() {
+export default function SearchBar({ onClose }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [navloading, setNavLoading] = useState(false);
   const router = useRouter();
-  const pathname = usePathname();
   const timeoutRef = useRef(null);
   const wrapperRef = useRef(null); // ref for outside click
 
@@ -26,7 +25,7 @@ export default function SearchBar() {
         `/products/search?name=${encodeURIComponent(query)}&limit=10&offset=0`
       );
       if (res?.success) {
-        setSuggestions(res.products?.products || []);
+        setSuggestions(res.products?.products || res.data || []);
       } else {
         setSuggestions([]);
       }
@@ -74,9 +73,10 @@ export default function SearchBar() {
   const handleSearch = () => {
     if (searchTerm) {
       setNavLoading(true);
-      router.push(`/product?query=${searchTerm}`);
+      router.push(`/products?query=${encodeURIComponent(searchTerm)}`);
       setSearchTerm("");
       setSuggestions([]);
+      onClose?.();
       setNavLoading(false);
     }
   };
@@ -85,9 +85,11 @@ export default function SearchBar() {
   const handleSelect = (product) => {
     setSearchTerm("");
     setSuggestions([]);
-    if (product.product_code) {
+    const productId = product.productId || product.id;
+    if (productId) {
       setNavLoading(true);
-      router.push(`/dashboard/${product.product_code}`);
+      router.push(`/products/${productId}`);
+      onClose?.();
       setNavLoading(false);
     }
   };
@@ -101,12 +103,7 @@ export default function SearchBar() {
   }
 
   return (
-    <div
-      ref={wrapperRef}
-      className={`flex-1 relative ${
-        pathname === "/product" ? "md:hidden" : ""
-      }`}
-    >
+    <div ref={wrapperRef} className="flex-1 relative">
       {/* Input + buttons */}
       <div className="relative flex w-full mx-auto max-w-[210px] sm:max-w-lg">
         {/* Input field */}
@@ -116,17 +113,32 @@ export default function SearchBar() {
           onChange={(e) => setSearchTerm(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="What can we help you find?"
-          className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none text-sm sm:text-base pr-8"
+          className="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none text-sm sm:text-base pr-8 text-gray-900"
         />
 
         {/* Clear button (X) inside input */}
         {searchTerm && (
           <button
             onClick={() => {
-              setSearchTerm("");
-              setSuggestions([]);
+              if (searchTerm) {
+                setSearchTerm("");
+                setSuggestions([]);
+                return;
+              }
+              onClose?.();
             }}
             className="absolute right-15 top-1/2 -translate-y-1/2 text-gray-900 hover:text-gray-600 "
+            aria-label={searchTerm ? "Clear search" : "Close search"}
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
+
+        {!searchTerm && onClose && (
+          <button
+            onClick={onClose}
+            className="absolute right-15 top-1/2 -translate-y-1/2 text-gray-900 hover:text-gray-600"
+            aria-label="Close search"
           >
             <X className="w-4 h-4" />
           </button>
@@ -135,7 +147,7 @@ export default function SearchBar() {
         {/* Search button */}
         <button
           onClick={handleSearch}
-          className="bg-[#0072bc] text-white px-3 sm:px-4 py-2 flex items-center justify-center rounded-r-md hover:bg-[#005fa3] transition-colors"
+          className="bg-[#00462C] text-white px-3 sm:px-4 py-2 flex items-center justify-center rounded-r-md hover:bg-[#0b5a3b] transition-colors"
         >
           <Search className="w-[22px] h-[22px] sm:w-[26px] sm:h-[26px]" />
         </button>

@@ -9,15 +9,14 @@ import { useAuthModal } from "@/app/account/useAuthModal";
 import AuthModals from "@/app/account/AuthModals";
 import { apiGetRequest } from "@/apihelper/apiHelper";
 import toast from "react-hot-toast";
+import SearchBar from "@/components/SearchBar";
 
 /* ── Icons ── */
 const SearchIcon = () => (
-  <Link href="/search">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="11" cy="11" r="8" />
-      <line x1="21" y1="21" x2="16.65" y2="16.65" />
-    </svg>
-  </Link>
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="11" cy="11" r="8" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
 );
 
 const WishlistIcon = () => (
@@ -110,6 +109,7 @@ export default function Header() {
   const [promoIndex, setPromoIndex] = useState(0);
   const [authUser, setAuthUser] = useState(null);
   const [authReady, setAuthReady] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const auth = useAuthModal();
   const cartItems = useCartStore((state) => state.items);
@@ -342,7 +342,7 @@ export default function Header() {
       <nav className="w-full bg-white" style={{ width: "100%", boxSizing: "border-box" }}>
         <div className="w-full max-w-360 mx-auto h-14 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
           {/* ── Left: Logo + Browse ── */}
-          <div className="flex justify-between items-center">
+          <div className="flex flex-1 justify-between items-center min-w-0">
             <div className="flex items-center gap-3 lg:gap-6 shrink-0 ">
               <Link href="/" className="flex items-center">
                 <Image src="/logo.png" alt="Nityagro" width={110} height={40} className="object-contain w-22.5 sm:w-27.5" />
@@ -372,44 +372,61 @@ export default function Header() {
             </div>
 
             {/* ── Center: Nav links (desktop only) ── */}
-            <div className="hidden lg:flex items-center gap-7 xl:gap-9">
-              {NAV_LINKS.map((link) => (
-                <div key={link.label} className="relative flex items-center" ref={link.hasDropdown ? methodsRef : undefined}>
-                  {link.hasDropdown ? (
-                    <>
-                      <button onClick={() => setMethodsOpen(!methodsOpen)} className="flex items-center gap-1 text-[14px] font-semibold text-[#2D333A] hover:text-[#00462C] transition-colors">
-                        {link.label}
-                        <ChevronDownIcon />
-                      </button>
+            {searchOpen ? (
+              <div className="hidden lg:flex flex-1 max-w-160 ml-6">
+                <SearchBar onClose={() => setSearchOpen(false)} />
+              </div>
+            ) : (
+              <div className="hidden lg:flex items-center gap-7 xl:gap-9">
+                {NAV_LINKS.map((link) => (
+                  <div key={link.label} className="relative flex items-center" ref={link.hasDropdown ? methodsRef : undefined}>
+                    {link.hasDropdown ? (
+                      <>
+                        <button onClick={() => setMethodsOpen(!methodsOpen)} className="flex items-center gap-1 text-[14px] font-semibold text-[#2D333A] hover:text-[#00462C] transition-colors">
+                          {link.label}
+                          <ChevronDownIcon />
+                        </button>
 
-                      <div
-                        className={`absolute top-full left-0 mt-2 w-32 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50
+                        <div
+                          className={`absolute top-full left-0 mt-2 w-32 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50
                          origin-top transform-gpu transition-all duration-200 ease-out
                          ${methodsOpen ? "opacity-100 scale-y-100 translate-y-0 pointer-events-auto" : "opacity-0 scale-y-95 -translate-y-2 pointer-events-none"}`}
-                      >
-                        {link.childLinks.map((child) => (
-                          <Link key={child.label} href={`/methods/${child.slug}`} onClick={() => setMethodsOpen(false)} className="block px-5 py-3 text-[12px] text-[#00462C] hover:bg-[#F5F8F6]  transition border-b border-gray-300 last:border-b-0">
-                            {child.label}
-                          </Link>
-                        ))}
-                      </div>
-                    </>
-                  ) : (
-                    <a href={link.href} className="text-[14px] font-semibold text-[#2D333A] hover:text-[#00462C] transition-colors">
-                      {link.label}
-                    </a>
-                  )}
-                </div>
-              ))}
-            </div>
+                        >
+                          {link.childLinks.map((child) => (
+                            <Link key={child.label} href={`/methods/${child.slug}`} onClick={() => setMethodsOpen(false)} className="block px-5 py-3 text-[12px] text-[#00462C] hover:bg-[#F5F8F6]  transition border-b border-gray-300 last:border-b-0">
+                              {child.label}
+                            </Link>
+                          ))}
+                        </div>
+                      </>
+                    ) : (
+                      <a href={link.href} className="text-[14px] font-semibold text-[#2D333A] hover:text-[#00462C] transition-colors">
+                        {link.label}
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* ── Right: Icons ── */}
           <div>
             <div className="flex items-center gap-4 sm:gap-5 text-[#1a1a1a] shrink-0">
-              <button className="hover:text-[#00462C] transition-colors">
+              <button
+                className="hidden lg:block hover:text-[#00462C] transition-colors"
+                aria-label="Search"
+                onClick={() => {
+                  setMethodsOpen(false);
+                  setCategoryOpen(false);
+                  setSearchOpen(true);
+                }}
+              >
                 <SearchIcon className="text-[#266A3F]" />
               </button>
+              <Link href="/products" className="lg:hidden hover:text-[#00462C] transition-colors" aria-label="Search">
+                <SearchIcon className="text-[#266A3F]" />
+              </Link>
 
               {!authReady ? (
                 <span className="hidden lg:block h-7 w-18 rounded-md bg-gray-100" aria-hidden="true" />

@@ -55,8 +55,22 @@ function ProductsPageContent() {
 
         setProducts(mapped);
         setCategories(activeCategories);
+        const queryFromUrl = String(searchParams.get("query") || "").trim().toLowerCase();
         const categoryFromQuery = searchParams.get("category");
-        if (categoryFromQuery) {
+        if (queryFromUrl) {
+          setFilteredProducts(
+            mapped.filter((product) =>
+              [
+                product.name,
+                product.category,
+                String(product.id || ""),
+              ]
+                .join(" ")
+                .toLowerCase()
+                .includes(queryFromUrl),
+            ),
+          );
+        } else if (categoryFromQuery) {
           const selected = [categoryFromQuery];
           setSelectedCategories(selected);
           const preFiltered = mapped.filter((p) => selected.includes(p.category));
