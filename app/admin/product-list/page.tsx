@@ -107,6 +107,10 @@ export default function ProductListPage() {
     fetchProduct();
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, selectedCategory]);
+
   // Fetch Products
   const fetchProductVariant = async (productId: string) => {
     const variantToastId = toast.loading("Loading product variants...");
@@ -148,9 +152,11 @@ export default function ProductListPage() {
   });
 
   // Pagination
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / itemsPerPage));
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentItems = filteredProducts.slice(startIndex, startIndex + itemsPerPage);
+  const canGoPrevious = currentPage > 1;
+  const canGoNext = currentPage < totalPages;
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -199,7 +205,7 @@ export default function ProductListPage() {
           <tbody className="divide-y divide-gray-200">
             {currentItems.map((product, index) => (
               <tr key={product.productCode} className="hover:bg-green-100 text-sm text-gray-900 cursor-pointer">
-                <td className="p-1 text-center">{index + 1}</td>
+                <td className="p-1 text-center">{startIndex + index + 1}</td>
 
                 {/* Catalog */}
                 <td className="p-1 text-left">
@@ -280,13 +286,43 @@ export default function ProductListPage() {
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-6 gap-2">
+      {filteredProducts.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-3">
+          <p className="text-sm text-gray-600">
+            Showing <span className="font-semibold">{startIndex + 1}</span> to{" "}
+            <span className="font-semibold">{Math.min(startIndex + currentItems.length, filteredProducts.length)}</span> of{" "}
+            <span className="font-semibold">{filteredProducts.length}</span> products
+          </p>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              disabled={!canGoPrevious}
+              className={`px-4 py-2 rounded-lg text-sm font-medium border transition ${
+                canGoPrevious ? "bg-white text-gray-700 border-gray-300 hover:bg-gray-50" : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+              }`}
+            >
+              Previous
+            </button>
+
           {Array.from({ length: totalPages }, (_, i) => (
-            <button key={i} onClick={() => setCurrentPage(i + 1)} className={`px-4 py-2 rounded-lg font-medium transition ${currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"}`}>
+            <button key={i} onClick={() => setCurrentPage(i + 1)} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"}`}>
               {i + 1}
             </button>
           ))}
+
+            <button
+              type="button"
+              onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+              disabled={!canGoNext}
+              className={`px-4 py-2 rounded-lg text-sm font-medium border transition ${
+                canGoNext ? "bg-white text-gray-700 border-gray-300 hover:bg-gray-50" : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+              }`}
+            >
+              Next
+            </button>
+          </div>
         </div>
       )}
 
