@@ -1,23 +1,3 @@
-// import HeroSection from "./components/Herosection";
-// import Belief from "./components/Belief";
-// import OurVision from "./components/OurVision";
-// import OurApproach from "./components/OurApproach";
-// import Sustainability from "./components/Sustainability";
-// import ExploreMore from "./components/ExploreMore";
-
-// export default function philosophy() {
-//   return (
-//     <div>
-//       <HeroSection />
-//       <Belief />
-//       <OurVision />
-//       <OurApproach />
-//       <Sustainability />
-//       <ExploreMore />
-//     </div>
-//   );
-// }
-
 import { Suspense } from "react";
 
 import HeroSection from "./components/Herosection";

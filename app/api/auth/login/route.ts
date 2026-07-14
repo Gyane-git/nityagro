@@ -8,7 +8,9 @@ const ADMIN_ROLES = new Set(["ADMIN", "SUPER_ADMIN", "SUPERADMIN"]);
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function normalizeRole(role: string | null | undefined) {
-  return String(role || "customer").trim().toUpperCase();
+  return String(role || "customer")
+    .trim()
+    .toUpperCase();
 }
 
 function isAdminRole(role: string | null | undefined) {
@@ -16,13 +18,7 @@ function isAdminRole(role: string | null | undefined) {
   return ADMIN_ROLES.has(normalized) || normalized.includes("ADMIN");
 }
 
-function safeUser(user: {
-  userId: bigint;
-  name: string;
-  email: string;
-  role: string;
-  status: boolean;
-}) {
+function safeUser(user: { userId: bigint; name: string; email: string; role: string; status: boolean }) {
   const admin = isAdminRole(user.role);
 
   return {
@@ -39,20 +35,16 @@ function safeUser(user: {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const email = String(body?.email || "").trim().toLowerCase();
+    const email = String(body?.email || "")
+      .trim()
+      .toLowerCase();
     const password = String(body?.password || "");
 
     if (!EMAIL_REGEX.test(email)) {
-      return NextResponse.json(
-        { success: false, message: "Valid email is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ success: false, message: "Valid email is required" }, { status: 400 });
     }
     if (!password) {
-      return NextResponse.json(
-        { success: false, message: "Password is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ success: false, message: "Password is required" }, { status: 400 });
     }
 
     const user = await prisma.users.findUnique({
@@ -68,17 +60,11 @@ export async function POST(req: Request) {
     });
 
     if (!user || !verifyPassword(password, user.password)) {
-      return NextResponse.json(
-        { success: false, message: "Invalid email or password" },
-        { status: 401 },
-      );
+      return NextResponse.json({ success: false, message: "Invalid email or password" }, { status: 401 });
     }
 
     if (!user.status) {
-      return NextResponse.json(
-        { success: false, message: "Your account is inactive. Please contact support." },
-        { status: 403 },
-      );
+      return NextResponse.json({ success: false, message: "Your account is inactive. Please contact support." }, { status: 403 });
     }
 
     if (!isHashedPassword(user.password)) {
