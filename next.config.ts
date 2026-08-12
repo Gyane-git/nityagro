@@ -4,6 +4,7 @@ const nextConfig = {
     "nityagro.com",
     "www.nityagro.com",
     "localhost:3000",
+    "nityagro.globaltech.com.np",
   ],
 
   images: {
@@ -18,6 +19,17 @@ const nextConfig = {
         hostname: "www.nityagro.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "nityagro.globaltech.com.np",
+        pathname: "/**",
+      },
+        {
+        protocol: "https",
+        hostname: "www.nityagro.globaltech.com.np",
+        pathname: "/**",
+      },
+      
     ],
   },
 };
