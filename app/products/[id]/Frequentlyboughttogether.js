@@ -8,6 +8,7 @@ import useToastStore from "@/store/toastStore";
 import { apiGetRequest } from "@/apihelper/apiHelper";
 import { requireLoginForAction } from "@/utils/clientAuthGuard";
 import { addCartToDb } from "@/utils/accountListApi";
+import { normalizeImageSrc, shouldBypassNextImage } from "@/utils/staticImage";
 
 const CartIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -94,7 +95,7 @@ function ProductCard({ product }) {
       <Link href={`/products/${product.id}`} className="flex flex-col">
         {/* Image */}
         <div className="relative w-full bg-gray-50" style={{ height: "160px", flexShrink: 0 }}>
-          <Image src={product.image} alt={product.name} fill className="object-contain p-3" sizes="190px" />
+          <Image src={normalizeImageSrc(product.image, "/no-image.png")} alt={product.name} fill className="object-contain p-3" sizes="190px" unoptimized={shouldBypassNextImage(normalizeImageSrc(product.image, "/no-image.png"))} />
         </div>
 
         {/* Info */}

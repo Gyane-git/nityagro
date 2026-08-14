@@ -10,6 +10,7 @@ import useConfirmModalStore from "@/store/confirmModalStore";
 import Banner from "@/app/products/Banner";
 import { requireLoginForAction } from "@/utils/clientAuthGuard";
 import { addCartToDb, clearWishlistInDb, removeWishlistFromDb } from "@/utils/accountListApi";
+import { shouldBypassNextImage } from "@/utils/staticImage";
 
 const HeartIcon = ({ filled }) => (
   <svg
@@ -171,6 +172,7 @@ export default function WishlistPage() {
                       fill
                       className="object-contain p-3"
                       sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 20vw"
+                      unoptimized={shouldBypassNextImage(resolveImageUrl(item.image))}
                     />
                   </div>
 

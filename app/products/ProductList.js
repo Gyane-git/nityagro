@@ -9,6 +9,7 @@ import useToastStore from "@/store/toastStore";
 import useWishlistStore from "@/store/wishlistStore";
 import { requireLoginForAction } from "@/utils/clientAuthGuard";
 import { addCartToDb, addWishlistToDb, removeWishlistFromDb } from "@/utils/accountListApi";
+import { normalizeImageSrc, shouldBypassNextImage } from "@/utils/staticImage";
 
 // ─── Icons ─────────────────────────────────────────────────────────────────
 const CartIcon = () => (
@@ -159,7 +160,7 @@ function ProductCard({ product }) {
       <Link href={`/products/${product.id}`} className="flex flex-col flex-1 min-h-0">
         {/* Image */}
 
-        <div className="relative w-full aspect-4/3 bg-gray-50 flex items-center justify-center">{!error ? <Image src={product.image} alt={product.name} fill className="object-contain p-4" sizes="259px" onError={() => setError(true)} /> : <div className="text-gray-500 text-sm font-semibold text-center px-2">{product.name}</div>}</div>
+        <div className="relative w-full aspect-4/3 bg-gray-50 flex items-center justify-center">{!error ? <Image src={normalizeImageSrc(product.image, "/no-image.png")} alt={product.name} fill className="object-contain p-4" sizes="259px" unoptimized={shouldBypassNextImage(normalizeImageSrc(product.image, "/no-image.png"))} onError={() => setError(true)} /> : <div className="text-gray-500 text-sm font-semibold text-center px-2">{product.name}</div>}</div>
 
         {/* Info */}
         <div className="flex flex-col flex-1 px-3 pt-2.5 pb-3">

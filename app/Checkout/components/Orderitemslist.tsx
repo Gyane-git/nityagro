@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import useCheckoutStore from "@/store/checkoutStore";
+import { normalizeImageSrc, shouldBypassNextImage } from "@/utils/staticImage";
 
 interface OrderItem {
   id: number;
@@ -38,7 +39,7 @@ export default function OrderItemsList() {
     unitPrice: Number(item.unitPrice ?? 0),
     qty: Number(item.qty ?? 1),
     total: Number(item.total ?? item.unitPrice ?? 0),
-    image: item.image || "/products/mustard-oil.png",
+    image: normalizeImageSrc(item.image || "/products/mustard-oil.png", "/no-image.png"),
   }));
 
   return (
@@ -57,7 +58,7 @@ export default function OrderItemsList() {
             <div className="flex items-center gap-4 w-full sm:w-auto pe-2">
               {/* Product image */}
               <div className="relative w-[72px] h-[72px] shrink-0">
-                <Image width={170} height={170} src={item.image} alt={item.name} className="w-full h-full object-contain" />
+                <Image width={170} height={170} src={item.image} alt={item.name} className="w-full h-full object-contain" unoptimized={shouldBypassNextImage(item.image)} />
               </div>
 
               {/* Name + weight */}

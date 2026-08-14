@@ -6,6 +6,7 @@ import useCartStore from "@/store/cartStore";
 import useConfirmModalStore from "@/store/confirmModalStore";
 import useToastStore from "@/store/toastStore";
 import { clearCartInDb, removeCartFromDb, updateCartQtyInDb } from "@/utils/accountListApi";
+import { normalizeImageSrc, shouldBypassNextImage } from "@/utils/staticImage";
 
 // ─── Icons ───────────────────────────────────────────────────────────────────
 const TrashIcon = () => (
@@ -63,7 +64,7 @@ function CartRowDesktop({ item, checked, onCheck, onQtyChange, onRemove }) {
         <input type="checkbox" checked={checked} disabled={outOfStock} onChange={onCheck} className="w-4 h-4 rounded border-gray-300 flex-shrink-0 cursor-pointer disabled:cursor-not-allowed" style={{ accentColor: "#00462C" }} />
 
         <div className="relative flex-shrink-0 bg-gray-50 rounded-md border border-gray-100" style={{ width: "80px", height: "80px" }}>
-          <Image src={item.image} alt={item.name} fill className="object-contain p-2" sizes="80px" />
+          <Image src={normalizeImageSrc(item.image, "/no-image.png")} alt={item.name} fill className="object-contain p-2" sizes="80px" unoptimized={shouldBypassNextImage(normalizeImageSrc(item.image, "/no-image.png"))} />
         </div>
 
         <div className="flex flex-col gap-0.5 flex-1 min-w-0">
@@ -110,7 +111,7 @@ function CartRowMobile({ item, checked, onCheck, onQtyChange, onRemove }) {
 
         {/* Image */}
         <div className="relative flex-shrink-0 bg-gray-50 rounded-md border border-gray-100" style={{ width: "72px", height: "72px" }}>
-          <Image src={item.image} alt={item.name} fill className="object-contain p-1.5" sizes="72px" />
+          <Image src={normalizeImageSrc(item.image, "/no-image.png")} alt={item.name} fill className="object-contain p-1.5" sizes="72px" unoptimized={shouldBypassNextImage(normalizeImageSrc(item.image, "/no-image.png"))} />
         </div>
 
         {/* Info */}

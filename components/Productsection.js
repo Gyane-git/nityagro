@@ -9,6 +9,7 @@ import useWishlistStore from "@/store/wishlistStore";
 import { apiGetRequest } from "@/apihelper/apiHelper";
 import { requireLoginForAction } from "@/utils/clientAuthGuard";
 import { addCartToDb, addWishlistToDb, removeWishlistFromDb } from "@/utils/accountListApi";
+import { normalizeImageSrc, shouldBypassNextImage } from "@/utils/staticImage";
 
 // ─── Icons ─────────────────────────────────────────────────────────────────
 const CartIcon = () => (
@@ -145,7 +146,7 @@ function ProductCard({ product }) {
       <Link href={`/products/${product.id}`} className="flex flex-col">
         {/* Image — fixed height */}
         <div className="relative w-full bg-gray-50" style={{ height: "160px" }}>
-          <Image src={product.image} alt={product.name} fill className="object-contain p-3" sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 20vw" />
+          <Image src={product.image} alt={product.name} fill className="object-contain p-3" sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 20vw" unoptimized={shouldBypassNextImage(product.image)} />
         </div>
 
         {/* Info — fixed height keeps all cards uniform */}
@@ -183,7 +184,7 @@ export default function ProductSection() {
         .map((item) => ({
           id: (item.categoryName || "").trim().toLowerCase(),
           label: item.categoryName || "",
-          image: item.categoryLogo || "/categories/all.png",
+          image: normalizeImageSrc(item.categoryLogo, "/categories/all.png"),
         }));
 
       const productRows = Array.isArray(productResponse?.data) ? productResponse.data : [];
@@ -200,7 +201,7 @@ export default function ProductSection() {
             .toLowerCase(),
           badge: item.specialOffer ? "Special Offer" : null,
           discount: Number(item.actualPrice || 0) > Number(item.sellingPrice || 0) ? `SAVE\n${Math.round(((Number(item.actualPrice) - Number(item.sellingPrice)) / Number(item.actualPrice)) * 100)}%` : null,
-          image: item.pImage || "/products/mustard-oil.png",
+          image: normalizeImageSrc(item.pImage, "/products/mustard-oil.png"),
           createdAt: item.createdAt || null,
           stockQuantity: Number(item.stockQuantity ?? item.availableQuantity ?? 0),
           availableQuantity: Number(item.availableQuantity ?? item.stockQuantity ?? 0),
@@ -249,7 +250,7 @@ export default function ProductSection() {
               return (
                 <button key={id} onClick={() => setActiveCategory(id)} className="flex flex-col items-center relative transition-all shrink-0" style={{ minWidth: "52px" }}>
                   <div className="flex flex-col items-center justify-center cursor-pointer pb-2">
-                    <Image src={image} alt={label} width={50} height={51} className="sm:w-8 sm:h-10 w-6 h-8 " />
+                    <Image src={image} alt={label} width={50} height={51} className="sm:w-8 sm:h-10 w-6 h-8 " unoptimized={shouldBypassNextImage(image)} />
                     <span
                       className="text-xs font-medium mt-1 font-figtree"
                       style={{

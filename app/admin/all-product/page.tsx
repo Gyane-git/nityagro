@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { apiRequest } from "@/utils/ApisafeCalls";
+import { shouldBypassNextImage } from "@/utils/staticImage";
 
 interface Product {
   id: string;
@@ -327,7 +328,7 @@ export default function AllProductPage() {
                 <div key={product.id} onClick={() => router.push(`/all-product/${product.id}`)} className="group bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl hover:border-orange-200 transition-all duration-300 cursor-pointer">
                   {/* Image Container */}
                   <div className="relative aspect-square bg-gray-50 overflow-hidden">
-                    <Image src={resolveImageUrl(product.image)} alt={product.title} fill className="object-contain p-4 group-hover:scale-110 transition-transform duration-500" />
+                    <Image src={resolveImageUrl(product.image)} alt={product.title} fill className="object-contain p-4 group-hover:scale-110 transition-transform duration-500" unoptimized={shouldBypassNextImage(resolveImageUrl(product.image))} />
 
                     {/* Badges */}
                     <div className="absolute top-2 left-2 flex flex-col gap-1">
@@ -370,7 +371,7 @@ export default function AllProductPage() {
                   <div className="flex gap-6 p-6">
                     {/* Image */}
                     <div className="relative w-48 h-48 flex-shrink-0 bg-gray-50 rounded-xl overflow-hidden">
-                      <Image src={resolveImageUrl(product.image)} alt={product.title} fill className="object-contain p-4 group-hover:scale-110 transition-transform duration-500" />
+                      <Image src={resolveImageUrl(product.image)} alt={product.title} fill className="object-contain p-4 group-hover:scale-110 transition-transform duration-500" unoptimized={shouldBypassNextImage(resolveImageUrl(product.image))} />
 
                       {/* Badges */}
                       <div className="absolute top-2 left-2 flex flex-col gap-1">
