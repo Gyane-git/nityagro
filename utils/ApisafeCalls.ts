@@ -6,10 +6,18 @@ const API_BASE = (
   .trim()
   .replace(/\/$/, "");
 
+function withApiPrefix(path: string) {
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  return cleanPath.startsWith("/api/") ? cleanPath : `/api${cleanPath}`;
+}
+
 function resolveUrl(path: string) {
-  if (/^https?:\/\//i.test(path)) return path;
-  if (!API_BASE) return path;
-  return `${API_BASE}${path.startsWith("/") ? path : `/${path}`}`;
+  const cleanPath = path.trim();
+  if (/^https?:\/\//i.test(cleanPath)) return cleanPath;
+  const apiPath = withApiPrefix(cleanPath);
+  if (!API_BASE) return apiPath;
+  const baseWithApi = /\/api$/i.test(API_BASE) ? API_BASE : `${API_BASE}/api`;
+  return `${baseWithApi}${apiPath.replace(/^\/api/, "")}`;
 }
 
 export async function apiRequest(

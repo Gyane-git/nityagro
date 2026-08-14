@@ -6,11 +6,18 @@ const baseUrl = (
   .trim()
   .replace(/\/$/, "");
 
+const withApiPrefix = (url: string) => {
+  const cleanUrl = url.startsWith("/") ? url : `/${url}`;
+  return cleanUrl.startsWith("/api/") ? cleanUrl : `/api${cleanUrl}`;
+};
+
 const resolveUrl = (url: string) => {
   const cleanUrl = url.trim();
   if (/^https?:\/\//i.test(cleanUrl)) return cleanUrl;
-  if (!baseUrl) return cleanUrl;
-  return `${baseUrl}${cleanUrl.startsWith("/") ? cleanUrl : `/${cleanUrl}`}`;
+  const apiPath = withApiPrefix(cleanUrl);
+  if (!baseUrl) return apiPath;
+  const baseWithApi = /\/api$/i.test(baseUrl) ? baseUrl : `${baseUrl}/api`;
+  return `${baseWithApi}${apiPath.replace(/^\/api/, "")}`;
 };
 
 // Generic API response type
