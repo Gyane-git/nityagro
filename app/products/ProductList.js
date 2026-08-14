@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { ALL_PRODUCTS } from "./productsData";
@@ -9,7 +8,6 @@ import useToastStore from "@/store/toastStore";
 import useWishlistStore from "@/store/wishlistStore";
 import { requireLoginForAction } from "@/utils/clientAuthGuard";
 import { addCartToDb, addWishlistToDb, removeWishlistFromDb } from "@/utils/accountListApi";
-import { normalizeImageSrc, shouldBypassNextImage } from "@/utils/staticImage";
 
 // ─── Icons ─────────────────────────────────────────────────────────────────
 const CartIcon = () => (
@@ -45,6 +43,12 @@ const HeartIcon = ({ filled }) => (
 );
 
 const PER_PAGE = 8; // 4 cols × 2 rows visible
+
+const normalizeImageSrc = (src, fallback = "/no-image.png") => {
+  if (!src || typeof src !== "string") return fallback;
+  if (/^https?:\/\//i.test(src)) return src;
+  return src.startsWith("/") ? src : `/${src}`;
+};
 
 // ─── Star Rating ───────────────────────────────────────────────────────────
 function StarRating({ rating, reviews }) {
@@ -160,7 +164,7 @@ function ProductCard({ product }) {
       <Link href={`/products/${product.id}`} className="flex flex-col flex-1 min-h-0">
         {/* Image */}
 
-        <div className="relative w-full aspect-4/3 bg-gray-50 flex items-center justify-center">{!error ? <Image src={normalizeImageSrc(product.image, "/no-image.png")} alt={product.name} fill className="object-contain p-4" sizes="259px" unoptimized={shouldBypassNextImage(normalizeImageSrc(product.image, "/no-image.png"))} onError={() => setError(true)} /> : <div className="text-gray-500 text-sm font-semibold text-center px-2">{product.name}</div>}</div>
+        <div className="relative w-full aspect-4/3 bg-gray-50 flex items-center justify-center">{!error ? <img src={normalizeImageSrc(product.image, "/no-image.png")} alt={product.name} className="absolute inset-0 w-full h-full object-contain p-4" onError={() => setError(true)} /> : <div className="text-gray-500 text-sm font-semibold text-center px-2">{product.name}</div>}</div>
 
         {/* Info */}
         <div className="flex flex-col flex-1 px-3 pt-2.5 pb-3">

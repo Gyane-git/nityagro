@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import useCartStore from "@/store/cartStore";
@@ -8,7 +7,6 @@ import useToastStore from "@/store/toastStore";
 import { apiGetRequest } from "@/apihelper/apiHelper";
 import { requireLoginForAction } from "@/utils/clientAuthGuard";
 import { addCartToDb } from "@/utils/accountListApi";
-import { normalizeImageSrc, shouldBypassNextImage } from "@/utils/staticImage";
 
 const CartIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -23,6 +21,12 @@ const StarIcon = ({ filled }) => (
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
   </svg>
 );
+
+const normalizeImageSrc = (src, fallback = "/no-image.png") => {
+  if (!src || typeof src !== "string") return fallback;
+  if (/^https?:\/\//i.test(src)) return src;
+  return src.startsWith("/") ? src : `/${src}`;
+};
 
 function ProductCard({ product }) {
   const [added, setAdded] = useState(false);
@@ -95,7 +99,7 @@ function ProductCard({ product }) {
       <Link href={`/products/${product.id}`} className="flex flex-col">
         {/* Image */}
         <div className="relative w-full bg-gray-50" style={{ height: "160px", flexShrink: 0 }}>
-          <Image src={normalizeImageSrc(product.image, "/no-image.png")} alt={product.name} fill className="object-contain p-3" sizes="190px" unoptimized={shouldBypassNextImage(normalizeImageSrc(product.image, "/no-image.png"))} />
+          <img src={normalizeImageSrc(product.image, "/no-image.png")} alt={product.name} className="absolute inset-0 w-full h-full object-contain p-3" />
         </div>
 
         {/* Info */}

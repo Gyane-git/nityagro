@@ -1,8 +1,6 @@
 "use client";
 
-import Image from "next/image";
 import useCheckoutStore from "@/store/checkoutStore";
-import { normalizeImageSrc, shouldBypassNextImage } from "@/utils/staticImage";
 
 interface OrderItem {
   id: number;
@@ -16,6 +14,12 @@ interface OrderItem {
 
 function formatNPR(amount: number) {
   return `NPR ${amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+}
+
+function normalizeImageSrc(src: unknown, fallback = "/no-image.png") {
+  if (!src || typeof src !== "string") return fallback;
+  if (/^https?:\/\//i.test(src)) return src;
+  return src.startsWith("/") ? src : `/${src}`;
 }
 
 export default function OrderItemsList() {
@@ -58,7 +62,7 @@ export default function OrderItemsList() {
             <div className="flex items-center gap-4 w-full sm:w-auto pe-2">
               {/* Product image */}
               <div className="relative w-[72px] h-[72px] shrink-0">
-                <Image width={170} height={170} src={item.image} alt={item.name} className="w-full h-full object-contain" unoptimized={shouldBypassNextImage(item.image)} />
+                <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
               </div>
 
               {/* Name + weight */}

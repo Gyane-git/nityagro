@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect } from "react";
 import useWishlistStore from "@/store/wishlistStore";
@@ -10,7 +9,6 @@ import useConfirmModalStore from "@/store/confirmModalStore";
 import Banner from "@/app/products/Banner";
 import { requireLoginForAction } from "@/utils/clientAuthGuard";
 import { addCartToDb, clearWishlistInDb, removeWishlistFromDb } from "@/utils/accountListApi";
-import { shouldBypassNextImage } from "@/utils/staticImage";
 
 const HeartIcon = ({ filled }) => (
   <svg
@@ -166,13 +164,10 @@ export default function WishlistPage() {
 
                 <Link href={`/products/${item.id}`} className="flex flex-col">
                   <div className="relative w-full bg-gray-50" style={{ height: "160px" }}>
-                    <Image
+                    <img
                       src={resolveImageUrl(item.image)}
                       alt={item.name}
-                      fill
-                      className="object-contain p-3"
-                      sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 20vw"
-                      unoptimized={shouldBypassNextImage(resolveImageUrl(item.image))}
+                      className="absolute inset-0 w-full h-full object-contain p-3"
                     />
                   </div>
 

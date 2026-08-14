@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import useCartStore from "@/store/cartStore";
@@ -9,7 +8,6 @@ import useWishlistStore from "@/store/wishlistStore";
 import { apiGetRequest } from "@/apihelper/apiHelper";
 import { requireLoginForAction } from "@/utils/clientAuthGuard";
 import { addCartToDb, addWishlistToDb, removeWishlistFromDb } from "@/utils/accountListApi";
-import { normalizeImageSrc, shouldBypassNextImage } from "@/utils/staticImage";
 
 // ─── Icons ─────────────────────────────────────────────────────────────────
 const CartIcon = () => (
@@ -34,6 +32,12 @@ const HeartIcon = ({ filled }) => (
 
 // ─── Data ──────────────────────────────────────────────────────────────────
 const DEFAULT_CATEGORIES = [{ id: "all", label: "All", image: "/categories/all.png" }];
+
+const normalizeImageSrc = (src, fallback = "/no-image.png") => {
+  if (!src || typeof src !== "string") return fallback;
+  if (/^https?:\/\//i.test(src)) return src;
+  return src.startsWith("/") ? src : `/${src}`;
+};
 
 // ─── Star Rating ───────────────────────────────────────────────────────────
 function StarRating({ rating, reviews }) {
@@ -146,7 +150,7 @@ function ProductCard({ product }) {
       <Link href={`/products/${product.id}`} className="flex flex-col">
         {/* Image — fixed height */}
         <div className="relative w-full bg-gray-50" style={{ height: "160px" }}>
-          <Image src={product.image} alt={product.name} fill className="object-contain p-3" sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 20vw" unoptimized={shouldBypassNextImage(product.image)} />
+          <img src={product.image} alt={product.name} className="absolute inset-0 w-full h-full object-contain p-3" />
         </div>
 
         {/* Info — fixed height keeps all cards uniform */}
@@ -250,7 +254,7 @@ export default function ProductSection() {
               return (
                 <button key={id} onClick={() => setActiveCategory(id)} className="flex flex-col items-center relative transition-all shrink-0" style={{ minWidth: "52px" }}>
                   <div className="flex flex-col items-center justify-center cursor-pointer pb-2">
-                    <Image src={image} alt={label} width={50} height={51} className="sm:w-8 sm:h-10 w-6 h-8 " unoptimized={shouldBypassNextImage(image)} />
+                    <img src={image} alt={label} className="sm:w-8 sm:h-10 w-6 h-8 object-contain" />
                     <span
                       className="text-xs font-medium mt-1 font-figtree"
                       style={{

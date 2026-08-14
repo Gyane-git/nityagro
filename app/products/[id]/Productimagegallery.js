@@ -1,8 +1,6 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useState } from "react";
-import { normalizeImageSrc, shouldBypassNextImage } from "@/utils/staticImage";
 
 const PlayIcon = () => (
   <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.85)" }}>
@@ -19,6 +17,12 @@ export default function ProductImageGallery({ images = [] }) {
   const [failedImages, setFailedImages] = useState({});
 
   const fallback = ["/products/mustard-oil.png", "/products/red-chilli.png", "/products/chickpea-flour.png", "/products/jaggery.png", "/products/red-chilli-2.png"];
+
+  const normalizeImageSrc = (src) => {
+    if (!src || typeof src !== "string") return "/no-image.png";
+    if (/^https?:\/\//i.test(src)) return src;
+    return src.startsWith("/") ? src : `/${src}`;
+  };
 
   const imgs = (images.length > 0 ? images : fallback).map((src) => normalizeImageSrc(src));
   const selectedImageUrl = imgs[selected] || imgs[0] || "/no-image.png";
@@ -143,7 +147,7 @@ export default function ProductImageGallery({ images = [] }) {
                 background: "#F9FAFB",
               }}
             >
-              <Image src={failedImages[src] ? "/no-image.png" : src} alt={`Thumbnail ${i + 1}`} fill className="object-contain p-2" sizes="90px" unoptimized={shouldBypassNextImage(failedImages[src] ? "/no-image.png" : src)} onError={() => markImageFailed(src)} />
+              <img src={failedImages[src] ? "/no-image.png" : src} alt={`Thumbnail ${i + 1}`} className="absolute inset-0 w-full h-full object-contain p-2" onError={() => markImageFailed(src)} />
               {i === 1 && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                   <PlayIcon />
@@ -169,7 +173,7 @@ export default function ProductImageGallery({ images = [] }) {
             });
           }}
         >
-          <Image src={displayImageUrl} alt="Product main" fill className={`object-contain sm:object-contain md:object-contain lg:object-contain p-2 transition-transform duration-500 ${zoomActive ? "scale-110" : "scale-100"}`} sizes="(max-width: 1024px) 100vw, 310px" priority unoptimized={shouldBypassNextImage(displayImageUrl)} onError={() => markImageFailed(selectedImageUrl)} />
+          <img src={displayImageUrl} alt="Product main" className={`absolute inset-0 w-full h-full object-contain p-2 transition-transform duration-500 ${zoomActive ? "scale-110" : "scale-100"}`} onError={() => markImageFailed(selectedImageUrl)} />
 
           {zoomActive && (
             <div
@@ -200,7 +204,7 @@ export default function ProductImageGallery({ images = [] }) {
               background: "#F9FAFB",
             }}
           >
-            <Image src={failedImages[src] ? "/no-image.png" : src} alt={`Thumbnail ${i + 1}`} fill className="object-contain p-2" sizes="72px" unoptimized={shouldBypassNextImage(failedImages[src] ? "/no-image.png" : src)} onError={() => markImageFailed(src)} />
+            <img src={failedImages[src] ? "/no-image.png" : src} alt={`Thumbnail ${i + 1}`} className="absolute inset-0 w-full h-full object-contain p-2" onError={() => markImageFailed(src)} />
             {i === 1 && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                 <PlayIcon />
