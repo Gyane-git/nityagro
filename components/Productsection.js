@@ -64,12 +64,6 @@ const DEFAULT_CATEGORIES = [
   { id: "all", label: "All", image: "/categories/all.png" },
 ];
 
-const normalizeImageSrc = (src, fallback = "/no-image.png") => {
-  if (!src || typeof src !== "string") return fallback;
-  if (/^https?:\/\//i.test(src)) return src;
-  return src.startsWith("/") ? src : `/${src}`;
-};
-
 // ─── Star Rating ───────────────────────────────────────────────────────────
 function StarRating({ rating, reviews }) {
   return (
