@@ -30,7 +30,7 @@ const features = [
     alt: "Mortar and pestle icon representing chemical-free products",
     title: "100% Chemical-Free",
     description:
-      "Everything goes through 40+ lab tests, to make sure that you get only what is best.",
+      "Every product undergoes rigorous quality testing to ensure you get only the best.",
   },
   {
     id: "rural-lives",
@@ -99,7 +99,7 @@ export default function WhyChooseNityagro() {
                 </h3>
 
                 {/* Description */}
-                <p className="text-sm font-normal text-gray-600 leading-relaxed max-w-45 font-figtree">
+                <p className="text-sm font-normal text-gray-600 leading-relaxed max-w-50 font-figtree text-center">
                   {feature.description}
                 </p>
               </div>

@@ -124,7 +124,7 @@ const CUSTOMER_SUPPORT = [
 
 const COMPANY = [
   { label: "About Nityagro", href: "/about" },
-  
+
   { label: "Contact Us", href: "/contact-us" },
 ];
 
@@ -183,18 +183,18 @@ export default function Footer() {
                       </p>
                       <div className="flex flex-col gap-3 text-white text-sm font-normal">
                         <a
-                          href="tel:+915400025124553"
+                          href="tel:+977-9801135604"
                           className="flex items-center gap-3"
                         >
                           <PhoneIcon size={17} className="text-sm" />
-                          <span className="text-xs">(+91)-540-025-124553</span>
+                          <span className="text-xs">+977-9801135604</span>
                         </a>
                         <a
                           href="mailto:sale@nityagro.com"
                           className="flex items-center gap-3"
                         >
                           <MailIcon size={17} className="text-sm" />
-                          <span className="text-xs">sale@nityagro.com</span>
+                          <span className="text-xs">sales@nityagro.com</span>
                         </a>
                       </div>
                     </div>
@@ -256,7 +256,10 @@ export default function Footer() {
 
                   {/* Bottom bar */}
                   <div className="flex flex-col md:flex-row items-center justify-between gap-4 py-4 text-white text-sm font-normal text-sm">
-                    <p>©️ {new Date().getFullYear()}, Nityagro - All rights reserved</p>
+                    <p>
+                      ©️ {new Date().getFullYear()}, Nityagro - All rights
+                      reserved
+                    </p>
                     <div className="flex items-center gap-4">
                       <span className="font-normal text-sm">Follow Us</span>
                       <div className="flex gap-3">
