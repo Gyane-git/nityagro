@@ -59,7 +59,14 @@ function StarRating({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-0.5">
       {Array.from({ length: 5 }).map((_, i) => (
-        <svg key={i} className={`w-4 sm:w-5 h-4 sm:h-5 ${i < rating ? "text-yellow-400" : "text-gray-300"}`} fill="currentColor" viewBox="0 0 20 20">
+        <svg
+          key={i}
+          className={`w-4 sm:w-5 h-4 sm:h-5 ${
+            i < rating ? "text-yellow-400" : "text-gray-300"
+          }`}
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
         </svg>
       ))}
@@ -126,7 +133,8 @@ export default function CustomerReviews() {
             rating: Number(item.rating || item.starRating || 5),
             body: item.description || item.message || "",
             name: item.name || item.userName || "Customer",
-            timeAgo: item.destination || item.designation || "Verified customer",
+            timeAgo:
+              item.destination || item.designation || "Verified customer",
             image: item.image || item.profile_image || "/c1.jpg",
           })),
         );
@@ -141,7 +149,10 @@ export default function CustomerReviews() {
 
   const totalPages = Math.max(1, Math.ceil(items.length / CARDS_PER_PAGE));
 
-  const visible = items.slice(page * CARDS_PER_PAGE, page * CARDS_PER_PAGE + CARDS_PER_PAGE);
+  const visible = items.slice(
+    page * CARDS_PER_PAGE,
+    page * CARDS_PER_PAGE + CARDS_PER_PAGE,
+  );
 
   const resetAutoSlide = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -161,7 +172,12 @@ export default function CustomerReviews() {
   return (
     <section className="bg-white py-2 sm:py-8 px-4 sm:px-8 lg:px-16">
       {/* Heading */}
-      <h1 className="text-center text-lg sm:text-xl lg:text-2xl font-bold text-[#235A49] mb-10 font-roboto-slab">What Our Customers Say</h1>
+      <h1
+        className="text-center text-xl sm:text-2xl lg:text-3xl font-bold text-[#235A49] mb-10"
+        style={{ fontFamily: "Roboto Slab" }}
+      >
+        What Our Customers Say
+      </h1>
 
       {/* Layout */}
       <div className="max-w-6xl mx-auto flex items-center gap-3 sm:gap-4">
@@ -204,7 +220,9 @@ export default function CustomerReviews() {
               setPage(i);
               resetAutoSlide();
             }}
-            className={`h-2 rounded-full transition-all ${i === page ? "w-4 bg-[#2d7a4f]" : "w-2 bg-gray-300"}`}
+            className={`h-2 rounded-full transition-all ${
+              i === page ? "w-4 bg-[#2d7a4f]" : "w-2 bg-gray-300"
+            }`}
           />
         ))}
       </div>
