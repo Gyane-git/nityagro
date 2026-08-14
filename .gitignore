@@ -13,6 +13,9 @@
 # testing
 /coverage
 
+# database
+database-backup
+
 # next.js
 /.next/
 /out/

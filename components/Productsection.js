@@ -193,7 +193,7 @@ export default function ProductSection() {
 
       const productRows = Array.isArray(productResponse?.data) ? productResponse.data : [];
       const mappedProducts = productRows
-        .filter((item) => item.productStatus !== false && item.productStatus !== 0)
+        // .filter((item) => item.productStatus !== false && item.productStatus !== 0)
         .map((item) => ({
           id: Number(item.productId || item.productCode),
           name: item.subGroupName || item.productName || "Unnamed Product",
