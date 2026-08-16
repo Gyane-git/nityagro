@@ -250,7 +250,7 @@ export default function ProductSection() {
         .map((item) => ({
           id: (item.categoryName || "").trim().toLowerCase(),
           label: item.categoryName || "",
-          image: normalizeImageSrc(item.categoryLogo, "/categories/all.png"),
+          image: item.categoryLogo  || "/categories/all.png",
         }));
 
       const productRows = Array.isArray(productResponse?.data)
