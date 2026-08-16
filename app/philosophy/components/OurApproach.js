@@ -18,14 +18,14 @@ export default function Approach() {
       image: stoneGrain,
       alt: "Hands holding stone ground grains",
       title: "Flour",
-      desc: "Ground between cool stones — the flour stays alive, never scorched by speed.",
+      desc: "From whole grains to flour, processed through traditional stone grinding rather than high-speed industrial milling.",
     },
     {
       badge: "Stone Pressed",
       image: turmatic,
       alt: "Turmeric being ground on stone",
       title: "Spices",
-      desc: "Crushed without overheating, locking in the essential oils that define each spice.",
+      desc: "Whole spices, gently crushed using traditional stone pressing.",
     },
   ];
 

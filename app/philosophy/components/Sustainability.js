@@ -4,10 +4,10 @@ import { Mountain } from "lucide-react";
 
 export default function Sustainability() {
   const stats = [
-    { value: "100%", label: "Chemical-Free Processing" },
-    { value: "Low °C", label: "Cold-Pressed Methods" },
-    { value: "0", label: "Industrial Refining Steps" },
-    { value: "Direct", label: "Farm-to-Kitchen Chain" },
+    { value: "18–19 RPM", label: "Our mechanical wood press operates at approximately 18–19 RPM for slow, controlled oil extraction." },
+    { value: "No Added Preservatives", label: "Our products are made without added chemical preservatives." },
+    { value: "Traditional Processing", label: "Our flours and spices are processed using traditional stone-based methods, including Jaato and Okhal." },
+    { value: "Minimal Intervention", label: "We avoid unnecessary industrial processing and keep our methods as straightforward as possible." },
   ];
 
   return (
@@ -22,11 +22,11 @@ export default function Sustainability() {
 
         {/* Headline */}
         <h2 className="text-[32px] sm:text-[38px] lg:text-[48px] font-normal leading-[1.18] text-[#1A5C36] mb-5 lg:mb-7" style={{ fontFamily: "var(--font-garamond)" }}>
-          A lighter footprint by design — not by claim.
+          BECAUSE FOOD WAS NEVER MEANT TO BE FAST
         </h2>
 
         {/* Body */}
-        <p className="text-[14px] sm:text-[15px] font-light leading-[1.85] text-[#4F5F56] max-w-full lg:max-w-85">Our traditional processing operates at low speed and low temperatures, reducing the need for heavy energy use or chemical processing. Simple responsible production that keeps food close to its natural form.</p>
+        <p className="text-[14px] sm:text-[15px] font-light leading-[1.85] text-[#4F5F56] max-w-full lg:max-w-85">Not everything from the past needs to be left behind. Traditional food practices were shaped by patience, simplicity, and experience — principles that still have meaning in the way we think about food today.</p>
       </div>
 
       {/* RIGHT: 2×2 grid */}

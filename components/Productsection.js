@@ -12,6 +12,7 @@ import {
   addWishlistToDb,
   removeWishlistFromDb,
 } from "@/utils/accountListApi";
+import Image from "next/image";
 
 // ─── Icons ─────────────────────────────────────────────────────────────────
 const CartIcon = () => (

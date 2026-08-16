@@ -12,9 +12,9 @@ const features = [
     // Replace src with your actual image: src: nativeSourcingIcon
     icon: "/w4.png",
     alt: "Bullock cart icon representing native sourcing",
-    title: "Native Sourcing",
+    title: "Best Sourcing",
     description:
-      "Highest quality raw material from native regions all over Nepal.",
+      "Carefully selected raw materials from regions known for their quality and suitability.",
   },
   {
     id: "traditional-processing",
@@ -22,23 +22,23 @@ const features = [
     alt: "Stone well icon representing traditional processing",
     title: "Traditional Processing",
     description:
-      "Minimally processed using time-tested methods, made better. For maximum nutrition.",
+      "Processed using time-tested methods such as wood pressing and stone grinding, with a focus on simple, controlled processing.",
   },
   {
     id: "chemical-free",
     icon: "/w3.png",
     alt: "Mortar and pestle icon representing chemical-free products",
-    title: "100% Chemical-Free",
+    title: "Nothing Unnecessary",
     description:
-      "Every product undergoes rigorous quality testing to ensure you get only the best.",
+      "No added chemicals. No solvents. No preservatives.",
   },
   {
     id: "rural-lives",
     icon: "/w1.png",
     alt: "Family and village icon representing better rural lives",
-    title: "Better Rural Lives",
+    title: "Made in Nepal",
     description:
-      "500K+ families prefer every healthy and traditional products from Nityagro.",
+      "Proudly produced in Nepal, bringing locally made food products to everyday kitchens.",
   },
 ];
 

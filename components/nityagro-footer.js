@@ -178,23 +178,22 @@ export default function Footer() {
                         GET IN TOUCH
                       </h3>
                       <p className="text-white text-xs leading-5 font-normal">
-                        Join our network of trusted partners and bring
-                        traditional, organic products to your community
+                        Have a question about our products or want to know more about Nityagro? We’d love to hear from you.
                       </p>
                       <div className="flex flex-col gap-3 text-white text-sm font-normal">
                         <a
-                          href="tel:+977-9801135604"
+                          href="tel:9700007400"
                           className="flex items-center gap-3"
                         >
                           <PhoneIcon size={17} className="text-sm" />
-                          <span className="text-xs">+977-9801135604</span>
+                          <span className="text-xs">9700007400</span>
                         </a>
                         <a
                           href="mailto:sale@nityagro.com"
                           className="flex items-center gap-3"
                         >
                           <MailIcon size={17} className="text-sm" />
-                          <span className="text-xs">sales@nityagro.com</span>
+                          <span className="text-xs">nityamagro.pvt.ltd@gmail.com</span>
                         </a>
                       </div>
                     </div>
@@ -276,7 +275,7 @@ export default function Footer() {
                           },
                           {
                             icon: <InstagramIcon />,
-                            href: "https://www.instagram.com/nityamagro.np",
+                            href: "https://www.instagram.com/nityagro.np/",
                             label: "Instagram",
                           },
                         ].map(({ icon, href, label }) => (
