@@ -12,7 +12,6 @@ import {
   addWishlistToDb,
   removeWishlistFromDb,
 } from "@/utils/accountListApi";
-import Image from "next/image";
 
 
 // ─── Icons ─────────────────────────────────────────────────────────────────
@@ -65,6 +64,12 @@ const HeartIcon = ({ filled }) => (
 const DEFAULT_CATEGORIES = [
   { id: "all", label: "All", image: "/categories/all.png" },
 ];
+
+const normalizeImageSrc = (src, fallback = "/no-image.png") => {
+  if (!src || typeof src !== "string") return fallback;
+  if (/^https?:\/\//i.test(src)) return src;
+  return src.startsWith("/") ? src : `/${src}`;
+};
 
 // ─── Star Rating ───────────────────────────────────────────────────────────
 function StarRating({ rating, reviews }) {
@@ -188,12 +193,13 @@ function ProductCard({ product }) {
       <Link href={`/products/${product.id}`} className="flex flex-col">
         {/* Image — fixed height */}
         <div className="relative w-full bg-gray-50" style={{ height: "160px" }}>
-          <Image
-            src={product.image}
+          <img
+            src={normalizeImageSrc(product.image, "/no-image.png")}
             alt={product.name}
-            fill
-            className="object-contain p-3"
-            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 20vw"
+            className="absolute inset-0 w-full h-full object-contain p-3"
+            onError={(event) => {
+              event.currentTarget.src = "/no-image.png";
+            }}
           />
         </div>
 
@@ -250,7 +256,7 @@ export default function ProductSection() {
         .map((item) => ({
           id: (item.categoryName || "").trim().toLowerCase(),
           label: item.categoryName || "",
-          image: item.categoryLogo  || "/categories/all.png",
+          image: normalizeImageSrc(item.categoryLogo, "/categories/all.png"),
         }));
 
       const productRows = Array.isArray(productResponse?.data)
@@ -278,7 +284,7 @@ export default function ProductSection() {
                     100,
                 )}%`
               : null,
-          image: item.pImage || "/products/mustard-oil.png",
+          image: normalizeImageSrc(item.pImage, "/products/mustard-oil.png"),
           createdAt: item.createdAt || null,
           stockQuantity: Number(
             item.stockQuantity ?? item.availableQuantity ?? 0,
@@ -354,12 +360,13 @@ export default function ProductSection() {
                   style={{ minWidth: "52px" }}
                 >
                   <div className="flex flex-col items-center justify-center cursor-pointer pb-2 w-20">
-                    <Image
-                      src={image}
+                    <img
+                      src={normalizeImageSrc(image, "/categories/all.png")}
                       alt={label}
-                      width={50}
-                      height={51}
-                      className="sm:w-8 sm:h-10 w-6 h-8"
+                      className="sm:w-8 sm:h-10 w-6 h-8 object-contain"
+                      onError={(event) => {
+                        event.currentTarget.src = "/categories/all.png";
+                      }}
                     />
 
                     <span
