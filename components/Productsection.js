@@ -14,6 +14,7 @@ import {
 } from "@/utils/accountListApi";
 import Image from "next/image";
 
+
 // ─── Icons ─────────────────────────────────────────────────────────────────
 const CartIcon = () => (
   <svg
@@ -64,6 +65,12 @@ const HeartIcon = ({ filled }) => (
 const DEFAULT_CATEGORIES = [
   { id: "all", label: "All", image: "/categories/all.png" },
 ];
+
+const normalizeImageSrc = (src, fallback = "/no-image.png") => {
+  if (!src || typeof src !== "string") return fallback;
+  if (/^https?:\/\//i.test(src)) return src;
+  return src.startsWith("/") ? src : `/${src}`;
+};
 
 // ─── Star Rating ───────────────────────────────────────────────────────────
 function StarRating({ rating, reviews }) {
@@ -277,7 +284,7 @@ export default function ProductSection() {
                     100,
                 )}%`
               : null,
-          image: item.pImage || "/products/mustard-oil.png",
+          image: normalizeImageSrc(item.pImage, "/products/mustard-oil.png"),
           createdAt: item.createdAt || null,
           stockQuantity: Number(
             item.stockQuantity ?? item.availableQuantity ?? 0,
