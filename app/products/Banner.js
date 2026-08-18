@@ -5,7 +5,7 @@ export default function Banner({ image = "/banner1.jpg", title = "All Products" 
 
   return (
     <div className="relative w-full aspect-3/1 sm:aspect-4/1 overflow-hidden rounded-lg transition-transform duration-300 ease-out hover:scale-101">
-      <img src={bannerImage} alt={title ? `${title} banner` : "Nityagro Banner"} className="absolute inset-0 w-full h-full object-cover object-center" />
+      <img src={bannerImage} alt={title ? `${title} banner` : "Nityagro Banner"} className="absolute inset-0 w-full h-full object-contail object-center" />
       {/* Overlay tint */}
       <div
         className="absolute inset-0"

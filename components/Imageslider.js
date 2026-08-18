@@ -52,8 +52,8 @@ export default function ImageSlider({ slides = DEFAULT_SLIDES, gap = 16 }) {
   const fixedSlides = (dynamicSlides.length ? dynamicSlides : slides).slice(0, 3);
 
   return (
-    <div className="flex flex-col items-center gap-5 w-full px-2 sm:px-4 mt-6 sm:mt-8 md:mt-10 lg:mt-12">
-      <div className="relative w-full overflow-hidden mt-10">
+    <div className="flex flex-col items-center gap-5 w-full px-2 sm:px-4 mt-2 sm:mt-8 md:mt-10 lg:mt-12">
+      <div className="relative w-full overflow-hidden mt-5">
         <div className="flex h-full gap-4">
           {fixedSlides.map((slide, i) => (
             <div key={`${slide.src}-${i}`} className="flex-1 relative overflow-hidden rounded-md lg:rounded-md aspect-[442/213]">
