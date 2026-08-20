@@ -84,7 +84,7 @@ export default function ColdPressedFlour({ data }) {
           </p>
 
           {/* Buttons */}
-          <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-10 lg:mb-14">
+          <div className="flex flex-wrap justify-between sm:justify-start items-center gap-5 sm:gap-4 mb-10 lg:mb-14">
             {/* <button className="inline-flex items-center gap-2.5 bg-[#1e5c34] rounded-full px-6 sm:px-7 py-3 sm:py-3.5 text-[12px] sm:text-[13px] font-medium text-white">
               {data?.btnPrimary}
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -115,99 +115,101 @@ export default function ColdPressedFlour({ data }) {
                 />
               </svg>
             </button>
-
-            {/* Video Modal */}
-            {isVideoOpen && (
+            <button className="inline-flex items-center bg-transparent border-[1.5px] border-[#1e5c34] rounded-full px-6 sm:px-7 py-3 sm:py-3.5 text-[12px] sm:text-[13px] font-medium text-[#1e5c34]">
+              {data?.btnSecondary}
+            </button>
+          </div>
+          {/* Video Modal */}
+          {isVideoOpen && (
+            <div
+              className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+              onClick={closeVideo}
+            >
+              {/* 80vw × 80vh Video Container */}
               <div
-                className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm"
-                onClick={closeVideo}
+                className="relative w-[60vw] h-[80vh] overflow-hidden rounded-2xl bg-black"
+                onClick={(e) => e.stopPropagation()}
               >
-                {/* 80vw × 80vh Video Container */}
-                <div
-                  className="relative w-[60vw] h-[80vh] overflow-hidden rounded-2xl bg-black"
-                  onClick={(e) => e.stopPropagation()}
+                {/* Video */}
+                <video
+                  ref={videoRef}
+                  src={videoSrc}
+                  autoPlay
+                  playsInline
+                  onPlay={() => setIsPlaying(true)}
+                  onPause={() => setIsPlaying(false)}
+                  className="w-full h-full object-contain"
+                />
+
+                {/* Center Play / Pause Button */}
+                <button
+                  onClick={togglePlay}
+                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex h-16 w-16 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm transition hover:scale-110 hover:bg-black/75"
+                  aria-label={isPlaying ? "Pause video" : "Play video"}
                 >
-                  {/* Video */}
-                  <video
-                    ref={videoRef}
-                    src={videoSrc}
-                    autoPlay
-                    playsInline
-                    onPlay={() => setIsPlaying(true)}
-                    onPause={() => setIsPlaying(false)}
-                    className="w-full h-full object-contain"
-                  />
-
-                  {/* Center Play / Pause Button */}
-                  <button
-                    onClick={togglePlay}
-                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex h-16 w-16 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm transition hover:scale-110 hover:bg-black/75"
-                    aria-label={isPlaying ? "Pause video" : "Play video"}
-                  >
-                    {isPlaying ? (
-                      /* Pause */
-                      <svg
-                        width="28"
-                        height="28"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                      >
-                        <path
-                          d="M7 5V19M17 5V19"
-                          stroke="white"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                    ) : (
-                      /* Play */
-                      <svg
-                        width="28"
-                        height="28"
-                        viewBox="0 0 24 24"
-                        fill="white"
-                      >
-                        <path d="M8 5v14l11-7L8 5z" />
-                      </svg>
-                    )}
-                  </button>
-
-                  {/* Close Button */}
-                  <button
-                    onClick={closeVideo}
-                    className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm transition hover:bg-black/80"
-                    aria-label="Close video"
-                  >
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  {isPlaying ? (
+                    /* Pause */
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
                       <path
-                        d="M6 6L18 18M18 6L6 18"
+                        d="M7 5V19M17 5V19"
                         stroke="white"
                         strokeWidth="2"
                         strokeLinecap="round"
                       />
                     </svg>
-                  </button>
-                </div>
+                  ) : (
+                    /* Play */
+                    <svg
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill="white"
+                    >
+                      <path d="M8 5v14l11-7L8 5z" />
+                    </svg>
+                  )}
+                </button>
+
+                {/* Close Button */}
+                <button
+                  onClick={closeVideo}
+                  className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm transition hover:bg-black/80"
+                  aria-label="Close video"
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M6 6L18 18M18 6L6 18"
+                      stroke="white"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </button>
               </div>
-            )}
-            <button className="inline-flex items-center bg-transparent border-[1.5px] border-[#1e5c34] rounded-full px-6 sm:px-7 py-3 sm:py-3.5 text-[12px] sm:text-[13px] font-medium text-[#1e5c34]">
-              {data?.btnSecondary}
-            </button>
-          </div>
+            </div>
+          )}
 
           {/* Stats */}
           <div className="flex flex-wrap items-start">
             {data?.stats?.map((stat, index) => (
               <div
                 key={index}
-                className={`pr-6 sm:pr-9 mb-4 sm:mb-0 ${
-                  index !== 0 ? "pl-6 sm:pl-9 border-l border-[#d0cdc8]" : ""
+                className={`group pr-7 sm:pr-10 mb-5 sm:mb-0 ${
+                  index !== 0 ? "pl-7 sm:pl-10 border-l border-[#d6d2ca]" : ""
                 }`}
               >
-                <p className="text-[24px] sm:text-[28px] lg:text-[32px] font-bold text-[#1e2a1e] mb-1">
+                <div className="flex items-center gap-2 mb-2.5">
+                  <span className="block w-5 h-[2px] bg-[#00462C] transition-all duration-300 group-hover:w-8" />
+                  <span className="text-[10px] font-medium tracking-[0.15em] text-[#9a968e]">
+                    0{index + 1}
+                  </span>
+                </div>
+
+                <p className="text-[25px] sm:text-[29px] lg:text-[28px] font-bold leading-tight tracking-tight text-[#1e2a1e]">
                   {stat.value}
                 </p>
-                <p className="text-[12px] sm:text-[13px] font-light text-[#6a6a66]">
+
+                <p className="mt-1.5 text-[11px] sm:text-[12px] lg:text-[13px] leading-5 text-[#77736c] max-w-[180px]">
                   {stat.label}
                 </p>
               </div>

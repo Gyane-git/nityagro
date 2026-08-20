@@ -38,7 +38,7 @@ function ProductsPageContent() {
         const activeCategories = categoryRows.filter((category) => category.categoryStatus !== false);
 
         const mapped = productRows
-          // .filter((item) => item.productStatus !== false)
+          .filter((item) => item.productStatus !== false)
           .map((item) => ({
             id: Number(item.productId),
             name: item.subGroupName || item.productName || "Unnamed Product",

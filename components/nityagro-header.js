@@ -160,10 +160,7 @@ export default function Header() {
   const [mobileMethodsOpen, setMobileMethodsOpen] = useState(false);
   const [mobileCategoryOpen, setMobileCategoryOpen] = useState(false);
   const [categories, setCategories] = useState([]);
-  const [promoMessages, setPromoMessages] = useState([
-    "12% OFF above · Code: NEW12",
-  ]);
-  const [promoIndex, setPromoIndex] = useState(0);
+
   const [authUser, setAuthUser] = useState(null);
   const [authReady, setAuthReady] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -346,41 +343,56 @@ export default function Header() {
     }
   }, []);
 
+  const FALLBACK_PROMO = "12% OFF above · Code: NEW12";
+  const [promoMessages, setPromoMessages] = useState([]);
+  const [promoIndex, setPromoIndex] = useState(0);
+
   useEffect(() => {
     const fetchPopupPromo = async () => {
       try {
         const response = await apiGetRequest("/popup-ads");
+
         const rows = Array.isArray(response?.data?.popupAds)
           ? response.data.popupAds
           : [];
-        const activeRows = rows.filter((item) => item.isActive !== false);
-        const messages = (activeRows.length ? activeRows : rows)
+
+        const messages = rows
+          .filter((item) => item.isActive !== false)
           .map((item) => item.popupDescription || item.title || "")
           .map((item) => String(item).trim())
           .filter(Boolean);
 
         if (messages.length > 0) {
+          // Use promo texts from admin panel
           setPromoMessages(messages);
           setPromoIndex(0);
+        } else {
+          // No promo added in admin panel
+          setPromoMessages([FALLBACK_PROMO]);
+          setPromoIndex(0);
         }
-      } catch {
-        // keep fallback promo text
+      } catch (error) {
+        console.error("Failed to fetch promo messages:", error);
+
+        // API failed → use fallback
+        setPromoMessages([FALLBACK_PROMO]);
+        setPromoIndex(0);
       }
     };
+
     fetchPopupPromo();
   }, []);
+  const promoText = promoMessages[promoIndex] || FALLBACK_PROMO;
 
-  // useEffect(() => {
-  //   if (promoMessages.length <= 1) return;
+  useEffect(() => {
+    if (promoMessages.length <= 1) return;
 
-  //   const timer = setInterval(() => {
-  //     setPromoIndex((prev) => (prev + 1) % promoMessages.length);
-  //   }, 3000);
+    const timer = setInterval(() => {
+      setPromoIndex((prev) => (prev + 1) % promoMessages.length);
+    }, 3000);
 
-  //   return () => clearInterval(timer);
-  // }, [promoMessages]);
-
-  const promoText = promoMessages[promoIndex] || "12% OFF above · Code: NEW12";
+    return () => clearInterval(timer);
+  }, [promoMessages]);
 
   return (
     <header
@@ -388,19 +400,26 @@ export default function Header() {
       style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box" }}
     >
       {/* ── Promo bar ── */}
-      <div className="w-full bg-[#FFF8E7] border-b border-[#f0e6c8] h-9 overflow-hidden">
-        <div className="relative flex h-full items-center overflow-hidden">
-          <div className="flex min-w-max animate-marquee items-center">
-            {[...Array(8)].map((_, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-2 px-8 text-[12px] md:text-[13px] text-[#1a1a1a] font-medium whitespace-nowrap"
-              >
-                <span className="text-[14px] md:text-[15px]">🎁</span>
-                <span>{promoText}</span>
-              </div>
-            ))}
-          </div>
+      <div
+        className="w-full bg-[#FFF8E7] border-b border-[#f0e6c8] h-9 overflow-hidden"
+        style={{ width: "100%", boxSizing: "border-box" }}
+      >
+        {/* Mobile: single centered item */}
+        <div className="flex md:hidden items-center justify-center h-full px-4 text-[12px] text-[#1a1a1a] font-medium gap-1.5">
+          <span className="text-[14px]">🎁</span>
+          <span>{promoText}</span>
+        </div>
+        {/* Desktop: four items */}
+        <div className="hidden md:flex items-center justify-between h-full px-8">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-2 text-[13px] text-[#1a1a1a] font-medium"
+            >
+              <span className="text-[15px]">🎁</span>
+              <span>{promoText}</span>
+            </div>
+          ))}
         </div>
       </div>
       {/* ── Main navbar ── */}

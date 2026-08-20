@@ -13,7 +13,6 @@ import {
   removeWishlistFromDb,
 } from "@/utils/accountListApi";
 
-
 // ─── Icons ─────────────────────────────────────────────────────────────────
 const CartIcon = () => (
   <svg
@@ -275,7 +274,7 @@ export default function ProductSection() {
           category: String(item.categoryId || "")
             .trim()
             .toLowerCase(),
-          badge: item.specialOffer ? "Special Offer" : null,
+          badge: item.specialOffer ? "Best Seller" : null,
           discount:
             Number(item.actualPrice || 0) > Number(item.sellingPrice || 0)
               ? `SAVE\n${Math.round(

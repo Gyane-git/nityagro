@@ -29,7 +29,7 @@ type OmsProduct = {
   PCode: string;
   PDesc: string;
   GroupName: string;
-  SubGroupName:string;
+  SubGroupName: string;
   slug: string | null;
   categoryDescription: string | null;
   BuyRate: number;
@@ -51,9 +51,8 @@ type OmsSubGroupName = {
   SubGroupName: string;
   //SalesRate: number;
   MRP: number;
-  Qty:number;
-  StockQty:number
-
+  Qty: number;
+  StockQty: number;
 };
 
 type OmsCategory = {
@@ -85,7 +84,6 @@ type SubGroupSyncPayload = {
   variationName: string;
   //salesRate: number;
   MRP: number;
-
 };
 
 type EditForm = {
@@ -175,7 +173,9 @@ export default function CategoriesListPage() {
   }, [categories, search]);
 
   const handleOmsSync = async () => {
-    const syncToastId = toast.loading("Syncing categories, products and variants from OMS...");
+    const syncToastId = toast.loading(
+      "Syncing categories, products and variants from OMS...",
+    );
     setSyncingOms(true);
     try {
       const omsResponse = await fetch("/api/oms/products", {
@@ -191,7 +191,7 @@ export default function CategoriesListPage() {
       const categories: OmsCategory[] = Array.isArray(omsJson?.data)
         ? omsJson.data
         : [];
-         const uniqueCategoryNames = Array.from(
+      const uniqueCategoryNames = Array.from(
         new Set(
           categories
             .map((item) => (item.GroupName || "").trim())
@@ -201,7 +201,7 @@ export default function CategoriesListPage() {
       const products: OmsProduct[] = Array.isArray(omsJson?.data)
         ? omsJson.data
         : [];
-         const subGroup: OmsSubGroupName[] = Array.isArray(omsJson?.data)
+      const subGroup: OmsSubGroupName[] = Array.isArray(omsJson?.data)
         ? omsJson.data
         : [];
 
@@ -249,7 +249,7 @@ export default function CategoriesListPage() {
             pCode: key,
             subGroupName: String(item.SubGroupName || "").trim(),
             variationName: String(item.PDesc || "").trim(),
-           // salesRate: item.SalesRate,
+            // salesRate: item.SalesRate,
             MRP: readOmsNumber(
               item.MRP,
               (item as Record<string, unknown>).mrp,
@@ -299,7 +299,11 @@ export default function CategoriesListPage() {
         "/subcategories",
         requestDataSubGroup,
       );
-      if (!categorySync.success || !productSync.success || !subCategorySync.success) {
+      if (
+        !categorySync.success ||
+        !productSync.success ||
+        !subCategorySync.success
+      ) {
         toast.error(
           categorySync.message ||
             productSync.message ||
@@ -367,7 +371,7 @@ export default function CategoriesListPage() {
         [categoryImageFile, categoryLogoFile, categoryBannerFile].some(Boolean)
       ) {
         toast.loading("Uploading category media...", { id: updateToastId });
-        
+
         const uploadFormData = new FormData();
         if (categoryImageFile)
           uploadFormData.append("categoryImage", categoryImageFile);
@@ -504,7 +508,7 @@ export default function CategoriesListPage() {
               <tr>
                 <th className="p-2 text-center text-xs border">ID</th>
                 <th className="p-2 text-center text-xs border">Name</th>
-                
+
                 <th className="p-2 text-center text-xs border">
                   Category Image
                 </th>
@@ -534,7 +538,7 @@ export default function CategoriesListPage() {
                   >
                     <td className="p-1 text-center">{category.categoryId}</td>
                     <td className="p-1 text-center">{category.categoryName}</td>
-                    
+
                     <td className="p-1 text-center">
                       {category.categoryImage ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -738,10 +742,6 @@ export default function CategoriesListPage() {
                 </p>
               </div>
 
-             
-
-             
-
               <div>
                 <h3 className="text-sm font-semibold text-gray-700 mb-3">
                   Media Uploads
@@ -766,7 +766,7 @@ export default function CategoriesListPage() {
                   ].map((item) => (
                     <label
                       key={item.title}
-                      className="group cursor-pointer rounded-2xl border-2 border-dashed border-gray-300 hover:border-blue-500 bg-gray-50 hover:bg-blue-50 transition p-5 text-center"
+                      className="group cursor-pointer rounded-2xl border-2 border-dashed text-gray-800 border-gray-300 hover:border-blue-500 bg-gray-50 hover:bg-blue-50 transition p-5 text-center"
                     >
                       {item.current ? (
                         // eslint-disable-next-line @next/next/no-img-element

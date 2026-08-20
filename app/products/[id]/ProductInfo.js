@@ -405,9 +405,11 @@ export default function ProductInfo({ product }) {
       <div className="flex flex-col gap-2">
         <p className="text-sm font-semibold text-gray-700">Quantity</p>
         {isStockLoading ? (
-          <p className="text-xs font-semibold text-gray-500">Checking available qty...</p>
+          <p className="text-xs font-semibold text-gray-500"></p>
+          // <p className="text-xs font-semibold text-gray-500">Checking available qty...</p>
         ) : isStockUnavailable ? (
-          <p className="text-xs font-semibold text-red-600">Unable to sync available qty. Please refresh.</p>
+          <p className="text-xs font-semibold text-red-600">Out Of Stock</p>
+          // <p className="text-xs font-semibold text-red-600">Unable to sync available qty. Please refresh.</p>
         ) : isOutOfStock ? (
           <p className="text-xs font-semibold text-red-600">Out of stock. You can add it to cart, but checkout is disabled until stock is available.</p>
         ) : (
