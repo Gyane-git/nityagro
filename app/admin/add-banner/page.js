@@ -46,8 +46,10 @@ export default function AddBannerPage() {
       formData.append("slug", form.slug.trim());
       formData.append("bannerDescription", form.bannerDescription.trim());
       formData.append("bannerStatus", form.bannerStatus ? "1" : "0");
-      if (bannerImageforWeb) formData.append("bannerImageforWeb", bannerImageforWeb);
-      if (bannerImageforMobile) formData.append("bannerImageforMobile", bannerImageforMobile);
+      if (bannerImageforWeb)
+        formData.append("bannerImageforWeb", bannerImageforWeb);
+      if (bannerImageforMobile)
+        formData.append("bannerImageforMobile", bannerImageforMobile);
       if (cardImage) formData.append("cardImage", cardImage);
 
       const res = await fetch("/api/banners", {
@@ -87,7 +89,9 @@ export default function AddBannerPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block mb-1 font-medium text-black">Banner Name</label>
+                <label className="block mb-1 font-medium text-black">
+                  Banner Name
+                </label>
                 <input
                   type="text"
                   value={form.bannerName}
@@ -98,16 +102,19 @@ export default function AddBannerPage() {
                   placeholder="Enter banner name"
                 />
               </div>
-
-              
             </div>
 
             <div>
-              <label className="block mb-1 font-medium text-black">Description</label>
+              <label className="block mb-1 font-medium text-black">
+                Description
+              </label>
               <textarea
                 value={form.bannerDescription}
                 onChange={(e) =>
-                  setForm((prev) => ({ ...prev, bannerDescription: e.target.value }))
+                  setForm((prev) => ({
+                    ...prev,
+                    bannerDescription: e.target.value,
+                  }))
                 }
                 className="w-full text-black border px-3 py-2 rounded min-h-24"
                 placeholder="Banner description"
@@ -116,33 +123,52 @@ export default function AddBannerPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block mb-1 text-black font-medium">Banner Image (Web)</label>
+                <label className="block mb-1 text-black font-medium">
+                  Banner Image (Web)
+                </label>
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => setBannerImageforWeb(e.target.files?.[0] || null)}
+                  onChange={(e) =>
+                    setBannerImageforWeb(e.target.files?.[0] || null)
+                  }
                   className="w-full text-black border px-3 py-2 rounded"
                 />
+                <span className="text-red-500 text-[12px]">
+                  Image Size: width: 1440px, height: 731px
+                </span>
               </div>
 
               <div>
-                <label className="block mb-1 text-black font-medium">Banner Image (Mobile)</label>
+                <label className="block mb-1 text-black font-medium">
+                  Banner Image (Mobile)
+                </label>
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => setBannerImageforMobile(e.target.files?.[0] || null)}
+                  onChange={(e) =>
+                    setBannerImageforMobile(e.target.files?.[0] || null)
+                  }
                   className="w-full text-black border px-3 py-2 rounded"
                 />
+                <span className="text-red-500 text-[12px]">
+                  Image Size: width: 1440px, height: 731px
+                </span>
               </div>
 
               <div>
-                <label className="block mb-1 text-black font-medium">Card Image (Slider)</label>
+                <label className="block mb-1 text-black font-medium">
+                  Card Image (Slider)
+                </label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => setCardImage(e.target.files?.[0] || null)}
                   className="w-full text-black border px-3 py-2 rounded"
                 />
+                <span className="text-red-500 text-[12px]">
+                  Image Size: width: 442px, height: 213px
+                </span>
               </div>
             </div>
 
@@ -151,7 +177,10 @@ export default function AddBannerPage() {
                 type="checkbox"
                 checked={form.bannerStatus}
                 onChange={(e) =>
-                  setForm((prev) => ({ ...prev, bannerStatus: e.target.checked }))
+                  setForm((prev) => ({
+                    ...prev,
+                    bannerStatus: e.target.checked,
+                  }))
                 }
               />
               Active Banner
