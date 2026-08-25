@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Aug 14, 2026 at 08:24 AM
+-- Generation Time: Aug 25, 2026 at 06:41 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -149,11 +149,17 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`categoryId`, `categoryName`, `userId`, `slug`, `categoryDescription`, `categoryImage`, `categoryLogo`, `categoryBanner`, `categoryStatus`, `createdAt`, `updatedAt`) VALUES
-(3, 'DALIYA', 1, NULL, NULL, NULL, NULL, NULL, 1, '2026-06-08 06:52:52.878', '2026-06-08 06:53:01.182'),
-(4, 'STONEPRESS FLOUR', 1, NULL, NULL, NULL, NULL, NULL, 1, '2026-06-08 06:52:52.882', '2026-06-08 06:53:07.339'),
-(5, 'WOODPRESS OIL', 1, NULL, NULL, NULL, NULL, NULL, 1, '2026-06-08 06:52:52.884', '2026-06-08 06:53:12.493'),
-(6, 'STONEPRESS SPICES', 1, NULL, NULL, NULL, NULL, NULL, 1, '2026-06-08 06:52:52.885', '2026-06-08 06:53:19.452'),
-(7, 'SATTU', 1, NULL, NULL, NULL, NULL, NULL, 1, '2026-06-08 06:52:52.886', '2026-06-08 06:53:24.770');
+(15, 'OIL', 1, NULL, NULL, NULL, NULL, NULL, 0, '2026-08-24 05:56:08.832', '2026-08-24 05:56:08.832'),
+(16, 'Local Rice', 1, NULL, NULL, NULL, NULL, NULL, 0, '2026-08-24 05:56:08.836', '2026-08-24 05:56:08.836'),
+(17, 'SATTU', 1, NULL, NULL, NULL, NULL, NULL, 0, '2026-08-24 05:56:08.839', '2026-08-24 05:56:08.839'),
+(18, 'Branch Stock', 1, NULL, NULL, NULL, NULL, NULL, 0, '2026-08-24 05:56:08.840', '2026-08-24 05:56:08.840'),
+(19, 'COLDPRESS OIL', 1, NULL, NULL, NULL, NULL, NULL, 0, '2026-08-24 05:56:08.842', '2026-08-24 05:56:08.842'),
+(20, 'DALIYA', 1, NULL, NULL, NULL, NULL, NULL, 0, '2026-08-24 05:56:08.844', '2026-08-24 05:56:08.844'),
+(21, 'Medical', 1, NULL, NULL, NULL, NULL, NULL, 0, '2026-08-24 05:56:08.846', '2026-08-24 06:09:49.448'),
+(22, 'JAGGERY', 1, NULL, NULL, NULL, NULL, NULL, 0, '2026-08-24 05:56:08.848', '2026-08-24 05:56:08.848'),
+(23, 'STONEPRESS FLOUR', 1, NULL, NULL, NULL, NULL, NULL, 0, '2026-08-24 05:56:08.850', '2026-08-24 05:56:08.850'),
+(24, 'SPICES', 1, NULL, NULL, NULL, NULL, NULL, 0, '2026-08-24 05:56:08.851', '2026-08-24 05:56:08.851'),
+(25, 'WOODPRESS OIL', 1, NULL, NULL, NULL, NULL, NULL, 0, '2026-08-24 05:56:08.854', '2026-08-24 05:56:08.854');
 
 -- --------------------------------------------------------
 
@@ -216,14 +222,6 @@ CREATE TABLE `comboOrders` (
   `updatedAt` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `comboOrders`
---
-
-INSERT INTO `comboOrders` (`comboOrderId`, `userId`, `comboProductId`, `quantity`, `unitPrice`, `productTotal`, `deliveryCharge`, `totalAmount`, `orderStatus`, `paymentStatus`, `createdAt`, `updatedAt`) VALUES
-(1, 1, 1, 1, 3280, 3280, 0, 3280, 'PLACED', 'PENDING', '2026-06-08 07:12:07.778', '2026-06-08 07:12:07.778'),
-(2, 1, 1, 1, 3280, 3280, 0, 3280, 'PLACED', 'PENDING', '2026-06-08 07:42:38.295', '2026-06-08 07:42:38.295');
-
 -- --------------------------------------------------------
 
 --
@@ -245,13 +243,6 @@ CREATE TABLE `comboProduct` (
   `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updatedAt` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `comboProduct`
---
-
-INSERT INTO `comboProduct` (`comboProductId`, `comboCode`, `comboName`, `productId`, `productCodes`, `productPrices`, `comboPrice`, `discount`, `slug`, `comboDescription`, `comboStatus`, `createdAt`, `updatedAt`) VALUES
-(1, 'C83679278', 'Combo1', 3, '1,9', 3280, 3280, 50, NULL, 'WOODPRESS BLACK MUSTARD OIL\r\n\r\nMade from carefully selected black mustard seeds using the traditional wood-pressed (cold-pressed) extraction method. This process helps retain the oil\'s natural aroma, flavor, and nutrients. It is suitable for everyday cooking, pickling, sautéing, and traditional recipes.\r\n\r\nKey Features\r\n\r\n100% Wood-Pressed Black Mustard Oil\r\nNo Artificial Colors or Flavors\r\nNo Added Preservatives\r\nRich Natural Aroma\r\nTraditionally Extracted\r\nSuitable for Daily Cooking', 1, '2026-06-08 07:10:10.548', '2026-06-08 07:10:56.183');
 
 -- --------------------------------------------------------
 
@@ -318,19 +309,6 @@ CREATE TABLE `deliveryDetails` (
   `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updatedAt` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `deliveryDetails`
---
-
-INSERT INTO `deliveryDetails` (`deliveryDetailsId`, `orderId`, `shippingDetailsId`, `deliveryDate`, `paymentMode`, `transactionId`, `trackingNumber`, `deliveryStatus`, `deliveryRemark`, `createdAt`, `updatedAt`) VALUES
-(1, 1, 1, NULL, 'COD', 'COD-1780901968383', NULL, 'PENDING', 'Order placed. Awaiting dispatch.', '2026-06-08 06:59:28.390', '2026-06-08 06:59:28.390'),
-(2, 2, 2, NULL, 'COD', 'COD-1780984033816', NULL, 'PENDING', 'Order placed. Awaiting dispatch.', '2026-06-09 05:47:13.822', '2026-06-09 05:47:13.822'),
-(3, 3, 3, NULL, 'COD', 'COD-1780984069394', NULL, 'PENDING', 'Order placed. Awaiting dispatch.', '2026-06-09 05:47:49.403', '2026-06-09 05:47:49.403'),
-(4, 4, 4, NULL, 'COD', 'COD-1780984135866', NULL, 'PENDING', 'Order placed. Awaiting dispatch.', '2026-06-09 05:48:55.875', '2026-06-09 05:48:55.875'),
-(5, 5, 5, NULL, 'COD', 'COD-1780995378736', NULL, 'PENDING', 'Order placed. Awaiting dispatch.', '2026-06-09 08:56:18.746', '2026-06-09 08:56:18.746'),
-(6, 6, 6, NULL, 'CONNECTIPS', 'NGTXN1781000616123', NULL, 'PENDING', 'Order paid via ConnectIPS. Awaiting dispatch.', '2026-06-09 10:23:56.759', '2026-06-09 10:23:56.759'),
-(7, 7, 7, NULL, 'CONNECTIPS', 'NG1781007235755', NULL, 'PENDING', 'Order paid via ConnectIPS. Awaiting dispatch.', '2026-06-09 12:18:01.381', '2026-06-09 12:18:01.381');
 
 -- --------------------------------------------------------
 
@@ -475,19 +453,6 @@ CREATE TABLE `orders` (
   `updatedAt` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `orders`
---
-
-INSERT INTO `orders` (`orderId`, `userId`, `productId`, `quantity`, `unitPrice`, `productTotal`, `deliveryCharge`, `totalAmount`, `orderStatus`, `paymentStatus`, `createdAt`, `updatedAt`) VALUES
-(1, 1, 11, 1, 2700, 2700, 0, 2700, 'PLACED', 'PENDING', '2026-06-08 06:59:28.385', '2026-06-08 06:59:28.385'),
-(2, 1, 3, 2, 630, 1260, 0, 1260, 'PLACED', 'PENDING', '2026-06-09 05:47:13.818', '2026-06-09 05:47:13.818'),
-(3, 1, 3, 2, 630, 1260, 0, 1260, 'PLACED', 'PENDING', '2026-06-09 05:47:49.396', '2026-06-09 05:47:49.396'),
-(4, 1, 3, 2, 630, 1260, 0, 1260, 'PLACED', 'PENDING', '2026-06-09 05:48:55.868', '2026-06-09 05:48:55.868'),
-(5, 1, 3, 1, 630, 630, 0, 630, 'PLACED', 'PENDING', '2026-06-09 08:56:18.738', '2026-06-09 08:56:18.738'),
-(6, 1, 4, 1, 11, 11, 0, 11, 'PLACED', 'PAID', '2026-06-09 10:23:56.751', '2026-06-09 10:23:56.751'),
-(7, 1, 4, 1, 11, 11, 0, 11, 'PLACED', 'PAID', '2026-06-09 12:18:01.371', '2026-06-09 12:18:01.371');
-
 -- --------------------------------------------------------
 
 --
@@ -506,19 +471,6 @@ CREATE TABLE `paymentDetails` (
   `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updatedAt` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `paymentDetails`
---
-
-INSERT INTO `paymentDetails` (`paymentDetailsId`, `orderId`, `userId`, `paymentMode`, `paymentAmount`, `paymentDate`, `transactionId`, `paymentStatus`, `createdAt`, `updatedAt`) VALUES
-(1, 1, 1, 'COD', 2700, '2026-06-08 06:59:28.383', 'COD-1780901968383', 'PENDING', '2026-06-08 06:59:28.387', '2026-06-08 06:59:28.387'),
-(2, 2, 1, 'COD', 1260, '2026-06-09 05:47:13.816', 'COD-1780984033816', 'PENDING', '2026-06-09 05:47:13.819', '2026-06-09 05:47:13.819'),
-(3, 3, 1, 'COD', 1260, '2026-06-09 05:47:49.394', 'COD-1780984069394', 'PENDING', '2026-06-09 05:47:49.399', '2026-06-09 05:47:49.399'),
-(4, 4, 1, 'COD', 1260, '2026-06-09 05:48:55.866', 'COD-1780984135866', 'PENDING', '2026-06-09 05:48:55.871', '2026-06-09 05:48:55.871'),
-(5, 5, 1, 'COD', 630, '2026-06-09 08:56:18.736', 'COD-1780995378736', 'PENDING', '2026-06-09 08:56:18.743', '2026-06-09 08:56:18.743'),
-(6, 6, 1, 'CONNECTIPS', 11, '2026-06-09 10:23:56.748', 'NGTXN1781000616123', 'PAID', '2026-06-09 10:23:56.756', '2026-06-09 10:23:56.756'),
-(7, 7, 1, 'CONNECTIPS', 11, '2026-06-09 12:18:01.369', 'NG1781007235755', 'PAID', '2026-06-09 12:18:01.376', '2026-06-09 12:18:01.376');
 
 -- --------------------------------------------------------
 
@@ -557,13 +509,13 @@ CREATE TABLE `ProductImage` (
 --
 
 INSERT INTO `ProductImage` (`productImageId`, `productId`, `comboProductId`, `imageUrl`, `isMain`, `createdAt`, `updatedAt`) VALUES
-(1, 3, NULL, '/uploads/products/gallery-c8a8a04c7d1ca2d92549732cf1ad4277f3a55c5f-1-1780901710495-ik6lfh.png', 0, '2026-06-08 06:55:10.499', '2026-06-08 06:55:10.499'),
-(2, 3, NULL, '/uploads/products/gallery-86ac5ac385f0c733fc52ab7c92304f40c205d512-1780901710496-153ri0.png', 0, '2026-06-08 06:55:10.499', '2026-06-08 06:55:10.499'),
-(3, 3, NULL, '/uploads/products/gallery-384a7fe56a24d56ac28be156b4ef2601172c40cc-1780901710497-ijob5z.png', 0, '2026-06-08 06:55:10.499', '2026-06-08 06:55:10.499'),
-(4, NULL, 1, '/uploads/combos/main-b2-1780902610552-vintjl.png', 1, '2026-06-08 07:10:10.559', '2026-06-08 07:10:10.559'),
-(5, NULL, 1, '/uploads/combos/gallery-b1-1780902610554-1w4il3.png', 0, '2026-06-08 07:10:10.559', '2026-06-08 07:10:10.559'),
-(6, NULL, 1, '/uploads/combos/gallery-b2-1780902610557-kki94a.png', 0, '2026-06-08 07:10:10.559', '2026-06-08 07:10:10.559'),
-(7, NULL, 1, '/uploads/combos/gallery-384a7fe56a24d56ac28be156b4ef2601172c40cc-1780902610558-fgi18q.png', 0, '2026-06-08 07:10:10.559', '2026-06-08 07:10:10.559');
+(1, NULL, NULL, '/uploads/products/gallery-c8a8a04c7d1ca2d92549732cf1ad4277f3a55c5f-1-1780901710495-ik6lfh.png', 0, '2026-06-08 06:55:10.499', '2026-06-08 06:55:10.499'),
+(2, NULL, NULL, '/uploads/products/gallery-86ac5ac385f0c733fc52ab7c92304f40c205d512-1780901710496-153ri0.png', 0, '2026-06-08 06:55:10.499', '2026-06-08 06:55:10.499'),
+(3, NULL, NULL, '/uploads/products/gallery-384a7fe56a24d56ac28be156b4ef2601172c40cc-1780901710497-ijob5z.png', 0, '2026-06-08 06:55:10.499', '2026-06-08 06:55:10.499'),
+(4, NULL, NULL, '/uploads/combos/main-b2-1780902610552-vintjl.png', 1, '2026-06-08 07:10:10.559', '2026-06-08 07:10:10.559'),
+(5, NULL, NULL, '/uploads/combos/gallery-b1-1780902610554-1w4il3.png', 0, '2026-06-08 07:10:10.559', '2026-06-08 07:10:10.559'),
+(6, NULL, NULL, '/uploads/combos/gallery-b2-1780902610557-kki94a.png', 0, '2026-06-08 07:10:10.559', '2026-06-08 07:10:10.559'),
+(7, NULL, NULL, '/uploads/combos/gallery-384a7fe56a24d56ac28be156b4ef2601172c40cc-1780902610558-fgi18q.png', 0, '2026-06-08 07:10:10.559', '2026-06-08 07:10:10.559');
 
 -- --------------------------------------------------------
 
@@ -620,36 +572,88 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`productId`, `productCode`, `categoryId`, `userId`, `productName`, `subGroupName`, `slug`, `productVariation`, `productDescription`, `nutritionInfo`, `cookingInstruction`, `storageInstruction`, `pImage`, `productStatus`, `actualPrice`, `sellingPrice`, `deliveryTargetDays`, `stockQuantity`, `availableQuantity`, `flashSale`, `specialOffer`, `createdAt`, `updatedAt`) VALUES
-(3, '1', 'WOODPRESS OIL', 1, '1LTR WOODPRESS BLACK MUSTARD OIL', 'WOODPRESS BLACK MUSTARD OIL', NULL, NULL, 'WOODPRESS BLACK MUSTARD OIL\r\n\r\nMade from carefully selected black mustard seeds using the traditional wood-pressed (cold-pressed) extraction method. This process helps retain the oil\'s natural aroma, flavor, and nutrients. It is suitable for everyday cooking, pickling, sautéing, and traditional recipes.\r\n\r\nKey Features\r\n\r\n100% Wood-Pressed Black Mustard Oil\r\nNo Artificial Colors or Flavors\r\nNo Added Preservatives\r\nRich Natural Aroma\r\nTraditionally Extracted\r\nSuitable for Daily Cooking', 'WOODPRESS BLACK MUSTARD OIL\r\n\r\nMade from carefully selected black mustard seeds using the traditional wood-pressed (cold-pressed) extraction method. This process helps retain the oil\'s natural aroma, flavor, and nutrients. It is suitable for everyday cooking, pickling, sautéing, and traditional recipes.\r\n\r\nKey Features\r\n\r\n100% Wood-Pressed Black Mustard Oil\r\nNo Artificial Colors or Flavors\r\nNo Added Preservatives\r\nRich Natural Aroma\r\nTraditionally Extracted\r\nSuitable for Daily Cooking', 'WOODPRESS BLACK MUSTARD OIL\r\n\r\nMade from carefully selected black mustard seeds using the traditional wood-pressed (cold-pressed) extraction method. This process helps retain the oil\'s natural aroma, flavor, and nutrients. It is suitable for everyday cooking, pickling, sautéing, and traditional recipes.\r\n\r\nKey Features\r\n\r\n100% Wood-Pressed Black Mustard Oil\r\nNo Artificial Colors or Flavors\r\nNo Added Preservatives\r\nRich Natural Aroma\r\nTraditionally Extracted\r\nSuitable for Daily Cooking', 'WOODPRESS BLACK MUSTARD OIL\r\n\r\nMade from carefully selected black mustard seeds using the traditional wood-pressed (cold-pressed) extraction method. This process helps retain the oil\'s natural aroma, flavor, and nutrients. It is suitable for everyday cooking, pickling, sautéing, and traditional recipes.\r\n\r\nKey Features\r\n\r\n100% Wood-Pressed Black Mustard Oil\r\nNo Artificial Colors or Flavors\r\nNo Added Preservatives\r\nRich Natural Aroma\r\nTraditionally Extracted\r\nSuitable for Daily Cooking', '/uploads/products/main-384a7fe56a24d56ac28be156b4ef2601172c40cc-1780901710486-mczq0m.png', 1, 700, 630, 2, 65, 65, 0, 1, '2026-06-08 06:52:52.899', '2026-07-20 11:02:53.679'),
-(4, '2', 'WOODPRESS OIL', 1, '1LTR WOODPRESS YELLOW MUSTARD OIL', 'WOODPRESS YELLOW MUSTARD OIL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 5, 11, 2, 78, 78, 0, 0, '2026-06-08 06:52:52.901', '2026-07-20 11:02:53.679'),
-(5, '3', 'WOODPRESS OIL', 1, '1LTR WOODPRESS PEANUT OIL', 'WOODPRESS PEANUT OIL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 950, 855, NULL, 82, 82, 0, 0, '2026-06-08 06:52:52.902', '2026-07-20 11:02:53.679'),
-(6, '4', 'WOODPRESS OIL', 1, '1LTR WOODPRESS SESAME OIL', 'WOODPRESS SESAME OIL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 1100, 990, NULL, 84, 84, 0, 0, '2026-06-08 06:52:52.904', '2026-07-20 11:02:53.679'),
-(7, '5', 'WOODPRESS OIL', 1, '1LTR WOODPRESS COCONUT OIL', 'WOODPRESS COCONUT OIL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 2500, 2250, NULL, 88, 88, 0, 0, '2026-06-08 06:52:52.905', '2026-07-20 11:02:53.680'),
-(8, '6', 'WOODPRESS OIL', 1, '300ML WOODPRESS COCONUT OIL', 'WOODPRESS COCONUT OIL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 700, 630, NULL, 90, 90, 0, 0, '2026-06-08 06:52:52.907', '2026-06-28 04:45:30.297'),
-(9, '7', 'WOODPRESS OIL', 1, '200ML WOODPRESS COCONUT OIL', 'WOODPRESS COCONUT OIL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 500, 450, NULL, 92, 92, 0, 0, '2026-06-08 06:52:52.908', '2026-06-28 04:45:30.298'),
-(10, '8', 'WOODPRESS OIL', 1, '1LTR COLDPRESS BLACK MUSTARD OIL', 'COLDPRESS BLACK MUSTARD OIL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 600, 540, NULL, 92, 92, 0, 0, '2026-06-08 06:52:52.909', '2026-07-20 11:02:53.681'),
-(11, '9', 'WOODPRESS OIL', 1, '5LTR WOODPRESS BLACK MUSTARD OIL', 'WOODPRESS BLACK MUSTARD OIL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 3000, 2700, 2, 92, 92, 0, 1, '2026-06-08 06:52:52.910', '2026-07-20 10:44:17.378'),
-(12, '10', 'WOODPRESS OIL', 1, '5LTR WOODPRESS YELLOW MUSTARD OIL', 'WOODPRESS YELLOW MUSTARD OIL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 3500, 3150, 2, 97, 97, 0, 0, '2026-06-08 06:52:52.912', '2026-08-14 04:37:31.606'),
-(13, '11', 'WOODPRESS OIL', 1, '5LTR WOODPRESS PEANUT OIL', 'WOODPRESS PEANUT OIL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 4000, 3600, NULL, 100, 100, 0, 0, '2026-06-08 06:52:52.913', '2026-06-28 04:45:30.304'),
-(14, '12', 'WOODPRESS OIL', 1, '5LTR COLDPRESS BLACK MUSTARD OIL', 'COLDPRESS BLACK MUSTARD OIL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 2500, 2250, NULL, 102, 102, 0, 0, '2026-06-08 06:52:52.914', '2026-06-28 04:45:30.306'),
-(15, '13', 'STONEPRESS FLOUR', 1, '1KG STONEPRESS KODO FLOUR', 'STONEPRESS KODO FLOUR', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 200, 180, NULL, 104, 104, 0, 0, '2026-06-08 06:52:52.916', '2026-07-20 11:02:53.681'),
-(16, '14', 'STONEPRESS FLOUR', 1, '1KG STONEPRESS BAJRA FLOUR', 'STONEPRESS BAJRA FLOUR', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 200, 180, NULL, 105, 105, 0, 0, '2026-06-08 06:52:52.917', '2026-07-20 11:02:53.681'),
-(17, '15', 'STONEPRESS FLOUR', 1, '1KG STONEPRESS FAFER FLOUR', 'STONEPRESS FAFER FLOUR', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 250, 225, NULL, 108, 108, 0, 0, '2026-06-08 06:52:52.918', '2026-07-20 11:02:53.681'),
-(18, '16', 'STONEPRESS FLOUR', 1, '1KG STONEPRESS JAU FLOUR', 'STONEPRESS JAU FLOUR', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 250, 225, NULL, 110, 110, 0, 0, '2026-06-08 06:52:52.919', '2026-07-20 11:02:53.681'),
-(19, '17', 'STONEPRESS FLOUR', 1, '1KG STONEPRESS JOWAR FLOUR', 'STONEPRESS JOWAR FLOUR', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 250, 225, NULL, 112, 112, 0, 0, '2026-06-08 06:52:52.920', '2026-07-20 11:02:53.681'),
-(20, '18', 'STONEPRESS FLOUR', 1, '1KG STONEPRESS MAKAI FLOUR', 'STONEPRESS MAKAI FLOUR', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 150, 135, NULL, 114, 114, 0, 0, '2026-06-08 06:52:52.921', '2026-07-20 11:02:53.681'),
-(21, '19', 'STONEPRESS FLOUR', 1, '1KG STONEPRESS BESAN FLOUR', 'STONEPRESS BESAN FLOUR', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 250, 225, NULL, 114, 114, 0, 0, '2026-06-08 06:52:52.923', '2026-07-20 11:02:53.681'),
-(22, '20', 'STONEPRESS SPICES', 1, '400GMS STONEPRESS RED CHILLI POWDER', 'STONEPRESS RED CHILLI  POWDER', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 520, 468, NULL, 118, 118, 0, 0, '2026-06-08 06:52:52.924', '2026-07-20 11:02:53.681'),
-(23, '21', 'STONEPRESS SPICES', 1, '400GMS STONEPRESS TURMERIC POWDER', 'STONEPRESS TURMERIC  POWDER', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 470, 423, NULL, 120, 120, 0, 0, '2026-06-08 06:52:52.925', '2026-07-20 11:02:53.681'),
-(24, '22', 'STONEPRESS SPICES', 1, '400GMS STONEPRESS CORIANDER POWDER', 'STONEPRESS CORIANDER  POWDER', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 340, 306, NULL, 121, 121, 0, 0, '2026-06-08 06:52:52.926', '2026-07-20 11:02:53.681'),
-(25, '23', 'STONEPRESS SPICES', 1, '500GMS JAGGERY POWDER', 'JAGGERY POWDER', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 275, 247.5, NULL, 124, 124, 0, 0, '2026-06-08 06:52:52.927', '2026-07-20 11:02:53.682'),
-(26, '24', 'DALIYA', 1, '1KG DALIYA WHITE MAKAI', 'DALIYA WHITE MAKAI', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 150, 135, NULL, 126, 126, 0, 0, '2026-06-08 06:52:52.928', '2026-08-14 05:06:47.218'),
-(27, '25', 'DALIYA', 1, '1KG DALIYA YELLOW MAKAI', 'DALIYA YELLOW MAKAI', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 150, 135, NULL, 109, 109, 0, 0, '2026-06-08 06:52:52.929', '2026-08-14 05:06:47.218'),
-(28, '26', 'DALIYA', 1, '1KG DALIYA WHEAT', 'DALIYA WHEAT', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 200, 180, NULL, 130, 130, 0, 0, '2026-06-08 06:52:52.931', '2026-07-20 11:02:53.682'),
-(29, '27', 'DALIYA', 1, '1KG DALIYA JAU', 'DALIYA JAU', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 250, 225, NULL, 132, 132, 0, 0, '2026-06-08 06:52:52.932', '2026-08-14 05:06:47.218'),
-(30, '28', 'SATTU', 1, '500GMS CHANNA SATTU', 'CHANNA SATTU', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 250, 225, NULL, 134, 134, 0, 0, '2026-06-08 06:52:52.933', '2026-07-20 11:02:53.682'),
-(31, '29', 'SATTU', 1, '500GMS JAU SATTU', 'JAU SATTU', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 250, 225, NULL, 136, 136, 0, 0, '2026-06-08 06:52:52.934', '2026-08-14 05:06:47.218'),
-(32, '30', 'SATTU', 1, '500GMS MULTIGRAIN SATTU', 'MULTIGRAIN SATTU', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 250, 225, NULL, 138, 138, 0, 0, '2026-06-08 06:52:52.935', '2026-07-20 11:02:53.682');
+(115, '50', 'Branch Stock', 1, 'Sample Product', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.713', '2026-08-24 06:09:49.708'),
+(116, '51', 'WOODPRESS OIL', 1, 'WOODPRESS BLACK MUSTARD OIL - 1000 ML', 'WOODPRESS BLACK MUSTARD OIL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.719', '2026-08-24 06:09:49.478'),
+(117, '52', 'WOODPRESS OIL', 1, 'WOODPRESS YELLOW MUSTARD OIL - 1000 ML', 'WOODPRESS YELLOW MUSTARD OIL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.724', '2026-08-24 06:09:49.480'),
+(118, '53', 'WOODPRESS OIL', 1, 'WOODPRESS PEANUT OIL - 1000 ML', 'WOODPRESS PEANUT OIL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.727', '2026-08-24 06:09:49.484'),
+(119, '54', 'WOODPRESS OIL', 1, 'WOODPRESS SESAME OIL - 1000 ML', 'WOODPRESS SESAME OIL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.729', '2026-08-24 06:09:49.489'),
+(120, '55', 'WOODPRESS OIL', 1, 'WOODPRESS COCONUT OIL - 1000 ML', 'WOODPRESS COCONUT OIL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.731', '2026-08-24 06:09:49.491'),
+(121, '56', 'WOODPRESS OIL', 1, 'WOODPRESS COCONUT OIL - 300 ML', 'WOODPRESS COCONUT OIL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.733', '2026-08-24 06:09:49.494'),
+(122, '57', 'COLDPRESS OIL', 1, 'COLDPRESS BLACK MUSTARD OIL - 1000 ML', 'COLDPRESS BLACK MUSTARD OIL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.736', '2026-08-24 06:09:49.496'),
+(123, '58', 'WOODPRESS OIL', 1, 'WOODPRESS BLACK MUSTARD OIL - 5000 ML', 'WOODPRESS BLACK MUSTARD OIL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.738', '2026-08-24 06:09:49.500'),
+(124, '59', 'WOODPRESS OIL', 1, 'WOODPRESS YELLOW MUSTARD OIL - 5000 ML', 'WOODPRESS YELLOW MUSTARD OIL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.741', '2026-08-24 06:09:49.503'),
+(125, '60', 'WOODPRESS OIL', 1, 'WOODPRESS SESAME OIL - 5000 ML', 'WOODPRESS SESAME OIL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.742', '2026-08-24 06:09:49.505'),
+(126, '61', 'WOODPRESS OIL', 1, 'WOODPRESS PEANUT OIL - 5000 ML', 'WOODPRESS PEANUT OIL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.744', '2026-08-24 06:09:49.507'),
+(127, '62', 'COLDPRESS OIL', 1, 'COLDPRESS BLACK MUSTARD OIL - 5000 ML', 'COLDPRESS BLACK MUSTARD OIL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.747', '2026-08-24 06:09:49.510'),
+(128, '63', 'STONEPRESS FLOUR', 1, 'STONEPRESS KODO FLOUR 1 KG', 'STONEPRESS KODO FLOUR', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.749', '2026-08-24 06:09:49.513'),
+(129, '64', 'STONEPRESS FLOUR', 1, 'STONEPRESS BAJRA FLOUR 1 KG', 'STONEPRESS BAJRA FLOUR', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.753', '2026-08-24 06:09:49.515'),
+(130, '65', 'STONEPRESS FLOUR', 1, 'STONEPRESS FAFER FLOUR 1 KG', 'STONEPRESS FAFER FLOUR', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.756', '2026-08-24 06:09:49.518'),
+(131, '66', 'STONEPRESS FLOUR', 1, 'STONEPRESS JAU FLOUR 1 KG', 'STONEPRESS JAU FLOUR', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.758', '2026-08-24 06:09:49.521'),
+(132, '67', 'STONEPRESS FLOUR', 1, 'STONEPRESS JOWAR FLOUR 1 KG', 'STONEPRESS JOWAR FLOUR', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.759', '2026-08-24 06:09:49.523'),
+(133, '68', 'STONEPRESS FLOUR', 1, 'STONEPRESS MAKAI FLOUR 1 KG', 'STONEPRESS MAKAI FLOUR', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.760', '2026-08-24 06:09:49.526'),
+(134, '69', 'STONEPRESS FLOUR', 1, 'STONEPRESS BESAN FLOUR 1 KG', 'STONEPRESS BESAN FLOUR', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.762', '2026-08-24 06:09:49.529'),
+(135, '70', 'SPICES', 1, 'STONEPRESS RED CHILLI  POWDER - 400 GMS', 'STONEPRESS RED CHILLI  POWDER', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.764', '2026-08-24 06:09:49.533'),
+(136, '71', 'SPICES', 1, 'STONEPRESS TURMERIC  POWDER - 400 GMS', 'STONEPRESS TURMERIC  POWDER', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.766', '2026-08-24 06:09:49.536'),
+(137, '72', 'SPICES', 1, 'STONEPRESS CORIANDER  POWDER - 400 GMS', 'STONEPRESS CORIANDER  POWDER', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.769', '2026-08-24 06:09:49.539'),
+(138, '73', 'JAGGERY', 1, 'JAGGERY POWDER - 1 KG', 'JAGGERY POWDER', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.772', '2026-08-24 06:09:49.542'),
+(139, '74', 'JAGGERY', 1, 'JAGGERY POWDER - 25 KGS', 'JAGGERY POWDER', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.774', '2026-08-24 06:09:49.545'),
+(140, '75', 'JAGGERY', 1, 'JAGGERY POWDER - 500 GMS', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.776', '2026-08-24 06:09:49.708'),
+(141, '76', 'DALIYA', 1, 'DALIYA WHITE MAKAI - 1 KG', 'DALIYA WHITE MAKAI', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.778', '2026-08-24 06:09:49.551'),
+(142, '77', 'DALIYA', 1, 'DALIYA YELLOW MAKAI - 1 KG', 'DALIYA YELLOW MAKAI', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.781', '2026-08-24 06:09:49.554'),
+(143, '78', 'DALIYA', 1, 'DALIYA WHEAT - 1 KG', 'DALIYA WHEAT', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.783', '2026-08-24 06:09:49.557'),
+(144, '79', 'DALIYA', 1, 'DALIYA JAU - 1 KG', 'DALIYA JAU', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.786', '2026-08-24 06:09:49.560'),
+(145, '80', 'SATTU', 1, 'CHANNA SATTU - 500 GMS', 'CHANNA SATTU', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.789', '2026-08-24 06:09:49.563'),
+(146, '81', 'SATTU', 1, 'JAU SATTU - 500 GMS', 'JAU SATTU', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.791', '2026-08-24 06:09:49.566'),
+(147, '82', 'SATTU', 1, 'MULTIGRAIN SATTU - 500 GMS', 'MULTIGRAIN SATTU', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.793', '2026-08-24 06:09:49.569'),
+(148, '83', 'STONEPRESS FLOUR', 1, 'STONEPRESS WHEAT FLOUR 1KG - SARBAT', 'STONEPRESS WHEAT FLOUR', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.796', '2026-08-24 06:09:49.572'),
+(149, '84', 'Branch Stock', 1, 'Cold Press Black Mustard Oil 1000ml', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.798', '2026-08-24 06:09:49.708'),
+(150, '85', 'Branch Stock', 1, 'Daily Makai', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.801', '2026-08-24 06:09:49.708'),
+(151, '86', 'Branch Stock', 1, 'Daily Wheat', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.804', '2026-08-24 06:09:49.708'),
+(152, '87', 'Branch Stock', 1, 'Jaggery Powder', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.806', '2026-08-24 06:09:49.708'),
+(153, '88', 'Branch Stock', 1, 'Jaggery Powder 1kg', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.808', '2026-08-24 06:09:49.708'),
+(154, '89', 'Branch Stock', 1, 'Jaggery Powder 25kg', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.812', '2026-08-24 06:09:49.708'),
+(155, '90', 'Branch Stock', 1, 'Sattu Chana', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.815', '2026-08-24 06:09:49.708'),
+(156, '91', 'Branch Stock', 1, 'Sattu Multigrain', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.816', '2026-08-24 06:09:49.708'),
+(157, '92', 'Branch Stock', 1, 'Stone Press Bajra Flour 1kg', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.818', '2026-08-24 06:09:49.708'),
+(158, '93', 'Branch Stock', 1, 'Stone Press Besan Flour 1kg', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.820', '2026-08-24 06:09:49.708'),
+(159, '94', 'Branch Stock', 1, 'Stone Press Coriander Powder', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.823', '2026-08-24 06:09:49.708'),
+(160, '95', 'Branch Stock', 1, 'Stone Press Fafer Flour 1kg', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.824', '2026-08-24 06:09:49.708'),
+(161, '96', 'Branch Stock', 1, 'Stone Press Jau Flour 1kg', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.826', '2026-08-24 06:09:49.708'),
+(162, '97', 'Branch Stock', 1, 'Stone Press Jowar Flour 1kg', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.828', '2026-08-24 06:09:49.708'),
+(163, '98', 'Branch Stock', 1, 'Stone Press Kodo Flour 1kg', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.830', '2026-08-24 06:09:49.708'),
+(164, '99', 'Branch Stock', 1, 'Stone Press Makkai Flour 1kg', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.832', '2026-08-24 06:09:49.708'),
+(165, '100', 'Branch Stock', 1, 'Stone Press Red Chilly Powder', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.835', '2026-08-24 06:09:49.708'),
+(166, '101', 'Branch Stock', 1, 'Stone Press Tumeric Powder', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.837', '2026-08-24 06:09:49.708'),
+(167, '102', 'Branch Stock', 1, 'Stone Press Wheat 1kg', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.839', '2026-08-24 06:09:49.708'),
+(168, '103', 'Branch Stock', 1, 'Wood Press Black Mustard Oil 1000ml', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.840', '2026-08-24 06:09:49.708'),
+(169, '104', 'Branch Stock', 1, 'Wood Press Black Mustard Oil 20ltrs', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.842', '2026-08-24 06:09:49.708'),
+(170, '105', 'Branch Stock', 1, 'Wood Press Black Mustard Oil 5000ml', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.843', '2026-08-24 06:09:49.708'),
+(171, '106', 'Branch Stock', 1, 'Wood Press Black Mustard Oil 500ml', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.844', '2026-08-24 06:09:49.708'),
+(172, '107', 'Branch Stock', 1, 'Wood Press Coconut Oil 1000ml', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.845', '2026-08-24 06:09:49.708'),
+(173, '108', 'Branch Stock', 1, 'Wood Press Peanut Oil 1000ml', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.846', '2026-08-24 06:09:49.708'),
+(174, '109', 'Branch Stock', 1, 'Wood Press Peanut Oil 5000ml', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.848', '2026-08-24 06:09:49.708'),
+(175, '110', 'Branch Stock', 1, 'Wood Press Sesami Oil 1000ml', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.849', '2026-08-24 06:09:49.708'),
+(176, '111', 'Branch Stock', 1, 'Wood Press Sesami Oil 5000ml', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.851', '2026-08-24 06:09:49.708'),
+(177, '112', 'Branch Stock', 1, 'Wood Press Yellow Mustard Oil 1000ml', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.855', '2026-08-24 06:09:49.708'),
+(178, '113', 'Local Rice', 1, 'Bucket Wheat 50kg', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.859', '2026-08-24 06:09:49.708'),
+(179, '114', 'Local Rice', 1, 'Chana 25kg', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.864', '2026-08-24 06:09:49.708'),
+(180, '115', 'Local Rice', 1, 'Chiura 20  Kg', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.870', '2026-08-24 06:09:49.708'),
+(181, '116', 'Local Rice', 1, 'Kabuli Chana 30kg', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.874', '2026-08-24 06:09:49.708'),
+(182, '117', 'Local Rice', 1, 'Kala Bhatamas25kg', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.878', '2026-08-24 06:09:49.708'),
+(183, '118', 'Local Rice', 1, 'Kwanti 20kg', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.882', '2026-08-24 06:09:49.708'),
+(184, '119', 'Local Rice', 1, 'Mass Dal 25kg', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.887', '2026-08-24 06:09:49.708'),
+(185, '120', 'Local Rice', 1, 'Moong Dal 25kg', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.891', '2026-08-24 06:09:49.708'),
+(186, '121', 'Local Rice', 1, 'Moong Khosta 25kg', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.894', '2026-08-24 06:09:49.708'),
+(187, '122', 'Local Rice', 1, 'Musuro Dal 25 KG', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.900', '2026-08-24 06:09:49.708'),
+(188, '123', 'Local Rice', 1, 'Rajma (30 Kg)', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.919', '2026-08-24 06:09:49.708'),
+(189, '124', 'Local Rice', 1, 'Rice 20 Kg', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.923', '2026-08-24 06:09:49.708'),
+(190, '125', 'Local Rice', 1, 'Rice 25 KG', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.926', '2026-08-24 06:09:49.708'),
+(191, '126', 'Local Rice', 1, 'Rice 30 Kg', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.929', '2026-08-24 06:09:49.708'),
+(192, '127', 'Local Rice', 1, 'Seto Semi 30kg', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.932', '2026-08-24 06:09:49.708'),
+(193, '128', 'Local Rice', 1, 'Wheat 25kg', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.934', '2026-08-24 06:09:49.708'),
+(194, '129', 'Medical', 1, 'International Acilarix LXS Series Diagnostic Ultrasound System with Accessories.', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.937', '2026-08-24 06:09:49.708'),
+(195, '130', 'Medical', 1, 'SONY-UPP-X899 17D Thermal Printer', 'No Subgroup', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.939', '2026-08-24 06:09:49.708'),
+(196, '131', 'OIL', 1, '1LTR COLDPRESS BLACK MUSTARD OIL', 'COLDPRESS BLACK MUSTARD OIL', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, NULL, NULL, 0, 0, '2026-08-24 05:46:31.941', '2026-08-24 06:09:49.710');
 
 -- --------------------------------------------------------
 
@@ -673,36 +677,88 @@ CREATE TABLE `productVariant` (
 --
 
 INSERT INTO `productVariant` (`variantId`, `pCode`, `subGroupName`, `variationName`, `salesRate`, `stockQuantity`, `createdAt`, `updatedAt`) VALUES
-(1, '1', 'WOODPRESS BLACK MUSTARD OIL', '1LTR WOODPRESS BLACK MUSTARD OIL', 630, 65, '2026-06-08 06:49:14.495', '2026-07-20 11:02:53.679'),
-(2, '2', 'WOODPRESS YELLOW MUSTARD OIL', '1LTR WOODPRESS YELLOW MUSTARD OIL', 11, 78, '2026-06-08 06:49:14.495', '2026-07-20 11:02:53.679'),
-(3, '3', 'WOODPRESS PEANUT OIL', '1LTR WOODPRESS PEANUT OIL', 855, 82, '2026-06-08 06:49:14.495', '2026-07-20 11:02:53.679'),
-(4, '4', 'WOODPRESS SESAME OIL', '1LTR WOODPRESS SESAME OIL', 990, 84, '2026-06-08 06:49:14.495', '2026-07-20 11:02:53.679'),
-(5, '5', 'WOODPRESS COCONUT OIL', '1LTR WOODPRESS COCONUT OIL', 2250, 88, '2026-06-08 06:49:14.495', '2026-07-20 11:02:53.681'),
-(6, '6', 'WOODPRESS COCONUT OIL', '300ML WOODPRESS COCONUT OIL', 630, 90, '2026-06-08 06:49:14.495', '2026-06-28 04:45:30.365'),
-(7, '7', 'WOODPRESS COCONUT OIL', '200ML WOODPRESS COCONUT OIL', 450, 92, '2026-06-08 06:49:14.495', '2026-06-28 04:45:30.366'),
-(8, '8', 'COLDPRESS BLACK MUSTARD OIL', '1LTR COLDPRESS BLACK MUSTARD OIL', 540, 92, '2026-06-08 06:49:14.495', '2026-07-20 11:02:53.681'),
-(9, '9', 'WOODPRESS BLACK MUSTARD OIL', '5LTR WOODPRESS BLACK MUSTARD OIL', 2700, 92, '2026-06-08 06:49:14.495', '2026-07-20 10:44:17.378'),
-(10, '10', 'WOODPRESS YELLOW MUSTARD OIL', '5LTR WOODPRESS YELLOW MUSTARD OIL', 3150, 97, '2026-06-08 06:49:14.495', '2026-08-14 04:37:31.606'),
-(11, '11', 'WOODPRESS PEANUT OIL', '5LTR WOODPRESS PEANUT OIL', 3600, 100, '2026-06-08 06:49:14.495', '2026-06-28 04:45:30.368'),
-(12, '12', 'COLDPRESS BLACK MUSTARD OIL', '5LTR COLDPRESS BLACK MUSTARD OIL', 2250, 102, '2026-06-08 06:49:14.495', '2026-06-28 04:45:30.368'),
-(13, '13', 'STONEPRESS KODO FLOUR', '1KG STONEPRESS KODO FLOUR', 180, 104, '2026-06-08 06:49:14.495', '2026-07-20 11:02:53.681'),
-(14, '14', 'STONEPRESS BAJRA FLOUR', '1KG STONEPRESS BAJRA FLOUR', 180, 105, '2026-06-08 06:49:14.495', '2026-07-20 11:02:53.681'),
-(15, '15', 'STONEPRESS FAFER FLOUR', '1KG STONEPRESS FAFER FLOUR', 225, 108, '2026-06-08 06:49:14.495', '2026-07-20 11:02:53.681'),
-(16, '16', 'STONEPRESS JAU FLOUR', '1KG STONEPRESS JAU FLOUR', 225, 110, '2026-06-08 06:49:14.495', '2026-07-20 11:02:53.681'),
-(17, '17', 'STONEPRESS JOWAR FLOUR', '1KG STONEPRESS JOWAR FLOUR', 225, 112, '2026-06-08 06:49:14.495', '2026-07-20 11:02:53.681'),
-(18, '18', 'STONEPRESS MAKAI FLOUR', '1KG STONEPRESS MAKAI FLOUR', 135, 114, '2026-06-08 06:49:14.495', '2026-07-20 11:02:53.681'),
-(19, '19', 'STONEPRESS BESAN FLOUR', '1KG STONEPRESS BESAN FLOUR', 225, 114, '2026-06-08 06:49:14.495', '2026-07-20 11:02:53.681'),
-(20, '20', 'STONEPRESS RED CHILLI  POWDER', '400GMS STONEPRESS RED CHILLI POWDER', 468, 118, '2026-06-08 06:49:14.495', '2026-07-20 11:02:53.681'),
-(21, '21', 'STONEPRESS TURMERIC  POWDER', '400GMS STONEPRESS TURMERIC POWDER', 423, 120, '2026-06-08 06:49:14.495', '2026-07-20 11:02:53.681'),
-(22, '22', 'STONEPRESS CORIANDER  POWDER', '400GMS STONEPRESS CORIANDER POWDER', 306, 121, '2026-06-08 06:49:14.495', '2026-07-20 11:02:53.682'),
-(23, '23', 'JAGGERY POWDER', '500GMS JAGGERY POWDER', 247.5, 124, '2026-06-08 06:49:14.495', '2026-07-20 11:02:53.682'),
-(24, '24', 'DALIYA WHITE MAKAI', '1KG DALIYA WHITE MAKAI', 135, 126, '2026-06-08 06:49:14.495', '2026-08-14 05:06:47.218'),
-(25, '25', 'DALIYA YELLOW MAKAI', '1KG DALIYA YELLOW MAKAI', 135, 109, '2026-06-08 06:49:14.495', '2026-08-14 05:06:47.218'),
-(26, '26', 'DALIYA WHEAT', '1KG DALIYA WHEAT', 180, 130, '2026-06-08 06:49:14.495', '2026-07-20 11:02:53.682'),
-(27, '27', 'DALIYA JAU', '1KG DALIYA JAU', 225, 132, '2026-06-08 06:49:14.495', '2026-08-14 05:06:47.218'),
-(28, '28', 'CHANNA SATTU', '500GMS CHANNA SATTU', 225, 134, '2026-06-08 06:49:14.495', '2026-07-20 11:02:53.682'),
-(29, '29', 'JAU SATTU', '500GMS JAU SATTU', 225, 136, '2026-06-08 06:49:14.495', '2026-08-14 05:06:47.218'),
-(30, '30', 'MULTIGRAIN SATTU', '500GMS MULTIGRAIN SATTU', 225, 138, '2026-06-08 06:49:14.495', '2026-07-20 11:02:53.682');
+(113, '50', 'No Subgroup', 'Sample Product', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.726'),
+(114, '51', 'WOODPRESS BLACK MUSTARD OIL', 'WOODPRESS BLACK MUSTARD OIL - 1000 ML', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.727'),
+(115, '52', 'WOODPRESS YELLOW MUSTARD OIL', 'WOODPRESS YELLOW MUSTARD OIL - 1000 ML', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.728'),
+(116, '53', 'WOODPRESS PEANUT OIL', 'WOODPRESS PEANUT OIL - 1000 ML', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.729'),
+(117, '54', 'WOODPRESS SESAME OIL', 'WOODPRESS SESAME OIL - 1000 ML', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.730'),
+(118, '55', 'WOODPRESS COCONUT OIL', 'WOODPRESS COCONUT OIL - 1000 ML', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.730'),
+(119, '56', 'WOODPRESS COCONUT OIL', 'WOODPRESS COCONUT OIL - 300 ML', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.731'),
+(120, '57', 'COLDPRESS BLACK MUSTARD OIL', 'COLDPRESS BLACK MUSTARD OIL - 1000 ML', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.731'),
+(121, '58', 'WOODPRESS BLACK MUSTARD OIL', 'WOODPRESS BLACK MUSTARD OIL - 5000 ML', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.732'),
+(122, '59', 'WOODPRESS YELLOW MUSTARD OIL', 'WOODPRESS YELLOW MUSTARD OIL - 5000 ML', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.732'),
+(123, '60', 'WOODPRESS SESAME OIL', 'WOODPRESS SESAME OIL - 5000 ML', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.733'),
+(124, '61', 'WOODPRESS PEANUT OIL', 'WOODPRESS PEANUT OIL - 5000 ML', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.733'),
+(125, '62', 'COLDPRESS BLACK MUSTARD OIL', 'COLDPRESS BLACK MUSTARD OIL - 5000 ML', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.733'),
+(126, '63', 'STONEPRESS KODO FLOUR', 'STONEPRESS KODO FLOUR 1 KG', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.734'),
+(127, '64', 'STONEPRESS BAJRA FLOUR', 'STONEPRESS BAJRA FLOUR 1 KG', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.735'),
+(128, '65', 'STONEPRESS FAFER FLOUR', 'STONEPRESS FAFER FLOUR 1 KG', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.736'),
+(129, '66', 'STONEPRESS JAU FLOUR', 'STONEPRESS JAU FLOUR 1 KG', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.737'),
+(130, '67', 'STONEPRESS JOWAR FLOUR', 'STONEPRESS JOWAR FLOUR 1 KG', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.737'),
+(131, '68', 'STONEPRESS MAKAI FLOUR', 'STONEPRESS MAKAI FLOUR 1 KG', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.738'),
+(132, '69', 'STONEPRESS BESAN FLOUR', 'STONEPRESS BESAN FLOUR 1 KG', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.739'),
+(133, '70', 'STONEPRESS RED CHILLI  POWDER', 'STONEPRESS RED CHILLI  POWDER - 400 GMS', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.739'),
+(134, '71', 'STONEPRESS TURMERIC  POWDER', 'STONEPRESS TURMERIC  POWDER - 400 GMS', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.740'),
+(135, '72', 'STONEPRESS CORIANDER  POWDER', 'STONEPRESS CORIANDER  POWDER - 400 GMS', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.741'),
+(136, '73', 'JAGGERY POWDER', 'JAGGERY POWDER - 1 KG', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.741'),
+(137, '74', 'JAGGERY POWDER', 'JAGGERY POWDER - 25 KGS', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.743'),
+(138, '75', 'No Subgroup', 'JAGGERY POWDER - 500 GMS', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.743'),
+(139, '76', 'DALIYA WHITE MAKAI', 'DALIYA WHITE MAKAI - 1 KG', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.744'),
+(140, '77', 'DALIYA YELLOW MAKAI', 'DALIYA YELLOW MAKAI - 1 KG', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.745'),
+(141, '78', 'DALIYA WHEAT', 'DALIYA WHEAT - 1 KG', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.745'),
+(142, '79', 'DALIYA JAU', 'DALIYA JAU - 1 KG', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.746'),
+(143, '80', 'CHANNA SATTU', 'CHANNA SATTU - 500 GMS', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.748'),
+(144, '81', 'JAU SATTU', 'JAU SATTU - 500 GMS', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.749'),
+(145, '82', 'MULTIGRAIN SATTU', 'MULTIGRAIN SATTU - 500 GMS', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.749'),
+(146, '83', 'STONEPRESS WHEAT FLOUR', 'STONEPRESS WHEAT FLOUR 1KG - SARBAT', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.750'),
+(147, '84', 'No Subgroup', 'Cold Press Black Mustard Oil 1000ml', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.751'),
+(148, '85', 'No Subgroup', 'Daily Makai', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.752'),
+(149, '86', 'No Subgroup', 'Daily Wheat', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.753'),
+(150, '87', 'No Subgroup', 'Jaggery Powder', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.753'),
+(151, '88', 'No Subgroup', 'Jaggery Powder 1kg', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.754'),
+(152, '89', 'No Subgroup', 'Jaggery Powder 25kg', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.755'),
+(153, '90', 'No Subgroup', 'Sattu Chana', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.755'),
+(154, '91', 'No Subgroup', 'Sattu Multigrain', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.756'),
+(155, '92', 'No Subgroup', 'Stone Press Bajra Flour 1kg', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.756'),
+(156, '93', 'No Subgroup', 'Stone Press Besan Flour 1kg', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.757'),
+(157, '94', 'No Subgroup', 'Stone Press Coriander Powder', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.757'),
+(158, '95', 'No Subgroup', 'Stone Press Fafer Flour 1kg', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.758'),
+(159, '96', 'No Subgroup', 'Stone Press Jau Flour 1kg', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.758'),
+(160, '97', 'No Subgroup', 'Stone Press Jowar Flour 1kg', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.758'),
+(161, '98', 'No Subgroup', 'Stone Press Kodo Flour 1kg', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.759'),
+(162, '99', 'No Subgroup', 'Stone Press Makkai Flour 1kg', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.760'),
+(163, '100', 'No Subgroup', 'Stone Press Red Chilly Powder', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.760'),
+(164, '101', 'No Subgroup', 'Stone Press Tumeric Powder', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.761'),
+(165, '102', 'No Subgroup', 'Stone Press Wheat 1kg', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.762'),
+(166, '103', 'No Subgroup', 'Wood Press Black Mustard Oil 1000ml', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.762'),
+(167, '104', 'No Subgroup', 'Wood Press Black Mustard Oil 20ltrs', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.762'),
+(168, '105', 'No Subgroup', 'Wood Press Black Mustard Oil 5000ml', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.763'),
+(169, '106', 'No Subgroup', 'Wood Press Black Mustard Oil 500ml', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.763'),
+(170, '107', 'No Subgroup', 'Wood Press Coconut Oil 1000ml', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.763'),
+(171, '108', 'No Subgroup', 'Wood Press Peanut Oil 1000ml', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.764'),
+(172, '109', 'No Subgroup', 'Wood Press Peanut Oil 5000ml', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.764'),
+(173, '110', 'No Subgroup', 'Wood Press Sesami Oil 1000ml', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.765'),
+(174, '111', 'No Subgroup', 'Wood Press Sesami Oil 5000ml', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.766'),
+(175, '112', 'No Subgroup', 'Wood Press Yellow Mustard Oil 1000ml', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.767'),
+(176, '113', 'No Subgroup', 'Bucket Wheat 50kg', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.768'),
+(177, '114', 'No Subgroup', 'Chana 25kg', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.769'),
+(178, '115', 'No Subgroup', 'Chiura 20  Kg', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.770'),
+(179, '116', 'No Subgroup', 'Kabuli Chana 30kg', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.770'),
+(180, '117', 'No Subgroup', 'Kala Bhatamas25kg', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.771'),
+(181, '118', 'No Subgroup', 'Kwanti 20kg', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.772'),
+(182, '119', 'No Subgroup', 'Mass Dal 25kg', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.772'),
+(183, '120', 'No Subgroup', 'Moong Dal 25kg', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.773'),
+(184, '121', 'No Subgroup', 'Moong Khosta 25kg', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.774'),
+(185, '122', 'No Subgroup', 'Musuro Dal 25 KG', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.775'),
+(186, '123', 'No Subgroup', 'Rajma (30 Kg)', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.776'),
+(187, '124', 'No Subgroup', 'Rice 20 Kg', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.777'),
+(188, '125', 'No Subgroup', 'Rice 25 KG', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.778'),
+(189, '126', 'No Subgroup', 'Rice 30 Kg', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.779'),
+(190, '127', 'No Subgroup', 'Seto Semi 30kg', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.779'),
+(191, '128', 'No Subgroup', 'Wheat 25kg', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.780'),
+(192, '129', 'No Subgroup', 'International Acilarix LXS Series Diagnostic Ultrasound System with Accessories.', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.780'),
+(193, '130', 'No Subgroup', 'SONY-UPP-X899 17D Thermal Printer', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.782'),
+(194, '131', 'COLDPRESS BLACK MUSTARD OIL', '1LTR COLDPRESS BLACK MUSTARD OIL', 0, 0, '2026-08-24 05:59:16.287', '2026-08-24 06:09:49.783');
 
 -- --------------------------------------------------------
 
@@ -764,19 +820,6 @@ CREATE TABLE `shippingDetails` (
   `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updatedAt` datetime(3) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `shippingDetails`
---
-
-INSERT INTO `shippingDetails` (`shippingDetailsId`, `orderId`, `productId`, `shippingCourier`, `trackingNumber`, `shippingDate`, `shippingRemark`, `shippingStatus`, `createdAt`, `updatedAt`) VALUES
-(1, 1, 11, NULL, NULL, NULL, 'Gyanendra Shah | 9821212332 | naxal, 09, Lumbini Sanskritik, Lumbini Province | Lumbini Sanskritik | Lumbini Province | naxal', 'PENDING', '2026-06-08 06:59:28.388', '2026-06-08 06:59:28.388'),
-(2, 2, 3, NULL, NULL, NULL, 'Gyanendra Shah | 9821212332 | naxal, 09, Lumbini Sanskritik, Lumbini Province | Lumbini Sanskritik | Lumbini Province | naxal', 'PENDING', '2026-06-09 05:47:13.821', '2026-06-09 05:47:13.821'),
-(3, 3, 3, NULL, NULL, NULL, 'Gyanendra Shah | 9821212332 | naxal, 09, Lumbini Sanskritik, Lumbini Province | Lumbini Sanskritik | Lumbini Province | naxal', 'PENDING', '2026-06-09 05:47:49.401', '2026-06-09 05:47:49.401'),
-(4, 4, 3, NULL, NULL, NULL, 'Gyanendra Shah | 9821212332 | naxal, 09, Lumbini Sanskritik, Lumbini Province | Lumbini Sanskritik | Lumbini Province | naxal', 'PENDING', '2026-06-09 05:48:55.873', '2026-06-09 05:48:55.873'),
-(5, 5, 3, NULL, NULL, NULL, 'Gyanendra Shah | 9821212332 | naxal, 09, Lumbini Sanskritik, Lumbini Province | Lumbini Sanskritik | Lumbini Province | naxal', 'PENDING', '2026-06-09 08:56:18.745', '2026-06-09 08:56:18.745'),
-(6, 6, 4, NULL, NULL, NULL, 'Gyanendra Shah | 9821212332 | naxal, 09, Lumbini Sanskritik, Lumbini Province | Lumbini Sanskritik | Lumbini Province | naxal', 'PENDING', '2026-06-09 10:23:56.757', '2026-06-09 10:23:56.757'),
-(7, 7, 4, NULL, NULL, NULL, 'Gyanendra Shah | 9821212332 | naxal, 09, Lumbini Sanskritik, Lumbini Province | Lumbini Sanskritik | Lumbini Province | naxal', 'PENDING', '2026-06-09 12:18:01.379', '2026-06-09 12:18:01.379');
 
 -- --------------------------------------------------------
 
@@ -1145,13 +1188,13 @@ ALTER TABLE `banner`
 -- AUTO_INCREMENT for table `cartList`
 --
 ALTER TABLE `cartList`
-  MODIFY `cartId` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `cartId` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `categoryId` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `categoryId` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `comboOrderCancellation`
@@ -1265,13 +1308,13 @@ ALTER TABLE `productReview`
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `productId` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `productId` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=197;
 
 --
 -- AUTO_INCREMENT for table `productVariant`
 --
 ALTER TABLE `productVariant`
-  MODIFY `variantId` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `variantId` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=195;
 
 --
 -- AUTO_INCREMENT for table `promoCode`
