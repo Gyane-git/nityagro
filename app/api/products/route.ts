@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { refreshLocalStockFromOms } from "@/lib/omsStock";
+import { refreshAllLocalStockFromOms } from "@/lib/omsStock";
 import { applyOmsPriceOverlay, fetchOmsProductPrices } from "@/lib/omsProductPrices";
 import { getPublicUploadDir } from "@/lib/uploadPaths";
 import { NextResponse } from "next/server";
@@ -138,7 +138,7 @@ export async function GET() {
       distinct: ["subGroupName"],
     });
 
-    const liveStockByCode = await refreshLocalStockFromOms(productGroupWise.map((product) => product.productCode)).catch((error) => {
+    const liveStockByCode = await refreshAllLocalStockFromOms().catch((error) => {
       console.warn("Live OMS stock overlay failed", error);
       return new Map<string, number>();
     });

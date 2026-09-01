@@ -75,6 +75,8 @@ type ProductSyncPayload = {
   productStatus: boolean;
   actualPrice: number;
   sellingPrice: number;
+  stockQuantity?: number;
+  availableQuantity?: number;
   deliveryTargetDays: null;
 };
 
@@ -84,6 +86,7 @@ type SubGroupSyncPayload = {
   variationName: string;
   //salesRate: number;
   MRP: number;
+  stockQuantity?: number;
 };
 
 type EditForm = {
@@ -231,6 +234,7 @@ export default function CategoriesListPage() {
             ),
             sellingPrice: readOmsNumber(
               item.MRP,
+              (item as Record<string, unknown>).Mrp,
               (item as Record<string, unknown>).mrp,
               item.SalesRate,
               (item as Record<string, unknown>).salesRate,
@@ -252,6 +256,7 @@ export default function CategoriesListPage() {
             // salesRate: item.SalesRate,
             MRP: readOmsNumber(
               item.MRP,
+              (item as Record<string, unknown>).Mrp,
               (item as Record<string, unknown>).mrp,
               (item as Record<string, unknown>).SalesRate,
               (item as Record<string, unknown>).salesRate,

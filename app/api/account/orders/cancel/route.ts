@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { cancelOmsOrderSafely } from "@/lib/omsOrderSync";
+import { refreshLocalStockFromOms } from "@/lib/omsStock";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -120,6 +121,12 @@ export async function POST(req: Request) {
       console.error("OMS cancellation log failed:", error);
       return null;
     });
+
+    if (order.product?.productCode) {
+      await refreshLocalStockFromOms([order.product.productCode]).catch((error) => {
+        console.warn("OMS stock refresh after cancellation failed:", error);
+      });
+    }
 
     return NextResponse.json(
       {
