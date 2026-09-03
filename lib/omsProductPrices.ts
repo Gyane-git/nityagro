@@ -1,5 +1,6 @@
-const DEFAULT_OMS_PRODUCT_LIST_URL =
-  "http://bkgroupapi.globaltech.com.np:802/api/MasterList/ProductListDivisionwise?dbname=BKGRP08301&Div=1";
+const DEFAULT_OMS_PRODUCT_LIST_URL = "http://bkgroupapi.globaltech.com.np:802/api/MasterList/ProductListDivisionwise?dbname=BKGRP08301&Div=1";
+
+  // "http://bkgroupapi.globaltech.com.np:802/api/MasterList/ListProduct?DbName=BKGRP08301&DivCode=1";
 const DEFAULT_OMS_PRODUCT_DB_NAME = "BKGRP08301";
 const DEFAULT_OMS_STORE_CODE = "BKGRP08301";
 const DEFAULT_OMS_DIVISION_CODE = "1";
