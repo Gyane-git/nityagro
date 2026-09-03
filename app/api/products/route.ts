@@ -132,29 +132,93 @@ async function saveProductImage(file: File, type: "main" | "gallery") {
   return `/uploads/products/${fileName}`;
 }
 
+// export async function GET() {
+//   try {
+//     const productGroupWise = await prisma.products.findMany({
+//       distinct: ["subGroupName"],
+//     });
+
+//     const liveStockByCode = await refreshAllLocalStockFromOms().catch((error) => {
+//       console.warn("Live OMS stock overlay failed", error);
+//       return new Map<string, number>();
+//     });
+//     const livePriceByCode = await fetchOmsProductPrices(
+//       productGroupWise.map((product) => product.productCode),
+//     ).catch((error) => {
+//       console.warn("Live OMS price overlay failed", error);
+//       return new Map<string, { actualPrice?: number; sellingPrice?: number }>();
+//     });
+//     const rows = productGroupWise.map((product) => {
+//       const liveStock = liveStockByCode.get(product.productCode);
+//       const withPrice = applyOmsPriceOverlay(
+//         product,
+//         livePriceByCode.get(product.productCode),
+//       );
+//       if (liveStock === undefined) return withPrice;
+//       return {
+//         ...withPrice,
+//         stockQuantity: liveStock,
+//         availableQuantity: liveStock,
+//         omsAvailableQty: liveStock,
+//       };
+//     });
+
+//     const safeData = JSON.parse(JSON.stringify(rows, (_, value) => (typeof value === "bigint" ? value.toString() : value)));
+
+//     return Response.json(
+//       {
+//         success: true,
+//         data: safeData,
+//       },
+//       { status: 200, headers: corsHeaders },
+//     );
+//   } catch (error) {
+//     return NextResponse.json({ success: false, message: String(error) }, { status: 500, headers: corsHeaders });
+//   }
+// }
+
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  return shuffled;
+}
+
 export async function GET() {
   try {
     const productGroupWise = await prisma.products.findMany({
       distinct: ["subGroupName"],
     });
 
+    // Randomize product order
+    const shuffledProducts = shuffleArray(productGroupWise);
+
     const liveStockByCode = await refreshAllLocalStockFromOms().catch((error) => {
       console.warn("Live OMS stock overlay failed", error);
+
       return new Map<string, number>();
     });
-    const livePriceByCode = await fetchOmsProductPrices(
-      productGroupWise.map((product) => product.productCode),
-    ).catch((error) => {
+
+    const livePriceByCode = await fetchOmsProductPrices(shuffledProducts.map((product) => product.productCode)).catch((error) => {
       console.warn("Live OMS price overlay failed", error);
+
       return new Map<string, { actualPrice?: number; sellingPrice?: number }>();
     });
-    const rows = productGroupWise.map((product) => {
+
+    const rows = shuffledProducts.map((product) => {
       const liveStock = liveStockByCode.get(product.productCode);
-      const withPrice = applyOmsPriceOverlay(
-        product,
-        livePriceByCode.get(product.productCode),
-      );
-      if (liveStock === undefined) return withPrice;
+
+      const withPrice = applyOmsPriceOverlay(product, livePriceByCode.get(product.productCode));
+
+      if (liveStock === undefined) {
+        return withPrice;
+      }
+
       return {
         ...withPrice,
         stockQuantity: liveStock,
@@ -170,10 +234,22 @@ export async function GET() {
         success: true,
         data: safeData,
       },
-      { status: 200, headers: corsHeaders },
+      {
+        status: 200,
+        headers: corsHeaders,
+      },
     );
   } catch (error) {
-    return NextResponse.json({ success: false, message: String(error) }, { status: 500, headers: corsHeaders });
+    return NextResponse.json(
+      {
+        success: false,
+        message: String(error),
+      },
+      {
+        status: 500,
+        headers: corsHeaders,
+      },
+    );
   }
 }
 
@@ -277,22 +353,8 @@ export async function POST(req: Request) {
       const nextProductName = normalizeText(item.productName);
       const nextSubGroupName = normalizeText(item.subGroupName) || null;
       const source = item as ProductDTO & Record<string, unknown>;
-      const nextActualPrice = Number(
-        source.actualPrice ??
-          source.TradeRate ??
-          source.tradeRate ??
-          source.trade_rate ??
-          source.BuyRate ??
-          0,
-      );
-      const nextSellingPrice = Number(
-        source.sellingPrice ??
-          source.MRP ??
-          source.mrp ??
-          source.SalesRate ??
-          source.salesRate ??
-          0,
-      );
+      const nextActualPrice = Number(source.actualPrice ?? source.TradeRate ?? source.tradeRate ?? source.trade_rate ?? source.BuyRate ?? 0);
+      const nextSellingPrice = Number(source.sellingPrice ?? source.MRP ?? source.mrp ?? source.SalesRate ?? source.salesRate ?? 0);
       const nextDeliveryTargetDays = item.deliveryTargetDays !== undefined && item.deliveryTargetDays !== null ? nullableBigInt(item.deliveryTargetDays) : null;
       const nextStockQuantity = item.stockQuantity !== undefined && item.stockQuantity !== null ? nullableBigInt(item.stockQuantity) : null;
       const nextAvailableQuantity = item.availableQuantity !== undefined && item.availableQuantity !== null ? nullableBigInt(item.availableQuantity) : null;
@@ -522,10 +584,7 @@ export async function PUT(req: Request) {
           ...(productStatusRaw !== null && { productStatus }),
           ...(specialOfferRaw !== null && { specialOffer }),
           ...(delivaryTargetDays !== undefined && {
-            deliveryTargetDays:
-              String(delivaryTargetDays || "").trim() === ""
-                ? null
-                : BigInt(Number(delivaryTargetDays)),
+            deliveryTargetDays: String(delivaryTargetDays || "").trim() === "" ? null : BigInt(Number(delivaryTargetDays)),
           }),
         },
       });
@@ -536,10 +595,7 @@ export async function PUT(req: Request) {
           ...(productStatusRaw !== null && { productStatus }),
           ...(specialOfferRaw !== null && { specialOffer }),
           ...(delivaryTargetDays !== undefined && {
-            deliveryTargetDays:
-              String(delivaryTargetDays || "").trim() === ""
-                ? null
-                : BigInt(Number(delivaryTargetDays)),
+            deliveryTargetDays: String(delivaryTargetDays || "").trim() === "" ? null : BigInt(Number(delivaryTargetDays)),
           }),
         },
       });
