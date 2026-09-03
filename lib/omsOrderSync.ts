@@ -90,12 +90,12 @@ function getPaymentAmount(paymentMode: string, amount: unknown) {
 function getCashBankName(paymentMode: string) {
   const normalized = paymentMode.toLowerCase();
   if (normalized === "connectips") {
-    return env("OMS_CONNECTIPS_CASHBANKNAME", "CONNECTIPS");
+    return env("OMS_CONNECTIPS_CASHBANKNAME", "10");
   }
   if (normalized === "cod" || normalized === "cash on delivery") {
-    return env("OMS_COD_CASHBANKNAME", "COD");
+    return env("OMS_COD_CASHBANKNAME", "10");
   }
-  return paymentMode || env("OMS_COD_CASHBANKNAME", "COD");
+  return paymentMode || env("OMS_COD_CASHBANKNAME", "10");
 }
 
 function getCustomerName(customer?: OmsCustomer | null) {
@@ -106,19 +106,14 @@ function getCustomerPhone(customer?: OmsCustomer | null) {
   return String(customer?.phone || env("OMS_DEFAULT_CUSTOMER_PHONE", "")).trim();
 }
 
-function getMemberCode(customer?: OmsCustomer | null) {
-  return String(
-    customer?.memberCode ||
-      customer?.userCode ||
-      env("OMS_MEMBER_CODE") ||
-      env("OMS_ORDER_BY", "1000002"),
-  ).trim();
+function getMemberCode() {
+  return env("OMS_MEMBER_CODE", "");
 }
 
 function buildUserDetails(customer?: OmsCustomer | null) {
   const name = getCustomerName(customer);
   const phone = getCustomerPhone(customer);
-  const code = String(customer?.userCode || getMemberCode(customer) || env("OMS_USER_CODE", "U001")).trim();
+  const code = env("OMS_USER_CODE", "U001");
 
   return {
     userName: name,
@@ -144,16 +139,16 @@ export function buildOmsOrderPayload(
   const orderNumber = localOrderIds.length ? localOrderIds.join("-") : `WEB-${Date.now()}`;
   const customerName = getCustomerName(options.customer);
   const customerPhone = getCustomerPhone(options.customer);
-  const memberCode = getMemberCode(options.customer);
+  const memberCode = getMemberCode();
   const deliveryCharge = Number(options.deliveryCharge || 0);
 
   return {
-    storeCode: env("OMS_STORE_CODE") || env("OMS_DB_NAME", "NITYAM8201"),
+    storeCode: env("OMS_STORE_CODE") || env("OMS_DB_NAME", "BKGRP08301"),
     orderNumber,
-    SalesCenter: env("OMS_SALES_CENTER", ""),
+    SalesCenter: env("OMS_SALES_CENTER", "Ravibhawan"),
     orderId: orderNumber,
     Updated: new Date().toISOString(),
-    remarks: options.comment || "Website Order",
+    remarks: options.comment || env("OMS_DEFAULT_REMARKS", "Deliver ASAP"),
     membercode: memberCode,
     membername: customerName,
     membermobile: customerPhone,
@@ -171,7 +166,7 @@ export function buildOmsOrderPayload(
         quantity: qtyString(qty),
         unitPrice: moneyString(unitPrice),
         finalPrice: moneyString(finalPrice),
-        remarks: item.remarks || "Website Order",
+        remarks: item.remarks || env("OMS_ITEM_REMARKS", "No ice"),
         DiscountAmount: moneyString(item.discountAmount),
         Discountrate: moneyString(item.discountRate),
         DispatchAmount: moneyString(dispatchAmount),

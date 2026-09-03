@@ -1,5 +1,8 @@
 const DEFAULT_OMS_PRODUCT_LIST_URL =
-  "http://bkgroupapi.globaltech.com.np:802/api/MasterList/ProductListCustomer?DbName=NITYAM8201";
+  "http://bkgroupapi.globaltech.com.np:802/api/MasterList/ProductListDivisionwise?dbname=BKGRP08301&Div=1";
+const DEFAULT_OMS_PRODUCT_DB_NAME = "BKGRP08301";
+const DEFAULT_OMS_STORE_CODE = "BKGRP08301";
+const DEFAULT_OMS_DIVISION_CODE = "1";
 
 type OmsProductPrice = {
   actualPrice?: number;
@@ -15,6 +18,46 @@ let priceCache:
 
 function env(key: string, fallback = "") {
   return String(process.env[key] ?? fallback).trim().replace(/^['"]|['"]$/g, "");
+}
+
+function getProductDbName() {
+  return env(
+    "OMS_PRODUCT_DB_NAME",
+    env("OMS_PRODUCT_LIST_DB_NAME", DEFAULT_OMS_PRODUCT_DB_NAME),
+  );
+}
+
+function getStoreCode() {
+  return env("OMS_STORE_CODE", env("OMS_DB_NAME", DEFAULT_OMS_STORE_CODE));
+}
+
+function getDivisionCode() {
+  const value = env("OMS_DIV_CODE", env("OMS_DIVISION_CODE", DEFAULT_OMS_DIVISION_CODE));
+  return value.toLowerCase() === "nityagro" ? DEFAULT_OMS_DIVISION_CODE : value;
+}
+
+function buildOmsProductListUrl() {
+  const configuredUrl = env("OMS_PRODUCT_LIST_URL", DEFAULT_OMS_PRODUCT_LIST_URL);
+  const url = new URL(configuredUrl);
+  const isDivisionwise = /ProductListDivisionwise/i.test(url.pathname);
+
+  if (isDivisionwise) {
+    if (!url.searchParams.has("dbname") && !url.searchParams.has("DbName")) {
+      url.searchParams.set("dbname", getProductDbName());
+    }
+    if (!url.searchParams.has("Div") && !url.searchParams.has("DivCode")) {
+      url.searchParams.set("Div", getDivisionCode());
+    }
+    return url.toString();
+  }
+
+  if (!url.searchParams.has("DbName") && !url.searchParams.has("dbname")) {
+    url.searchParams.set("DbName", getStoreCode());
+  }
+  if (!url.searchParams.has("DivCode") && !url.searchParams.has("Div")) {
+    url.searchParams.set("DivCode", getDivisionCode());
+  }
+  return url.toString();
 }
 
 function readString(...values: unknown[]) {
@@ -47,7 +90,7 @@ async function fetchOmsProductPriceMap() {
     return priceCache.map;
   }
 
-  const response = await fetch(env("OMS_PRODUCT_LIST_URL", DEFAULT_OMS_PRODUCT_LIST_URL), {
+  const response = await fetch(buildOmsProductListUrl(), {
     cache: "no-store",
     headers: { Accept: "application/json" },
   });
@@ -69,6 +112,7 @@ async function fetchOmsProductPriceMap() {
       item.sku,
       item.SKU,
       item.barCode,
+      item.Code,
     );
     if (!code) continue;
 
@@ -77,11 +121,13 @@ async function fetchOmsProductPriceMap() {
         item.TradeRate,
         item.tradeRate,
         item.trade_rate,
+        item.Rate,
         item.BuyRate,
         item.buyRate,
       ),
       sellingPrice: readPositiveNumber(
         item.MRP,
+        item.Mrp,
         item.mrp,
         item.SalesRate,
         item.salesRate,

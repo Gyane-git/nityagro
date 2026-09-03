@@ -177,7 +177,7 @@ export default function ProductInfo({ product }) {
       try {
         await fetch("/api/oms/auth", { cache: "no-store" }).catch(() => null);
         const response = await fetch(
-          `/api/oms/stock?sku=${encodeURIComponent(activeProductCode)}`,
+          `/api/oms/stock?Storecode=BKGRP08301&sku=${encodeURIComponent(activeProductCode)}`,
           { cache: "no-store" },
         );
         if (!response.ok) {
@@ -192,9 +192,22 @@ export default function ProductInfo({ product }) {
         const rows = Array.isArray(result?.data) ? result.data : [];
         const row =
           rows.find(
-            (item) =>
-              String(item?.sku || item?.pCode || item?.PCode || item?.barCode || "")
-                .trim() === activeProductCode,
+            (item) => {
+              const itemCodes = [
+                item?.sku,
+                item?.SKU,
+                item?.pCode,
+                item?.PCode,
+                item?.Code,
+                item?.ItemCode,
+                item?.itemCode,
+                item?.barCode,
+                item?.barcode,
+              ];
+              return itemCodes.some(
+                (code) => String(code ?? "").trim() === activeProductCode,
+              );
+            },
           ) || rows[0];
 
         if (!row) {
@@ -203,7 +216,9 @@ export default function ProductInfo({ product }) {
 
         const liveQty = Number(
           row?.availableQty ??
+            row?.AvailableQuantity ??
             row?.availableQuantity ??
+            row?.StockQuantity ??
             row?.stockQuantity ??
             row?.StockQty ??
             NaN,
@@ -238,6 +253,13 @@ export default function ProductInfo({ product }) {
 
   const currentPrice = Number(selectedVariant?.price ?? p.price ?? 0);
   const currentActualPrice = Number(selectedVariant?.actualPrice ?? p.actualPrice ?? currentPrice);
+  const fallbackAvailableQty = Number(
+    selectedVariant?.availableQuantity ??
+      selectedVariant?.stockQuantity ??
+      p.availableQuantity ??
+      p.stockQuantity ??
+      0,
+  );
   const hasLiveAvailableQty = Object.prototype.hasOwnProperty.call(
     liveAvailableQtyByCode,
     activeProductCode,
@@ -245,10 +267,12 @@ export default function ProductInfo({ product }) {
   const stockStatus = liveStockStatusByCode[activeProductCode] || "loading";
   const currentAvailableQty = hasLiveAvailableQty
     ? Number(liveAvailableQtyByCode[activeProductCode])
-    : 0;
+    : fallbackAvailableQty;
   const isOutOfStock = currentAvailableQty <= 0;
-  const isStockLoading = stockStatus === "loading" && !hasLiveAvailableQty;
-  const isStockUnavailable = stockStatus === "error" && !hasLiveAvailableQty;
+  const isStockLoading =
+    stockStatus === "loading" && !hasLiveAvailableQty;
+  const isStockUnavailable =
+    stockStatus === "error" && !hasLiveAvailableQty;
   const selectedLabel = selectedVariant?.label || p.label || p.name;
   const displayName = `${p.name} - ${selectedLabel}`;
 
@@ -408,8 +432,7 @@ export default function ProductInfo({ product }) {
           <p className="text-xs font-semibold text-gray-500"></p>
           // <p className="text-xs font-semibold text-gray-500">Checking available qty...</p>
         ) : isStockUnavailable ? (
-          <p className="text-xs font-semibold text-red-600">Out Of Stock</p>
-          // <p className="text-xs font-semibold text-red-600">Unable to sync available qty. Please refresh.</p>
+          <p className="text-xs font-semibold text-red-600">Unable to check stock. Please refresh.</p>
         ) : isOutOfStock ? (
           <p className="text-xs font-semibold text-red-600">Out of stock. You can add it to cart, but checkout is disabled until stock is available.</p>
         ) : (

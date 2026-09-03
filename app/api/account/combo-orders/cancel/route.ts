@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { resolveComboItems, restoreComboItemsStock } from "@/lib/comboItems";
 import { cancelOmsOrderSafely } from "@/lib/omsOrderSync";
+import { refreshLocalStockFromOms } from "@/lib/omsStock";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -169,6 +170,12 @@ export async function POST(req: Request) {
     }).catch((error) => {
       console.error("OMS combo cancellation log failed:", error);
       return null;
+    });
+
+    await refreshLocalStockFromOms(
+      comboItems.map((item) => item.code || item.pCode),
+    ).catch((error) => {
+      console.warn("OMS stock refresh after combo cancellation failed:", error);
     });
 
     return NextResponse.json(

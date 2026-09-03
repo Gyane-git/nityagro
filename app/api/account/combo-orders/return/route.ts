@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { resolveComboItems, restoreComboItemsStock } from "@/lib/comboItems";
+import { refreshLocalStockFromOms } from "@/lib/omsStock";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -168,6 +169,12 @@ export async function POST(req: Request) {
       });
 
       return { comboReturn, updatedOrder };
+    });
+
+    await refreshLocalStockFromOms(
+      comboItems.map((item) => item.code || item.pCode),
+    ).catch((error) => {
+      console.warn("OMS stock refresh after combo return failed:", error);
     });
 
     return NextResponse.json(

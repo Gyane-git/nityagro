@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetchOmsStockRows } from "@/lib/omsStock";
+import { fetchOmsStockRows, persistOmsStockRows } from "@/lib/omsStock";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -11,6 +11,9 @@ export async function GET(req: Request) {
       searchParams.get("Storecode") || searchParams.get("storeCode") || undefined;
     const sku = searchParams.get("sku") || searchParams.get("pCode") || "";
     const { rows, raw } = await fetchOmsStockRows({ sku, storeCode });
+    await persistOmsStockRows(rows).catch((error) => {
+      console.warn("Failed to persist OMS stock from stock API", error);
+    });
 
     return NextResponse.json(
       {

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 export default function TawkToWidget() {
-  const number = "9821212332";
+  const number = "9700007400";
   const message = "Hello! I'm interested in your products !";
 
   const [showSelection, setShowSelection] = useState(false);

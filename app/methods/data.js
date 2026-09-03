@@ -1,4 +1,3 @@
-
 import SeedToBottle from "./components/SeedToBottle";
 import SideBySide from "./components/SideBySide";
 
@@ -32,7 +31,6 @@ export const METHODS = {
       headlineGold: "Sealed Bottle.",
       desc: "A simple process, from carefully selected oilseeds to wood pressing, filling, and sealing — without unnecessary processing steps.",
 
-      
       steps: [
         {
           step: "Step 01",
@@ -46,7 +44,7 @@ export const METHODS = {
         },
         {
           step: "Step 02",
-          icon: "🪵" ,
+          icon: "🪵",
           title: "Mechanical Wood Pressing",
           desc: "The seeds are pressed using our mechanical wood press, operating at approximately 18–19 RPM. Oil is extracted through mechanical pressure in a slow pressing process.",
           image: "/methods/wooden-ghani.jpeg",
@@ -88,10 +86,8 @@ export const METHODS = {
       subtitle1: "The Nityagro Way",
       subHeading1: "Wood-Pressed",
       subHeading2: "Refined-Multiple Processing Steps",
-      subDesc1:
-        "Slow. Mechanical. Deliberate. Our oilseeds are pressed using a mechanical wood press operating at approximately 18–19 RPM. The oil is extracted through mechanical pressure, without solvent extraction.",
-      subDesc2:
-        "Fast. Processed. Standardised. Refined oils may go through several industrial processing stages, including refining, bleaching, and deodorisation, depending on the production method.",
+      subDesc1: "Slow. Mechanical. Deliberate. Our oilseeds are pressed using a mechanical wood press operating at approximately 18–19 RPM. The oil is extracted through mechanical pressure, without solvent extraction.",
+      subDesc2: "Fast. Processed. Standardised. Refined oils may go through several industrial processing stages, including refining, bleaching, and deodorisation, depending on the production method.",
       image1: "/methods/wood-pressed-oil.jpeg",
       image2: "/methods/industrial-factory.png",
     },
@@ -180,10 +176,8 @@ export const METHODS = {
       subtitle1: "The Nityagro Way",
       subHeading1: "Cold-Pressed",
       subHeading2: "Refined",
-      subDesc1:
-        "Slow. Quiet. Patient. A wooden ghani turning under 30 RPM, the way it has for four generations — coaxing oil out, never forcing it.",
-      subDesc2:
-        "Fast. Hot. Chemical. Steel expellers spinning at 1500 RPM, hexane baths and bleaching clay — engineered for shelf life, not for you",
+      subDesc1: "Slow. Quiet. Patient. A wooden ghani turning under 30 RPM, the way it has for four generations — coaxing oil out, never forcing it.",
+      subDesc2: "Fast. Hot. Chemical. Steel expellers spinning at 1500 RPM, hexane baths and bleaching clay — engineered for shelf life, not for you",
       image1: "/methods/wood-pressed-oil.jpeg",
       image2: "/methods/industrial-factory.png",
     },
@@ -204,7 +198,7 @@ export const METHODS = {
       desc: "Our flours and spices are made using traditional stone-based methods. From grains to flour and whole spices to powder, the process is kept simple and focused on the food itself.",
       btnPrimary: "Explore the Process",
       btnSecondary: "SHOP FLOURS & SPICES",
-      
+
       image: "/methods/wood-pressed-oil.jpg",
       stats: [
         { value: "STONE GROUND", label: "Traditional stone processing" },
@@ -215,7 +209,7 @@ export const METHODS = {
     },
     SeedToBottle: {
       title: "Four Steps ",
-      headline1: "From Grain &",
+      headline1: "From Grain & ",
       headlineGold: "Spice to Your Kitchen.",
       desc: "A simple process — from selecting the raw material to stone processing, packing, and sealing the finished product.",
 
@@ -274,10 +268,8 @@ export const METHODS = {
       subtitle1: "The Nityagro Way",
       subHeading1: "Stone-Pressed",
       subHeading2: "Refined",
-      subDesc1:
-        "Slow. Simple. Traditional. Grains and whole spices are processed using traditional stone-based methods to make flour and spice powders. Stone Ground · Traditional Method · Simple Processing",
-      subDesc2:
-        "Fast. High-Volume. Standardised. Industrial milling commonly uses high-speed machinery designed for large-scale production and consistent output.High Volume · High Speed · Standardised",
+      subDesc1: "Slow. Simple. Traditional. Grains and whole spices are processed using traditional stone-based methods to make flour and spice powders. Stone Ground · Traditional Method · Simple Processing",
+      subDesc2: "Fast. High-Volume. Standardised. Industrial milling commonly uses high-speed machinery designed for large-scale production and consistent output.High Volume · High Speed · Standardised",
       image1: "/methods/wood-pressed-oil.jpeg",
       image2: "/methods/industrial-factory.png",
     },

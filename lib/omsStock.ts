@@ -4,15 +4,18 @@ import type { PrismaClient } from "@prisma/client";
 const DEFAULT_OMS_STOCK_URL =
   "http://nityamecomapi.globaltech.com.np/api/v1/full-reset";
 const DEFAULT_OMS_TOKEN_URL = "http://nityamecomapi.globaltech.com.np/token";
-const DEFAULT_STORE_CODE = "NITYAM8201";
+const DEFAULT_STORE_CODE = "BKGRP08301";
+const DEFAULT_OMS_DIVISION_CODE = "1";
 let stockTokenCache: { token: string; tokenType: string; expiresAt: number } | null =
   null;
 
 type StockRow = {
   PCode?: unknown;
   pCode?: unknown;
+  Code?: unknown;
   SKU?: unknown;
   sku?: unknown;
+  PShortName?: unknown;
   ItemCode?: unknown;
   itemCode?: unknown;
   barCode?: unknown;
@@ -46,6 +49,7 @@ function readString(...values: unknown[]) {
 
 function readNumber(...values: unknown[]) {
   for (const value of values) {
+    if (value === undefined || value === null || value === "") continue;
     const parsed = Number(value ?? "");
     if (Number.isFinite(parsed)) return parsed;
   }
@@ -54,6 +58,19 @@ function readNumber(...values: unknown[]) {
 
 function env(key: string, fallback = "") {
   return String(process.env[key] ?? fallback).trim().replace(/^['\"]|['\"]$/g, "");
+}
+
+function getStockStoreCode(storeCode?: string) {
+  return storeCode || env("OMS_STOCK_DB_NAME", env("OMS_STORE_CODE", DEFAULT_STORE_CODE));
+}
+
+function getDivisionCode() {
+  const value = env("OMS_DIV_CODE", env("OMS_DIVISION_CODE", DEFAULT_OMS_DIVISION_CODE));
+  return value.toLowerCase() === "nityagro" ? DEFAULT_OMS_DIVISION_CODE : value;
+}
+
+function isPublicMasterStockUrl(url: URL) {
+  return /\/api\/MasterList\/(ListProduct|ProductListDivisionwise)$/i.test(url.pathname);
 }
 
 async function parseJsonResponse(response: Response) {
@@ -145,10 +162,12 @@ export function normalizeOmsStockRows(payload: unknown): NormalizedOmsStockRow[]
     .map((row) => {
       const stockRow = row as StockRow;
       const pCode = readString(
-        stockRow.sku,
-        stockRow.SKU,
         stockRow.PCode,
         stockRow.pCode,
+        stockRow.sku,
+        stockRow.SKU,
+        stockRow.Code,
+        stockRow.PShortName,
         stockRow.ItemCode,
         stockRow.itemCode,
         stockRow.barCode,
@@ -188,14 +207,75 @@ function createStockError(status: number, payload: unknown) {
   return new Error(`OMS stock API failed with status ${status}: ${detail}`);
 }
 
+function rowMatchesCode(row: NormalizedOmsStockRow, code: string) {
+  const expected = String(code || "").trim();
+  if (!expected) return true;
+
+  const item = row as StockRow;
+  const candidateCodes = [
+    row.pCode,
+    row.PCode,
+    item.Code,
+    item.PShortName,
+    item.sku,
+    item.SKU,
+    item.ItemCode,
+    item.itemCode,
+    item.barCode,
+    item.barcode,
+  ].map((value) => String(value ?? "").trim());
+
+  return candidateCodes.some((candidate) => candidate === expected);
+}
+
+function applyRequestedSkuFallback(
+  rows: NormalizedOmsStockRow[],
+  sku: string,
+) {
+  if (!sku || rows.length !== 1 || rowMatchesCode(rows[0], sku)) return rows;
+
+  // The full-reset endpoint can return one SKU row without a code property.
+  // The requested SKU is authoritative in that case.
+  return [{ ...rows[0], PCode: sku, pCode: sku }];
+}
+
 export async function fetchOmsStockRows(args: FetchOmsStockRowsArgs = {}) {
   const upstreamUrl = new URL(env("OMS_STOCK_URL", DEFAULT_OMS_STOCK_URL));
-  upstreamUrl.searchParams.set(
-    "Storecode",
-    args.storeCode || env("OMS_STORE_CODE", DEFAULT_STORE_CODE),
-  );
-
   const cleanSku = String(args.sku || "").trim();
+
+  if (isPublicMasterStockUrl(upstreamUrl)) {
+    const isProductListDivisionwise = /ProductListDivisionwise/i.test(upstreamUrl.pathname);
+    const dbParam = isProductListDivisionwise ? "dbname" : "DbName";
+    const divParam = isProductListDivisionwise ? "Div" : "DivCode";
+
+    if (!upstreamUrl.searchParams.has("dbname") && !upstreamUrl.searchParams.has("DbName")) {
+      upstreamUrl.searchParams.set(dbParam, getStockStoreCode(args.storeCode));
+    }
+    if (!upstreamUrl.searchParams.has("Div") && !upstreamUrl.searchParams.has("DivCode")) {
+      upstreamUrl.searchParams.set(divParam, getDivisionCode());
+    }
+    if (cleanSku && !upstreamUrl.searchParams.has("PCode") && !upstreamUrl.searchParams.has("pCode")) {
+      upstreamUrl.searchParams.set("PCode", cleanSku);
+    }
+
+    const response = await fetch(upstreamUrl.toString(), {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
+    const payload = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      throw createStockError(response.status, payload);
+    }
+
+    const rows = applyRequestedSkuFallback(normalizeOmsStockRows(payload), cleanSku);
+    return {
+      rows: cleanSku ? rows.filter((row) => rowMatchesCode(row, cleanSku)) : rows,
+      raw: payload,
+    };
+  }
+
+  upstreamUrl.searchParams.set("Storecode", getStockStoreCode(args.storeCode));
   if (cleanSku) upstreamUrl.searchParams.set("sku", cleanSku);
 
   const { token, tokenType } = await getOmsStockToken();
@@ -230,7 +310,7 @@ export async function fetchOmsStockRows(args: FetchOmsStockRowsArgs = {}) {
 
     if (response.ok) {
       return {
-        rows: normalizeOmsStockRows(payload),
+        rows: applyRequestedSkuFallback(normalizeOmsStockRows(payload), cleanSku),
         raw: payload,
       };
     }
@@ -250,13 +330,68 @@ export async function fetchOmsStockMap(productCodes: Array<string | null | undef
 
   const stockEntries = await Promise.all(
     uniqueCodes.map(async (code) => {
-      const { rows } = await fetchOmsStockRows({ sku: code });
-      const matched = rows.find((row) => row.pCode === code);
-      return matched ? ([code, matched.availableQuantity] as const) : null;
+      try {
+        const { rows } = await fetchOmsStockRows({ sku: code });
+        const matched = rows.find((row) => rowMatchesCode(row, code));
+        return matched ? ([code, matched.availableQuantity] as const) : null;
+      } catch (error) {
+        console.warn(`OMS stock refresh failed for SKU ${code}`, error);
+        return null;
+      }
     }),
   );
 
   return new Map(stockEntries.filter(Boolean) as Array<readonly [string, number]>);
+}
+
+export async function persistOmsStockRows(
+  rows: NormalizedOmsStockRow[],
+  db: PrismaClient = prisma,
+) {
+  const stockByCode = new Map(
+    rows.map((row) => [row.pCode, Math.max(0, Number(row.availableQuantity || 0))]),
+  );
+  const codes = Array.from(stockByCode.keys());
+  const variants = codes.length
+    ? await db.productVariant.findMany({
+        where: { pCode: { in: codes } },
+        select: { pCode: true, subGroupName: true },
+      })
+    : [];
+  const groupsByCode = new Map<string, Set<string>>();
+
+  for (const variant of variants) {
+    const groups = groupsByCode.get(variant.pCode) || new Set<string>();
+    if (variant.subGroupName) groups.add(variant.subGroupName);
+    groupsByCode.set(variant.pCode, groups);
+  }
+
+  await Promise.all(
+    Array.from(stockByCode.entries()).map(([productCode, quantity]) =>
+      Promise.all([
+        db.products.updateMany({
+          where: {
+            OR: [
+              { productCode },
+              ...Array.from(groupsByCode.get(productCode) || []).map((subGroupName) => ({
+                subGroupName,
+              })),
+            ],
+          },
+          data: {
+            stockQuantity: BigInt(quantity),
+            availableQuantity: BigInt(quantity),
+          },
+        }),
+        db.productVariant.updateMany({
+          where: { pCode: productCode },
+          data: { stockQuantity: BigInt(quantity) },
+        }),
+      ]),
+    ),
+  );
+
+  return stockByCode;
 }
 
 export async function refreshLocalStockFromOms(
@@ -278,23 +413,30 @@ export async function refreshLocalStockFromOms(
     ]),
   );
 
-  await Promise.all(
-    Array.from(effectiveStockByCode.entries()).map(([productCode, quantity]) =>
-      Promise.all([
-        db.products.updateMany({
-          where: { productCode },
-          data: {
-            stockQuantity: BigInt(quantity),
-            availableQuantity: BigInt(quantity),
-          },
-        }),
-        db.productVariant.updateMany({
-          where: { pCode: productCode },
-          data: { stockQuantity: BigInt(quantity) },
-        }),
-      ]),
-    ),
-  );
+  await persistOmsStockRows(
+    Array.from(effectiveStockByCode.entries()).map(([pCode, quantity]) => ({
+      PCode: pCode,
+      pCode,
+      StockQty: quantity,
+      stockQuantity: quantity,
+      availableQuantity: quantity,
+    })),
+    db,
+  ).catch((error) => {
+    // Keep live OMS stock usable even if the local database is temporarily unavailable.
+    console.warn("Failed to persist OMS stock locally", error);
+  });
 
   return effectiveStockByCode;
+}
+
+export async function refreshAllLocalStockFromOms(db: PrismaClient = prisma) {
+  const products = await db.products.findMany({
+    select: { productCode: true },
+  });
+
+  return refreshLocalStockFromOms(
+    products.map((product) => product.productCode),
+    db,
+  );
 }
