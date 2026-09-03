@@ -3,7 +3,7 @@ import { HelpCircle, X } from "lucide-react";
 import useConfirmModalStore from "@/store/confirmModalStore";
 
 const ConfirmModal = () => {
-  const { isOpen, title, message, onConfirm, onCancel, close } = useConfirmModalStore();
+  const { isOpen, title, titleColor, message, onConfirm, onCancel, close } = useConfirmModalStore();
 
   if (!isOpen) return null;
 
@@ -19,20 +19,26 @@ const ConfirmModal = () => {
           </button>
         </div>
         <div className="bg-gray-50 rounded-b-lg p-4 sm:p-6 pt-3 sm:pt-4 flex flex-col items-center">
-          <h2 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2 text-center">{title || "Confirm Title"}</h2>
+          <h2 className={`text-lg sm:text-xl font-bold mb-1 sm:mb-2 text-center ${titleColor || "text-gray-900"}`}>{title || "Confirm Title"}</h2>
           <p className="text-gray-600 mb-4 sm:mb-6 text-center text-sm sm:text-base">{message || "Confirm Message"}</p>
           <div className="flex gap-2 sm:gap-4 justify-center">
             <button
-            aria-label="Okay"
+              aria-label="Okay"
               className="bg-red-400 hover:bg-red-600 text-white px-6 sm:px-8 py-2 rounded-full font-semibold text-base sm:text-lg cursor-pointer"
-              onClick={() => { onConfirm && onConfirm(); close(); }}
+              onClick={() => {
+                onConfirm && onConfirm();
+                close();
+              }}
             >
               Okay
             </button>
             <button
-            aria-label="Cancel"
+              aria-label="Cancel"
               className="bg-blue-400 hover:bg-blue-600 text-white px-6 sm:px-8 py-2 rounded-full font-semibold text-base sm:text-lg cursor-pointer"
-              onClick={() => { onCancel && onCancel(); close(); }}
+              onClick={() => {
+                onCancel && onCancel();
+                close();
+              }}
             >
               Cancel
             </button>
@@ -42,4 +48,4 @@ const ConfirmModal = () => {
     </div>
   );
 };
-export default ConfirmModal; 
+export default ConfirmModal;
