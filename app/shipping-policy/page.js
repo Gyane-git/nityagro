@@ -1,64 +1,78 @@
 "use client";
 
+import { subtitle } from "crypto";
+
 const DELIVERY_ZONES = [
   {
     zone: "Inside Valley",
     coverage: "Kathmandu, Bhaktapur, Lalitpur",
     timeline: "1-2 Working Days",
-    charges: "Free Above NPR 199",
+    charges: "Free Delivery",
   },
   {
     zone: "Outside Valley",
     coverage: "Most Provinces Capitals Across Nepal",
     timeline: "2-4 Working Days",
-    charges: "Free Above NPR 299",
+    charges: "NPR 199",
   },
   {
     zone: "Hilly & Mountain Region",
     coverage: "Hilly Regions, Islands, North-East States",
     timeline: "4-6 Working Days",
-    charges: "Free Above NPR 399",
+    charges: "NPR 299",
   },
 ];
+
 
 const SECTIONS = [
   {
     number: "01",
     title: "Order Processing",
     paragraphs: [
-      "Orders placed before 2:00 PM on a working day are processed the same day. Orders placed later, or on Saturday and public holidays, move into the next working day's queue.",
-      "Because we press oils in small batches, certain SKUs may take 1–2 extra working days during peak season. We'll notify you proactively if your order is affected.",
+      "Orders placed before 12:00 PM on a working day are processed the same day. Orders placed later, or on Saturday and public holidays, move into the next working day's queue.",
     ],
   },
   {
     number: "02",
-    title: "Packaging Standards",
+    title: "Packaging & Product Safety",
     paragraphs: [
-      "Each glass bottle is wrapped in food-grade bubble film, cushioned with shredded kraft paper, and secured inside double-walled corrugated boxes. We use no plastic peanuts or single-use foam.",
-      "Tamper-evident seals are placed across every box flap so you can identify any in-transit interference at a glance.",
+      "Packed with Care",
+      "Every Nityagro order is carefully packed to ensure your products reach you safely and in good condition.",
+      "Products are protected with food-grade bubble film, cushioned with shredded kraft paper, and packed securely in double-walled corrugated boxes.",
+      "Each parcel is securely sealed before dispatch to help ensure your order reaches you safely and just as it left us.",
     ],
   },
   {
     number: "03",
     title: "Tracking Your Order",
     paragraphs: [
-      "Once dispatched, you'll receive an SMS, WhatsApp and email with a live tracking link from our courier partner (PathaoCourier, Pick & Drop or NepalCanMove depending on your pincode).",
-      "If your tracking shows no movement for more than 48 hours, please write to care@nityagro.com — we will escalate it directly with the courier.",
+      "Stay Updated on Your Order",
+      "Once your order is dispatched, you’ll receive delivery updates via SMS, WhatsApp, or email, along with tracking details where available.",
+      "If you have any questions about your order or delivery, reach out to us at care@nityagro.com and our team will be happy to assist you.",
     ],
   },
   {
     number: "04",
-    title: "Delivery Attempts & Failures",
+    title: "Delivery Attempts & Returns",
     paragraphs: [
-      "Couriers make up to 3 delivery attempts before returning the parcel to us. Please ensure someone is available at the shipping address and your phone is reachable.",
-      "If a parcel is RTO'd (returned to origin) due to incorrect address or non-availability, re-shipping charges of NPR 120 will apply.",
+      "What Happens If You Miss a Delivery?",
+      "Our delivery partner may make multiple delivery attempts before an undelivered parcel is returned to us.",
+      "To help ensure a smooth delivery:",
+      "Provide a complete and accurate delivery address.",
+      "Keep your phone number reachable around the expected delivery date.",
+      "Make sure someone is available to receive the order.",
+      "If an order is returned due to an incorrect address, unreachable phone number, or repeated delivery failure/non-availability, a re-shipping charge of NPR 120 will apply.",
     ],
   },
   {
     number: "05",
-    title: "International Shipping",
+    title: "Delivery Across Nepal",
     paragraphs: [
-      "We currently ship across Nepal only. International shipping is on our roadmap — please subscribe to our newsletter to be notified when we launch in your country.",
+      "From Nityagro to Your Kitchen 🇳🇵",
+      "Nityagro delivers across Nepal, bringing thoughtfully made everyday staples closer to your home.",
+      "FREE DELIVERY INSIDE KATHMANDU VALLEY",
+      "For orders outside Kathmandu Valley, applicable delivery charges will be communicated or shown at checkout before the order is confirmed.",
+      "For any questions regarding delivery, contact us at admin@nityagro.com",
     ],
   },
 ];

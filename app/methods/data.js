@@ -81,7 +81,7 @@ export const METHODS = {
       headline1: "One is",
       headline2: "The other is",
       headlineGold: "Crafted.",
-      headlineCross: "Manufactures.",
+      headlineCross: "Manufactured.",
       desc: "Look closer. Every step of how oil is made shapes what reaches your kitchen.",
       subtitle1: "The Nityagro Way",
       subHeading1: "Wood-Pressed",
@@ -121,7 +121,7 @@ export const METHODS = {
       headlineGold: "sealed bottle.",
       desc: "Every step happens within our own facility, by hands we know, in time measured by season — not by quarter.",
 
-      tested: "Traditional · Time-Honoured · Tested",
+      // tested: "Traditional · Time-Honoured · Tested",
       steps: [
         {
           step: "Step 01",
@@ -213,7 +213,7 @@ export const METHODS = {
       headlineGold: "Spice to Your Kitchen.",
       desc: "A simple process — from selecting the raw material to stone processing, packing, and sealing the finished product.",
 
-      tested: "Traditional · Time-Honoured · Tested",
+      // tested: "Traditional · Time-Honoured · Tested",
       steps: [
         {
           step: "Step 01",
@@ -263,7 +263,7 @@ export const METHODS = {
       headline1: "One way is",
       headline2: "The other takes its time.",
       headlineGold: "faster.",
-      headlineCross: "Manufactures.",
+      headlineCross: "Manufactured.",
       desc: "The way food is processed matters. Traditional stone processing takes a different approach — one built around a slower, simpler way of turning grains and whole spices into everyday foods.",
       subtitle1: "The Nityagro Way",
       subHeading1: "Stone-Pressed",

@@ -7,7 +7,7 @@ import CoreValues from "./components/CoreValues";
 import StatsSection from "./components/StatSection";
 import LeadershipSection from "./components/LeaderSection";
 import TimelineSection from "./components/timeLineSection";
-import CTASection from "./components/CtaSection";
+//import CTASection from "./components/CtaSection";
 //import Footer from "./components/Footer";
 
 export default function page() {
@@ -20,7 +20,7 @@ export default function page() {
       <StatsSection />
       <LeadershipSection />
       <TimelineSection />
-      <CTASection />
+      {/* <CTASection /> */}
       {/* <Footer /> */}
     </div>
   );
