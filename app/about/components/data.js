@@ -10,50 +10,43 @@ export const coreValues = [
   {
     icon: <Leaf size={26} />,
     title: "Sustainability",
-    desc: "We care for the planet and promote eco-friendly agricultural practices.",
+    tagline: "Think beyond today.",
+    desc: "We make responsible choices in how we source, produce, package and operate, with a focus on reducing unnecessary impact and building for the long term.",
   },
   {
     icon: <ShieldCheck size={26} />,
     title: "Integrity",
-    desc: "We are transparent, ethical and committed to doing what's right.",
+    tagline: "Do what’s right.",
+    desc: "We believe in honest practices, transparent relationships and delivering on what we promise—to farmers, partners and customers.",
   },
   {
     icon: <Lightbulb size={26} />,
     title: "Innovation",
-    desc: "We continuously innovate with science and technology to create better solutions.",
+    tagline: "Better, by design.",
+    desc: "We look for practical ways to improve quality, freshness and convenience—from vacuum brick packaging for our flours to BPA-free bottles and jars for our oils and spices.",
   },
   {
     icon: <Users size={26} />,
     title: "Empowerment",
-    desc: "We empower farmers with knowledge, products and partnerships.",
+    tagline: "Grow together.",
+    desc: "We believe better agriculture starts with better access to knowledge, practical solutions and opportunities for farmers and the communities around them.",
   },
   {
     icon: <Globe size={26} />,
     title: "Impact",
-    desc: "We measure our success by the positive impact we create together.",
+    tagline: "Make it matter.",
+    desc: "We measure our progress by the meaningful difference we create across the agricultural value chain—from the field to the final product.",
   },
 ];
 
-export const leaders = [
-  {
-    name: "Harshal Shinde",
-    role: "Co-Founder & CEO",
-    desc: "Visionary leader driving innovation and sustainability in agriculture.",
-    img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&auto=format&fit=crop",
-  },
-  {
-    name: "Manesh Chaudhari",
-    role: "Co-Founder & CTO",
-    desc: "Technology expert dedicated to building farmer-centric solutions.",
-    img: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=400&auto=format&fit=crop",
-  },
-  {
-    name: "Yogesh Patil",
-    role: "Co-Founder & COO",
-    desc: "Operations leader focused on delivery, growth and impact.",
-    img: "https://images.unsplash.com/photo-1504257432389-52343af06ae3?q=80&w=400&auto=format&fit=crop",
-  },
-];
+export const coreValuesSection = {
+  eyebrow: "WHAT DRIVES US",
+  title: "Our Core Values",
+  description:
+    "The way we work matters as much as what we create. These values guide our decisions, our products and the way we work with the agricultural community.",
+};
+
+
 
 export const timeline = [
   {

@@ -18,11 +18,12 @@ export default function PurposeSection() {
 
           <h2 className="text-3xl md:text-4xl lg:text-3xl font-bold text-gray-800">Why We Exist</h2>
 
-          <p className="mt-5 text-sm md:text-base leading-relaxed text-gray-600 max-w-full lg:max-w-[330px] mx-auto lg:mx-0">We believe farming is not just an occupation—it’s the foundation of life. Our purpose is to empower every farmer with the right solutions, knowledge and care to create a prosperous and sustainable future.</p>
+          <p className="mt-5 text-sm md:text-base leading-relaxed text-gray-600 max-w-full lg:max-w-[330px] mx-auto lg:mx-0">We believe better agriculture begins with better choices—for the farmer, the soil and the future.</p>
 
           <button className="mt-6 text-[#4d7c41] font-semibold flex items-center gap-2 mx-auto lg:mx-0">
-            Our Mission & Vision
-            <span className="text-lg">→</span>
+           “To nurture healthier crops, stronger soils and more resilient farming communities today and for generations to come.”
+
+           
           </button>
         </div>
 
@@ -32,7 +33,7 @@ export default function PurposeSection() {
             {/* quote mark */}
             <div className="text-[#4d7c41] text-4xl font-bold">“</div>
 
-            <p className="text-[#5c7e54] leading-relaxed">At Nityagro, we are committed to nurturing crops, conserving soil and strengthening communities for generations to come.</p>
+            <p className="text-[#5c7e54] leading-relaxed">Nityagro exists to support farmers with practical, science-backed solutions that improve crop productivity, strengthen soil health and make farming more sustainable over time. By bringing knowledge, innovation and care closer to the field, we aim to create lasting value for the people who grow our food and the communities that depend on them.</p>
 
             {/* small leaf icon bottom right */}
             <div className="absolute bottom-4 right-4 text-[#5c7e54]">
