@@ -348,29 +348,33 @@ export default function OurProcess() {
         </div>
 
         {/* Bottom icon row */}
-        <div className="flex flex-wrap items-center border-t border-[#e2dfd2] mt-10 pt-7">
-          {BOTTOM_ITEMS.map((item, index) => {
-            const Icon = item.icon;
-            return (
-              <div
-                key={index}
-                className={`group flex items-center gap-3 pr-7 sm:pr-10 mb-4 sm:mb-0 ${
-                  index !== 0 ? "pl-7 sm:pl-10 border-l border-[#e2dfd2]" : ""
-                }`}
-              >
-                <Icon
-                  className="w-5 h-5 text-[#1c3a26] shrink-0 transition-transform duration-300 group-hover:scale-110"
-                  strokeWidth={1.6}
-                />
-                <p className="text-[11px] sm:text-[12px] font-semibold leading-tight tracking-wide text-[#132b1c] uppercase">
-                  {item.label[0]}
-                  <br />
-                  {item.label[1]}
-                </p>
-              </div>
-            );
-          })}
-        </div>
+        <div className="flex flex-wrap items-center justify-center border-t border-[#e2dfd2] mt-10 pt-7">
+  {BOTTOM_ITEMS.map((item, index) => {
+    const Icon = item.icon;
+
+    return (
+      <div
+        key={index}
+        className={`group flex items-center gap-3 pr-7 sm:pr-10 mb-4 sm:mb-0 ${
+          index !== 0
+            ? "pl-7 sm:pl-10 border-l border-[#e2dfd2]"
+            : ""
+        }`}
+      >
+        <Icon
+          className="w-5 h-5 text-[#1c3a26] shrink-0 transition-transform duration-300 group-hover:scale-110"
+          strokeWidth={1.6}
+        />
+
+        <p className="text-[11px] sm:text-[12px] font-semibold leading-tight tracking-wide text-[#132b1c] uppercase">
+          {item.label[0]}
+          <br />
+          {item.label[1]}
+        </p>
+      </div>
+    );
+  })}
+</div>
       </div>
     </section>
   );

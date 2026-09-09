@@ -141,25 +141,49 @@ export default function Sustainability() {
         </p>
       </div>
 
-      {/* RIGHT: 2×2 grid */}
-      <div className="flex-1 w-full min-w-0 grid grid-cols-2 gap-3 xs:gap-4 sm:gap-5 lg:gap-6">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="min-w-0 bg-[#f0ede6] rounded-xl px-4 sm:px-6 lg:px-8 py-5 sm:py-7 lg:py-8"
-          >
-            <p
-              className="break-words hyphens-auto text-[20px] xs:text-[24px] sm:text-[32px] lg:text-[36px] font-normal leading-[1.05] text-[#1F5131] mb-1.5 sm:mb-2 lg:mb-3"
-              style={{ fontFamily: "var(--font-garamond)" }}
-            >
-              {stat.value}
-            </p>
-            <p className="break-words text-[14px] lg:text-[18px] font-normal text-[#5A695F] leading-snug">
-              {stat.label}
-            </p>
-          </div>
-        ))}
-      </div>
+     {/* RIGHT: 2×2 grid */}
+<div className="flex-1 w-full min-w-0 grid grid-cols-2 gap-3 xs:gap-4 sm:gap-5 lg:gap-6">
+  {stats.map((stat) => (
+    <div
+      key={stat.label}
+      className="min-w-0 bg-[#f0ede6] rounded-xl px-4 sm:px-6 lg:px-8 py-5 sm:py-7 lg:py-8"
+    >
+      <p
+        className="
+          break-words
+          hyphens-auto
+          text-[18px]
+          xs:text-[22px]
+          sm:text-[27px]
+          lg:text-[30px]
+          font-normal
+          leading-[1.05]
+          text-[#1F5131]
+          mb-1.5
+          sm:mb-2
+          lg:mb-2.5
+        "
+        style={{ fontFamily: "var(--font-garamond)" }}
+      >
+        {stat.value}
+      </p>
+
+      <p
+        className="
+          break-words
+          text-[13px]
+          sm:text-[14px]
+          lg:text-[16px]
+          font-normal
+          text-[#5A695F]
+          leading-snug
+        "
+      >
+        {stat.label}
+      </p>
+    </div>
+  ))}
+</div>
     </section>
   );
 }
