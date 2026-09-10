@@ -47,10 +47,18 @@ const ShareIcon = () => (
   </svg>
 );
 
+// function getVariantButtonLabel(label) {
+//   const text = String(label || "").trim();
+//   return text.split(/\s+/)[0] || text;
+// }
+
+
 function getVariantButtonLabel(label) {
   const text = String(label || "").trim();
-  return text.split(/\s+/)[0] || text;
+
+  return text.split(/\s+/).at(-1) || text;
 }
+
 
 function firstValidPrice(...values) {
   for (const value of values) {
