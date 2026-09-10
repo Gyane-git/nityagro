@@ -4,10 +4,13 @@ import type { PrismaClient } from "@prisma/client";
 const DEFAULT_OMS_STOCK_URL =
   "http://nityamecomapi.globaltech.com.np/api/v1/full-reset";
 const DEFAULT_OMS_TOKEN_URL = "http://nityamecomapi.globaltech.com.np/token";
+const DEFAULT_OMS_STOCK_CODE_URL =
+  "http://bkgroupapi.globaltech.com.np:802/api/MasterList/ProductListDivisionwise?dbname=BKGRP08301&Div=1";
 const DEFAULT_STORE_CODE = "BKGRP08301";
 const DEFAULT_OMS_DIVISION_CODE = "1";
 let stockTokenCache: { token: string; tokenType: string; expiresAt: number } | null =
   null;
+let stockCodeMapCache: { expiresAt: number; map: Map<string, string> } | null = null;
 
 type StockRow = {
   PCode?: unknown;
@@ -80,6 +83,73 @@ async function parseJsonResponse(response: Response) {
   } catch {
     return { raw: text };
   }
+}
+
+async function getOmsStockCodeMap() {
+  if (stockCodeMapCache && stockCodeMapCache.expiresAt > Date.now()) {
+    return stockCodeMapCache.map;
+  }
+
+  const url = new URL(env("OMS_STOCK_CODE_URL", DEFAULT_OMS_STOCK_CODE_URL));
+  if (!url.searchParams.has("dbname") && !url.searchParams.has("DbName")) {
+    url.searchParams.set("dbname", getStockStoreCode());
+  }
+  if (!url.searchParams.has("Div") && !url.searchParams.has("DivCode")) {
+    url.searchParams.set("Div", getDivisionCode());
+  }
+
+  const response = await fetch(url.toString(), {
+    cache: "no-store",
+    headers: { Accept: "application/json" },
+  });
+  const payload = await parseJsonResponse(response);
+  if (!response.ok) {
+    throw createStockError(response.status, payload);
+  }
+
+  const source = Array.isArray(payload)
+    ? payload
+    : Array.isArray((payload as { data?: unknown[] })?.data)
+      ? (payload as { data: unknown[] }).data
+      : Array.isArray((payload as { Data?: unknown[] })?.Data)
+        ? (payload as { Data: unknown[] }).Data
+        : Array.isArray((payload as { result?: unknown[] })?.result)
+          ? (payload as { result: unknown[] }).result
+          : [];
+  const map = new Map<string, string>();
+
+  for (const row of source) {
+    const item = row as Record<string, unknown>;
+    const productCode = readString(item.PCode, item.pCode, item.productCode);
+    const stockCode = readString(item.Code, item.code, item.sku, item.SKU);
+    if (productCode && stockCode) map.set(productCode, stockCode);
+    if (stockCode) map.set(stockCode, stockCode);
+  }
+
+  stockCodeMapCache = { expiresAt: Date.now() + 5 * 60_000, map };
+  return map;
+}
+
+async function resolveOmsStockSku(localSku: string) {
+  if (!localSku) return localSku;
+  try {
+    return (await getOmsStockCodeMap()).get(localSku) || localSku;
+  } catch (error) {
+    console.warn(`OMS product-code mapping failed for SKU ${localSku}`, error);
+    return localSku;
+  }
+}
+
+function relabelStockRowsForLocalSku(
+  rows: NormalizedOmsStockRow[],
+  localSku: string,
+  upstreamSku: string,
+) {
+  if (!localSku || !upstreamSku || localSku === upstreamSku || rows.length !== 1) {
+    return rows;
+  }
+
+  return [{ ...rows[0], PCode: localSku, pCode: localSku }];
 }
 
 async function getOmsStockToken() {
@@ -276,7 +346,8 @@ export async function fetchOmsStockRows(args: FetchOmsStockRowsArgs = {}) {
   }
 
   upstreamUrl.searchParams.set("Storecode", getStockStoreCode(args.storeCode));
-  if (cleanSku) upstreamUrl.searchParams.set("sku", cleanSku);
+  const upstreamSku = await resolveOmsStockSku(cleanSku);
+  if (upstreamSku) upstreamUrl.searchParams.set("sku", upstreamSku);
 
   const { token, tokenType } = await getOmsStockToken();
   const username = env("OMS_USERNAME");
@@ -309,8 +380,12 @@ export async function fetchOmsStockRows(args: FetchOmsStockRowsArgs = {}) {
     payload = await parseJsonResponse(response);
 
     if (response.ok) {
+      const normalizedRows = applyRequestedSkuFallback(
+        normalizeOmsStockRows(payload),
+        upstreamSku,
+      );
       return {
-        rows: applyRequestedSkuFallback(normalizeOmsStockRows(payload), cleanSku),
+        rows: relabelStockRowsForLocalSku(normalizedRows, cleanSku, upstreamSku),
         raw: payload,
       };
     }
