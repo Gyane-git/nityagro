@@ -40,7 +40,20 @@ export async function OPTIONS() {
 
 export async function GET() {
   try {
-    const categories = await prisma.categories.findMany();
+    const categories = await prisma.categories.findMany({
+      select: {
+        categoryId: true,
+        categoryName: true,
+        userId: true,
+        slug: true,
+        categoryDescription: true,
+        categoryImage: true,
+        categoryLogo: true,
+        categoryBanner: true,
+        categoryStatus: true,
+      },
+      orderBy: { categoryId: "asc" },
+    });
     // 🔥 Fix BigInt serialization
     const safeData = JSON.parse(
       JSON.stringify(categories, (_, value) =>

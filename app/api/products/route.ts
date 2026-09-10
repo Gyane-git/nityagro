@@ -1,6 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import { refreshAllLocalStockFromOms } from "@/lib/omsStock";
-import { applyOmsPriceOverlay, fetchOmsProductPrices } from "@/lib/omsProductPrices";
 import { getPublicUploadDir } from "@/lib/uploadPaths";
 import { NextResponse } from "next/server";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -193,39 +191,37 @@ export async function GET() {
   try {
     const productGroupWise = await prisma.products.findMany({
       distinct: ["subGroupName"],
+      select: {
+        productId: true,
+        productCode: true,
+        categoryId: true,
+        userId: true,
+        productName: true,
+        subGroupName: true,
+        slug: true,
+        productVariation: true,
+        productDescription: true,
+        nutritionInfo: true,
+        cookingInstruction: true,
+        storageInstruction: true,
+        pImage: true,
+        productStatus: true,
+        actualPrice: true,
+        sellingPrice: true,
+        deliveryTargetDays: true,
+        stockQuantity: true,
+        availableQuantity: true,
+        flashSale: true,
+        specialOffer: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     // Randomize product order
     const shuffledProducts = shuffleArray(productGroupWise);
 
-    const liveStockByCode = await refreshAllLocalStockFromOms().catch((error) => {
-      console.warn("Live OMS stock overlay failed", error);
-
-      return new Map<string, number>();
-    });
-
-    const livePriceByCode = await fetchOmsProductPrices(shuffledProducts.map((product) => product.productCode)).catch((error) => {
-      console.warn("Live OMS price overlay failed", error);
-
-      return new Map<string, { actualPrice?: number; sellingPrice?: number }>();
-    });
-
-    const rows = shuffledProducts.map((product) => {
-      const liveStock = liveStockByCode.get(product.productCode);
-
-      const withPrice = applyOmsPriceOverlay(product, livePriceByCode.get(product.productCode));
-
-      if (liveStock === undefined) {
-        return withPrice;
-      }
-
-      return {
-        ...withPrice,
-        stockQuantity: liveStock,
-        availableQuantity: liveStock,
-        omsAvailableQty: liveStock,
-      };
-    });
+    const rows = shuffledProducts;
 
     const safeData = JSON.parse(JSON.stringify(rows, (_, value) => (typeof value === "bigint" ? value.toString() : value)));
 
