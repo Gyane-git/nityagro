@@ -419,7 +419,7 @@ export async function POST(req: Request) {
         0,
       );
 
-      await syncOmsOrderSafely({
+      const omsSync = await syncOmsOrderSafely({
         prisma,
         orderType: "COMBO_ORDER",
         localOrderIds: created.map((order) => order.comboOrderId),
@@ -446,7 +446,10 @@ export async function POST(req: Request) {
           memberCode: String(userId),
           userCode: String(userId),
         },
-      }).catch((error) => console.error("OMS combo ConnectIPS sync log failed:", error));
+      }).catch((error) => {
+        console.error("OMS combo ConnectIPS sync log failed:", error);
+        return null;
+      });
 
       try {
         const user = await prisma.users.findUnique({
@@ -534,6 +537,8 @@ export async function POST(req: Request) {
             itemCount: created.length,
             grandTotal,
             orderType: "combo",
+            omsSyncStatus: omsSync?.status || "FAILED",
+            omsSyncLogId: omsSync?.omsOrderSyncLogId?.toString?.() || null,
           },
         },
         { status: 200, headers: corsHeaders },
@@ -810,7 +815,7 @@ export async function POST(req: Request) {
 
     const grandTotal = created.reduce((sum, o) => sum + Number(o.totalAmount), 0);
 
-    await syncOmsOrderSafely({
+    const omsSync = await syncOmsOrderSafely({
       prisma,
       orderType: "ORDER",
       localOrderIds: created.map((order) => order.orderId),
@@ -833,7 +838,10 @@ export async function POST(req: Request) {
         memberCode: String(userId),
         userCode: String(userId),
       },
-    }).catch((error) => console.error("OMS ConnectIPS sync log failed:", error));
+    }).catch((error) => {
+      console.error("OMS ConnectIPS sync log failed:", error);
+      return null;
+    });
 
     try {
       const user = await prisma.users.findUnique({
@@ -928,6 +936,8 @@ export async function POST(req: Request) {
           transactionId: connectipsReferenceId,
           itemCount: created.length,
           grandTotal,
+          omsSyncStatus: omsSync?.status || "FAILED",
+          omsSyncLogId: omsSync?.omsOrderSyncLogId?.toString?.() || null,
         },
       },
       { status: 200, headers: corsHeaders },

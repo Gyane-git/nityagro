@@ -166,7 +166,14 @@ export default function SuccessClient() {
           sessionStorage.removeItem("connectips_last_reference");
         }
 
-        setResult({ status: "success" });
+        if (orderData?.data?.omsSyncStatus && orderData.data.omsSyncStatus !== "SUCCESS") {
+          setResult({
+            status: "success",
+            message: "Payment completed. Order saved, but OMS sync is pending.",
+          });
+        } else {
+          setResult({ status: "success" });
+        }
       } catch (error) {
         const message =
           error instanceof Error
@@ -201,7 +208,9 @@ export default function SuccessClient() {
               </div>
             </div>
             <h1 className="text-3xl font-bold text-white text-center mb-2">Payment Successful!</h1>
-            <p className="text-green-100 text-center">Your order has been placed successfully.</p>
+            <p className="text-green-100 text-center">
+              {result.message || "Your order has been placed successfully."}
+            </p>
           </div>
 
           <div className="px-8 py-6">

@@ -653,7 +653,7 @@ export async function POST(req: Request) {
 
     const grandTotal = created.reduce((sum, o) => sum + Number(o.totalAmount), 0);
 
-    await syncOmsOrderSafely({
+    const omsSync = await syncOmsOrderSafely({
       prisma,
       orderType: "ORDER",
       localOrderIds: created.map((order) => order.orderId),
@@ -676,7 +676,10 @@ export async function POST(req: Request) {
         memberCode: String(userId),
         userCode: String(userId),
       },
-    }).catch((error) => console.error("OMS COD sync log failed:", error));
+    }).catch((error) => {
+      console.error("OMS COD sync log failed:", error);
+      return null;
+    });
 
     // Send invoice email without breaking order placement on mail failure.
     try {
@@ -791,6 +794,8 @@ export async function POST(req: Request) {
           transactionId: txCode,
           itemCount: created.length,
           grandTotal,
+          omsSyncStatus: omsSync?.status || "FAILED",
+          omsSyncLogId: omsSync?.omsOrderSyncLogId?.toString?.() || null,
         },
       },
       { status: 200, headers: corsHeaders },

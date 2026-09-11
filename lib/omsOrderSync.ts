@@ -42,6 +42,7 @@ type OmsOrderPayload = ReturnType<typeof buildOmsOrderPayload>;
 type OmsCancelPayload = OmsOrderPayload;
 
 let tokenCache: { token: string; expiresAt: number } | null = null;
+let omsItemCodeCache: { expiresAt: number; map: Map<string, string> } | null = null;
 
 function env(key: string, fallback = "") {
   return String(process.env[key] ?? fallback).trim().replace(/^['\"]|['\"]$/g, "");
@@ -185,6 +186,62 @@ async function parseResponse(response: Response) {
   }
 }
 
+async function getOmsItemCodeMap() {
+  if (omsItemCodeCache && omsItemCodeCache.expiresAt > Date.now()) {
+    return omsItemCodeCache.map;
+  }
+
+  const url = new URL(
+    env(
+      "OMS_ORDER_CODE_URL",
+      "http://bkgroupapi.globaltech.com.np:802/api/MasterList/ProductListDivisionwise?dbname=BKGRP08301&Div=1",
+    ),
+  );
+  const response = await fetch(url.toString(), {
+    cache: "no-store",
+    headers: { Accept: "application/json" },
+  });
+  const data = await parseResponse(response);
+  if (!response.ok) {
+    throw new Error(`OMS item-code lookup failed (${response.status}): ${JSON.stringify(data)}`);
+  }
+
+  const rows = Array.isArray(data)
+    ? data
+    : Array.isArray((data as { data?: unknown[] })?.data)
+      ? (data as { data: unknown[] }).data
+      : Array.isArray((data as { Data?: unknown[] })?.Data)
+        ? (data as { Data: unknown[] }).Data
+        : Array.isArray((data as { result?: unknown[] })?.result)
+          ? (data as { result: unknown[] }).result
+          : [];
+  const map = new Map<string, string>();
+
+  for (const row of rows) {
+    const item = row as Record<string, unknown>;
+    const productCode = String(item.PCode ?? item.pCode ?? item.productCode ?? "").trim();
+    const omsCode = String(item.Code ?? item.code ?? item.sku ?? item.SKU ?? "").trim();
+    if (productCode && omsCode) map.set(productCode, omsCode);
+    if (omsCode) map.set(omsCode, omsCode);
+  }
+
+  omsItemCodeCache = { expiresAt: Date.now() + 5 * 60_000, map };
+  return map;
+}
+
+async function mapOrderItemCodes(items: OmsSyncItem[]) {
+  try {
+    const map = await getOmsItemCodeMap();
+    return items.map((item) => ({
+      ...item,
+      itemCode: map.get(String(item.itemCode || "").trim()) || item.itemCode,
+    }));
+  } catch (error) {
+    console.warn("OMS order item-code mapping failed; using local codes", error);
+    return items;
+  }
+}
+
 async function getOmsToken() {
   if (tokenCache?.token && tokenCache.expiresAt > Date.now() + 60_000) {
     return tokenCache.token;
@@ -312,7 +369,9 @@ async function tryPostWithRetry(payload: OmsOrderPayload, retries = 1) {
 
 export async function syncOmsOrderSafely(args: OmsSyncArgs) {
   const db = args.prisma || defaultPrisma;
-  const cleanItems = args.items.filter((item) => String(item.itemCode || "").trim());
+  const cleanItems = await mapOrderItemCodes(
+    args.items.filter((item) => String(item.itemCode || "").trim()),
+  );
   const localOrderIds = args.localOrderIds.map((id) => id.toString()).join(",");
   const payload = buildOmsOrderPayload(cleanItems, {
     comment: args.comment || "Website Order",

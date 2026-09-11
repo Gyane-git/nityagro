@@ -192,7 +192,13 @@ export default function CheckoutPaymentPage() {
       setConfirmedOrderType(data?.data?.orderType || "product");
       setPlacedAt(new Date().toLocaleString());
       setShowConfirmation(true);
-      toast.success("Order placed successfully");
+      if (data?.data?.omsSyncStatus === "SUCCESS") {
+        toast.success("Order placed successfully");
+      } else {
+        toast("Order saved, but OMS sync is pending. Admin can retry it.", {
+          icon: "!",
+        });
+      }
     } catch (err) {
       console.error("COD error:", err);
       toast.error("Order placement failed");
