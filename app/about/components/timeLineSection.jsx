@@ -18,7 +18,7 @@ export default function JoinTheMovement() {
 
       {/* Full banner image */}
       <div className="relative w-full sm:-mt-10 md:-mt-20 lg:-mt-20 ">
-        <Image src="/assets/Revolution.jpg" alt="Join the Movement — Anveshan products" width={1280} height={520} className="w-full h-auto object-cover object-bottom" priority />
+        <Image src="/assets/join the Revolution (1).jpg" alt="Join the Movement — Anveshan products" width={1280} height={520} className="w-full h-auto object-cover object-bottom" priority />
       </div>
     </section>
   );

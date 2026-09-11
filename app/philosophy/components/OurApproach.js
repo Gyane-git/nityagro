@@ -1,8 +1,8 @@
 // components/Approach.jsx
 import Image from "next/image";
-import woodPressOil from "@/public/images/wood-press-oil.jpeg";
-import stoneGrain from "@/public/images/stone-ground-grain.jpeg";
-import turmatic from "@/public/images/turmatic.jpeg";
+import woodPressOil from "@/public/images/wood presssed oil.png";
+import stoneGrain from "@/public/images/stone pressed image.png";
+import turmatic from "@/public/images/stone pressed spices.png";
 
 export default function Approach() {
   const cards = [

@@ -153,37 +153,39 @@ export default function LeaderSection() {
       </div>
 
       {/* Image block */}
-      <div
-        className="
-          shrink-0
-          flex
-          items-center md:items-end
-          justify-center md:justify-end
-          w-full md:w-auto
-          mt-6 md:mt-0
-        "
-      >
-        <Image
-          src="/assets/partner.png"
-          alt="Nityagro founder"
-          width={420}
-          height={300}
-          priority
-          className="
-            block
-            object-contain
-            object-bottom
-            grayscale
-            w-full
-            max-w-[260px]
-            sm:max-w-[320px]
-            md:max-w-[360px]
-            max-h-[190px]
-            sm:max-h-[230px]
-            md:max-h-[280px]
-          "
-        />
-      </div>
+     <div
+  className="
+    shrink-0
+    flex
+    items-center md:items-end
+    justify-center md:justify-end
+    w-full md:w-auto
+    mt-6 md:mt-0
+  "
+>
+  <Image
+    src="/assets/Anna DD Photo.png"
+    alt="Nityagro founder"
+    width={420}
+    height={300}
+    priority
+    className="
+      block
+      object-contain
+      object-bottom
+      grayscale
+      w-full
+      max-w-[260px]
+      sm:max-w-[320px]
+      md:max-w-[360px]
+      max-h-[190px]
+      sm:max-h-[230px]
+      md:max-h-[280px]
+      translate-y-5
+      md:translate-y-5
+    "
+  />
+</div>
     </section>
   );
 }
