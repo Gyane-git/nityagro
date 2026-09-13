@@ -215,29 +215,34 @@ export default function ColdPressedFlour({ data }) {
           </div>
 
           {/* RIGHT */}
-          <div className="flex-1 w-full flex justify-center lg:justify-end items-start pt-0 lg:pt-4">
-            <div
-              className="relative w-full rounded-[24px] sm:rounded-[36px] p-4 sm:p-5"
-              style={{
-                background:
-                  "0 0 60px 30px rgba(235,185,70,0.35), 0 0 100px 50px rgba(235,185,70,0.15)",
-              }}
-            >
-              <div
-                className="rounded-[16px] sm:rounded-[22px] overflow-hidden w-full"
-                style={{ boxShadow: "0 0 30px 15px rgba(201,150,58,0.20)" }}
-              >
-                <Image
-                  src="/methods/mill.png"
-                  alt="Stone grinding flour"
-                  width={700}
-                  height={875}
-                  className="w-full object-cover rounded-[16px] sm:rounded-[22px]"
-                  style={{ height: "clamp(280px, 50vw, 600px)" }}
-                />
-              </div>
-            </div>
-          </div>
+          {/* RIGHT */}
+<div className="flex-1 w-full flex justify-center lg:justify-end items-start pt-0 lg:pt-4">
+  <div
+    className="relative w-full rounded-[24px] sm:rounded-[36px] p-4 sm:p-5"
+    style={{
+      background:
+        "0 0 60px 30px rgba(235,185,70,0.35), 0 0 100px 50px rgba(235,185,70,0.15)",
+    }}
+  >
+    <div
+      className="rounded-[16px] sm:rounded-[22px] overflow-hidden w-full"
+      style={{
+        boxShadow: "0 0 30px 15px rgba(201,150,58,0.20)",
+      }}
+    >
+      <Image
+        src={data?.image}
+        alt={data?.title || "Nityagro method"}
+        width={700}
+        height={875}
+        className="w-full object-cover rounded-[16px] sm:rounded-[22px]"
+        style={{
+          height: "clamp(280px, 50vw, 600px)",
+        }}
+      />
+    </div>
+  </div>
+</div>
         </div>
       </div>
       {params?.id === "stone-pressed" && <OurProcess />}
