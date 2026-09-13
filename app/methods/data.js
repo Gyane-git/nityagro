@@ -17,7 +17,7 @@ export const METHODS = {
       desc: "Wood pressing is a slower mechanical method of extracting oil from seeds. The oil is extracted through pressure, without solvent extraction, keeping the process simple and close to the traditional way of making oil.",
       btnPrimary: "Explore the Process",
       btnSecondary: "Shop Wood Pressed Oils",
-      image: "/methods/Wood-Pressed.png",
+      image: "/methods/woodpress.png",
       stats: [
         { value: "18–19 RPM", label: "Slow Mechanical Pressing" },
         { value: "100%", label: "Chemical free" },
@@ -199,7 +199,7 @@ export const METHODS = {
       btnPrimary: "Explore the Process",
       btnSecondary: "SHOP FLOURS & SPICES",
 
-      image: "/methods/stone pressed.png",
+      image: "/methods/stonepress.png",
       stats: [
         { value: "STONE GROUND", label: "Traditional stone processing" },
         { value: "WHOLE GRAINS", label: "Processed from selected grains" },
