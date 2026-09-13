@@ -6,6 +6,7 @@ export default function SeedToBottle({ data }) {
       className="
         w-full
         bg-[#f0ece3]
+        text-[#4a4a46]
         px-5
         sm:px-10
         md:px-14
