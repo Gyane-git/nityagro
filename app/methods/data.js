@@ -4,7 +4,7 @@ import SideBySide from "./components/SideBySide";
 export const METHODS = {
   "wood-pressed": {
     Banner: {
-      image: "/banners/banner-wood-pressed.jpg",
+      image: "/banner1.jpg",
       title: "Wood Pressed",
     },
     ColdPressedFlour: {
@@ -65,7 +65,7 @@ export const METHODS = {
           icon: "📦",
           title: "Filled & Sealed",
           desc: "The finished oil is filled and sealed in our facility, then packed and prepared for your kitchen.",
-          image: "/methods/Filled & Sealed.png",
+          image: "/methods/FilledSealed.png",
           alt: "Glass bottles of pressed oil",
           reverse: true,
         },
@@ -247,7 +247,7 @@ export const METHODS = {
           icon: "📦",
           title: "Packed & Sealed",
           desc: "Once processed, the finished flour and spices are packed and sealed carefully before making their way to your kitchen.",
-          image: "/methods/Packed & Sealed .png",
+          image: "/methods/PackedSealed.png",
           alt: "Glass bottles of pressed oil",
           reverse: true,
         },

@@ -47,7 +47,7 @@ function ProductsPageContent() {
             image: item.pImage || "/products/mustard-oil.png",
             rating: 4,
             reviews: 0,
-            badge: item.specialOffer ? "Special Offer" : null,
+            badge: item.specialOffer ? "Best Seller" : null,
             discount: item.actualPrice > item.sellingPrice ? `SAVE\n${Math.round(((item.actualPrice - item.sellingPrice) / item.actualPrice) * 100)}%` : null,
             stockQuantity: Number(item.stockQuantity ?? item.availableQuantity ?? 0),
             availableQuantity: Number(item.availableQuantity ?? item.stockQuantity ?? 0),
