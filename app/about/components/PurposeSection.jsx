@@ -8,7 +8,7 @@ export default function PurposeSection() {
         {/* LEFT - CIRCLE IMAGE */}
         <div className="flex justify-center lg:justify-start">
           <div className="w-[260px] h-[260px] md:h-[300px] rounded-full sm:rounded-lg sm:w-full md:w-full overflow-hidden">
-            <img src="https://images.unsplash.com/photo-1461354464878-ad92f492a5a0?q=80&w=1200&auto=format&fit=crop" alt="plant" className="w-full h-full object-cover" />
+            <img src="/assets/about us tomato replace.png" alt="plant" className="w-full h-full object-cover" />
           </div>
         </div>
 
