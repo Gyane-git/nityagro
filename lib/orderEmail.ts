@@ -176,7 +176,7 @@ const emailHeader = (): string => `
             <td width="60" height="60"
               style="width:60px;height:60px;background:#ffffff;border-radius:30px;
                      text-align:center;vertical-align:middle;font-size:28px;line-height:60px;">
-              🌿
+              
             </td>
           </tr>
         </table>
@@ -268,10 +268,10 @@ const helpSection = (): string => `
             <!-- Contact -->
             <td valign="middle" align="right">
               <div style="font-size:12px;color:#1B5E35;margin-bottom:5px;">
-                ${ICON.mail}&nbsp; support@nityagro.com
+                ${ICON.mail}&nbsp; nityamagro.pvt.ltd@gmail.com
               </div>
               <div style="font-size:12px;color:#1B5E35;">
-                ${ICON.phone}&nbsp; +977 9800000000
+                ${ICON.phone}&nbsp; +977 9800007400
               </div>
             </td>
 
@@ -698,7 +698,7 @@ export function buildOrderStatusEmail(input: OrderStatusEmailInput): {
                     </td>
                   </tr>
                 </table>
-              </td>
+              </td>Te
 
             </tr>
           </table>
