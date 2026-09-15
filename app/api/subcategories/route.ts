@@ -13,6 +13,7 @@ type SubCategoryDTO = {
   MRP: number;
 
   stockQuantity?: number;
+  imageUrl?: string | null;
 };
 // ✅ Preflight handler
 export async function OPTIONS() {
@@ -80,6 +81,7 @@ export async function POST(req: Request) {
           row?.stockQuantity === undefined || row?.stockQuantity === null
             ? undefined
             : Number(row.stockQuantity),
+        imageUrl: row?.imageUrl ? String(row.imageUrl).trim() : null,
       });
     }
 
@@ -117,6 +119,7 @@ export async function POST(req: Request) {
           variationName: p.variationName,
           salesRate: p.MRP,
           stockQuantity: BigInt(Number(p.stockQuantity ?? 0)),
+          imageUrl: p.imageUrl,
         })),
         skipDuplicates: true,
       });
@@ -133,6 +136,7 @@ export async function POST(req: Request) {
           ...(row.stockQuantity === undefined
             ? {}
             : { stockQuantity: BigInt(Number(row.stockQuantity ?? 0)) }),
+          ...(row.imageUrl === undefined ? {} : { imageUrl: row.imageUrl }),
         },
       });
       updatedCount += updated.count;

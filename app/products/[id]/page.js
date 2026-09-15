@@ -1,6 +1,5 @@
 import Banner from "./Banner";
-import ProductImageGallery from "./Productimagegallery";
-import ProductInfo from "./ProductInfo";
+import ProductDetailMedia from "./ProductDetailMedia";
 import DeliveryCard from "./Deliverycard";
 import ProductTabs from "./Producttabs";
 import FrequentlyBoughtTogether from "./Frequentlyboughttogether";
@@ -122,10 +121,7 @@ export default async function ProductDetailPage({ params }) {
         {/* ── Main row: Gallery | Info | Delivery Card ── */}
         <div className="flex flex-col lg:flex-row gap-6 items-start mt-2 mb-8">
           {/* Left: image gallery (thumbnails + main) */}
-          <ProductImageGallery images={normalizedProduct.images} />
-
-          {/* Center: product info */}
-          <ProductInfo product={normalizedProduct} />
+          <ProductDetailMedia product={normalizedProduct} />
 
           {/* Right: delivery + return card */}
           <DeliveryCard deliveryTargetDays={normalizedProduct.deliveryTargetDays} />

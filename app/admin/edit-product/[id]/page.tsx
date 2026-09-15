@@ -33,6 +33,15 @@ interface Products {
   productImages?: Array<string | { imageUrl?: string | null; url?: string | null }> | string;
   galleryImages?: string[];
 }
+
+interface ProductVariant {
+  variantId: string;
+  pCode: string;
+  subGroupName: string;
+  variationName: string;
+  imageUrl?: string | null;
+  stockQuantity?: number | string | null;
+}
 type ExpandedSections = {
   basic: boolean;
   flags: boolean;
@@ -44,6 +53,11 @@ type ExpandedSections = {
 };
 
 type SectionKey = keyof ExpandedSections;
+
+function getVariantButtonLabel(label: string | null | undefined) {
+  const text = String(label || "").trim();
+  return text.split(/\s+/).at(-1) || text;
+}
 
 type SectionHeaderProps = {
   title: string;
@@ -66,6 +80,8 @@ export default function EditProductPage() {
 
   const [galleryPreview, setGalleryPreview] = useState<string[]>([]);
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [variantUploading, setVariantUploading] = useState<string | null>(null);
 
   const [expandedSections, setExpandedSections] = useState<ExpandedSections>({
     basic: true,
@@ -241,6 +257,16 @@ export default function EditProductPage() {
             specialOffer: Boolean(response.data?.specialOffer),
             productImage: null,
           }));
+
+          const subgroup = String(response.data?.subGroupName || "").trim();
+          if (subgroup) {
+            const variantResponse = await apiGetRequest<ProductVariant[]>(
+              `/subcategories/${encodeURIComponent(subgroup)}`,
+            );
+            if (variantResponse.success) {
+              setVariants(variantResponse.data || []);
+            }
+          }
         } else {
           toast.error(response.message || "Failed to load product");
         }
@@ -253,6 +279,35 @@ export default function EditProductPage() {
     };
     fetchProductById();
   }, []);
+
+  const uploadVariantImage = async (variant: ProductVariant, file: File) => {
+    const data = new FormData();
+    data.append("pCode", variant.pCode);
+    data.append("image", file);
+    setVariantUploading(variant.pCode);
+    try {
+      const response = await fetch("/api/subcategories/image", {
+        method: "POST",
+        body: data,
+      });
+      const result = await response.json();
+      if (!response.ok || !result?.success) {
+        throw new Error(result?.message || "Variant image upload failed");
+      }
+      setVariants((current) =>
+        current.map((item) =>
+          item.pCode === variant.pCode
+            ? { ...item, imageUrl: result.imageUrl }
+            : item,
+        ),
+      );
+      toast.success("Variant image updated");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Variant image upload failed");
+    } finally {
+      setVariantUploading(null);
+    }
+  };
 
   const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -670,6 +725,47 @@ export default function EditProductPage() {
                         )}
                       </label>
                     </div>
+
+                    {variants.length > 0 && (
+                      <div className="border-t border-gray-100 pt-4">
+                        <label className={labelClass}>Variant Images</label>
+                        <p className="text-xs text-gray-400 mb-3">
+                          Upload an image for each weight or size variant. It will appear when that variant is selected on the product page.
+                        </p>
+                        <div className="space-y-3">
+                          {variants.map((variant) => (
+                            <div key={variant.variantId} className="flex items-center gap-3 rounded-lg border border-gray-200 p-3">
+                              <img
+                                src={resolveImageUrl(variant.imageUrl) || "/no-image.png"}
+                                alt={variant.variationName}
+                                className="h-16 w-16 rounded-lg border object-cover bg-gray-50"
+                                onError={(event) => {
+                                  event.currentTarget.src = "/no-image.png";
+                                }}
+                              />
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-semibold text-gray-800">{getVariantButtonLabel(variant.variationName) || variant.pCode}</p>
+                                <p className="text-xs text-gray-500">SKU: {variant.pCode}</p>
+                              </div>
+                              <label className="cursor-pointer rounded-lg border border-blue-200 px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50">
+                                {variantUploading === variant.pCode ? "Uploading..." : variant.imageUrl ? "Change image" : "Upload image"}
+                                <input
+                                  type="file"
+                                  accept="image/jpeg,image/png,image/webp,image/gif"
+                                  className="hidden"
+                                  disabled={variantUploading === variant.pCode}
+                                  onChange={(event) => {
+                                    const file = event.target.files?.[0];
+                                    if (file) void uploadVariantImage(variant, file);
+                                    event.currentTarget.value = "";
+                                  }}
+                                />
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* to be added to model: gallery images */}
                     <div>

@@ -549,6 +549,7 @@ model ProductVariant {
   variationName String
   salesRate     Float?
   stockQuantity BigInt?
+  imageUrl      String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

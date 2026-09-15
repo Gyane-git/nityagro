@@ -69,7 +69,7 @@ function firstValidPrice(...values) {
   return 0;
 }
 
-export default function ProductInfo({ product }) {
+export default function ProductInfo({ product, onVariantImageChange }) {
   const [qty, setQty] = useState(1);
   const [variantsFromApi, setVariantsFromApi] = useState([]);
   const [selectedProductCode, setSelectedProductCode] = useState(
@@ -121,10 +121,10 @@ export default function ProductInfo({ product }) {
             id: Number(item.productId || p.id),
             variantId: Number(item.variantId),
             productCode: item.pCode || "",
+            image: item.imageUrl || item.productImage || p.image || p.images?.[0] || "/products/mustard-oil.png",
             label: item.variationName || item.pCode || "Variant",
             price: variantSellingPrice,
             actualPrice: variantActualPrice,
-            image: item.productImage || p.image || p.images?.[0] || "/products/mustard-oil.png",
             omsAvailableQty: Number(item.omsAvailableQty ?? item.productAvailableQuantity ?? item.stockQuantity ?? 0),
             stockQuantity: Number(item.omsAvailableQty ?? item.productStockQuantity ?? item.stockQuantity ?? 0),
             availableQuantity: Number(
@@ -170,6 +170,10 @@ export default function ProductInfo({ product }) {
   const activeProductCode = String(
     selectedVariant?.productCode || selectedProductCode || p.productCode || "",
   ).trim();
+
+  useEffect(() => {
+    onVariantImageChange?.(selectedVariant?.image || "");
+  }, [selectedVariant?.image, onVariantImageChange]);
 
   useEffect(() => {
     if (!activeProductCode) return;

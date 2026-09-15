@@ -77,6 +77,7 @@ export async function GET(
       return {
         ...item,
         stockQuantity: liveStock ?? item.stockQuantity,
+        imageUrl: item.imageUrl,
         omsAvailableQty: liveStock ?? null,
         productId: product?.productId ?? null,
         productImage: product?.pImage ?? null,

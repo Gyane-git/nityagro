@@ -43,6 +43,7 @@ interface ProductVariant {
   subGroupName: string;
   variationName: string;
   stockQuantity: number;
+  imageUrl?: string | null;
   //salesRate: number;
   MRP: number;
   createdAt: string;
@@ -150,6 +151,25 @@ export default function ProductListPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const uploadVariantImage = async (pCode: string, file: File) => {
+    const data = new FormData();
+    data.append("pCode", pCode);
+    data.append("image", file);
+    const response = await fetch("/api/subcategories/image", {
+      method: "POST",
+      body: data,
+    });
+    const result = await response.json();
+    if (!response.ok || !result?.success) {
+      throw new Error(result?.message || "Variant image upload failed");
+    }
+    setProductsVariant((current) =>
+      current.map((variant) =>
+        variant.pCode === pCode ? { ...variant, imageUrl: result.imageUrl } : variant,
+      ),
+    );
   };
 
   // Filter Products by search & category
@@ -424,8 +444,17 @@ export default function ProductListPage() {
             {productsVariant.length > 0 ? (
               <div className="space-y-3">
                 {productsVariant.map((item) => (
-                  <button
-                    onClick={() => {
+                  <div key={item.variantId} className="flex items-center gap-3 p-2 border rounded-lg">
+                    <img
+                      src={resolveImageUrl(item.imageUrl)}
+                      alt={item.variationName}
+                      className="w-12 h-12 rounded object-cover border"
+                      onError={(event) => {
+                        event.currentTarget.src = "/no-image.png";
+                      }}
+                    />
+                    <button
+                      onClick={() => {
                       setProductVariantDetails((prev) => ({
                         ...prev,
                         pCode: item.pCode,
@@ -436,12 +465,30 @@ export default function ProductListPage() {
                         stockQuantity: item.stockQuantity,
                       }));
                     }}
-                    key={item.variantId}
                     //  onClick={() => setSelectedWeight(w)}
                     className="px-4 py-2 cursor-pointer text-sm bg-green-700 hover:bg-green-900 text-white font-medium border rounded-md transition-all duration-150"
                   >
                     {item.variationName}
-                  </button>
+                    </button>
+                    <label className="ml-auto cursor-pointer text-xs text-blue-600 hover:text-blue-800">
+                      Change image
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (event) => {
+                          const file = event.target.files?.[0];
+                          if (!file) return;
+                          try {
+                            await uploadVariantImage(item.pCode, file);
+                            toast.success("Variant image updated");
+                          } catch (error) {
+                            toast.error(error instanceof Error ? error.message : "Upload failed");
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
                 ))}
               </div>
             ) : (
