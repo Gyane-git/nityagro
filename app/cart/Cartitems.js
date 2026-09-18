@@ -133,7 +133,7 @@ function CartRowMobile({ item, checked, onCheck, onQtyChange, onRemove }) {
           <div className="flex items-center justify-between mt-2">
             <QtySpinner value={item.qty} max={Number(item.availableQuantity ?? item.stockQuantity ?? 0)} onChange={(v) => onQtyChange(item.id, v)} />
             <p className="font-bold text-sm" style={{ color: "#00462C" }}>
-              NPR {(subtotal * 10).toLocaleString("en-NP", { minimumFractionDigits: 2 })}
+              NPR {subtotal.toLocaleString("en-NP", { minimumFractionDigits: 2 })}
             </p>
           </div>
         </div>

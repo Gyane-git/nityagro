@@ -50,6 +50,8 @@ export default function OrderItemsList() {
   };
   const sourceItems = checkoutItems.length > 0 ? checkoutItems : checkoutItem ? [checkoutItem] : [];
   const items: OrderItem[] = sourceItems.map((item: CheckoutSourceItem) => {
+    const unitPrice = Number(item.unitPrice ?? 0);
+    const qty = Number(item.qty ?? 1);
     const display = normalizeCheckoutDisplay(
       item.name,
       item.weight ?? (item.type === "combo" ? "Combo Pack" : "100 gm"),
@@ -58,9 +60,9 @@ export default function OrderItemsList() {
       id: item.id,
       name: display.name,
       weight: display.weight,
-      unitPrice: Number(item.unitPrice ?? 0),
-      qty: Number(item.qty ?? 1),
-      total: Number(item.total ?? item.unitPrice ?? 0),
+      unitPrice,
+      qty,
+      total: unitPrice * qty,
       image: normalizeImageSrc(item.image || "/products/mustard-oil.png", "/no-image.png"),
     };
   });

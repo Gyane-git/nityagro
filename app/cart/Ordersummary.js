@@ -93,7 +93,7 @@ export default function OrderSummary({
     ) {
       setDeliveryCharge(
         delivery === "Express/Same-Day Delivery"
-          ? 300
+          ? 100
           : delivery === "Click & Collect"
           ? 0
           : 0
