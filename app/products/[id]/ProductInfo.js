@@ -69,6 +69,16 @@ function firstValidPrice(...values) {
   return 0;
 }
 
+function getWeightLabel(label, productName) {
+  const text = String(label || "").trim();
+  const name = String(productName || "").trim();
+  if (!text) return "";
+
+  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const prefix = new RegExp(`^${escapedName}\\s*[-–—:]\\s*`, "i");
+  return text.replace(prefix, "").trim() || text;
+}
+
 export default function ProductInfo({ product, onVariantImageChange }) {
   const [qty, setQty] = useState(1);
   const [variantsFromApi, setVariantsFromApi] = useState([]);
@@ -285,7 +295,7 @@ export default function ProductInfo({ product, onVariantImageChange }) {
     stockStatus === "loading" && !hasLiveAvailableQty;
   const isStockUnavailable =
     stockStatus === "error" && !hasLiveAvailableQty;
-  const selectedLabel = selectedVariant?.label || p.label || p.name;
+  const selectedLabel = getWeightLabel(selectedVariant?.label || p.label || p.name, p.name);
   const displayName = `${p.name} - ${selectedLabel}`;
 
   const handleAdd = async () => {
