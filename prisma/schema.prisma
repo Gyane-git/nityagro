@@ -334,6 +334,7 @@ model Testimonials {
   message           String?  @db.Text
   image             String?
   designation       String?
+  socialVideoUrl    String?  @db.Text
   starRating        BigInt?
   testimonialStatus Boolean  @default(true)
   createdAt         DateTime @default(now())

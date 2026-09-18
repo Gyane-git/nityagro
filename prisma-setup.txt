@@ -23,3 +23,13 @@ DATABASE_URL = mysql://root:@127.0.0.1:3306/nityagro_db
 
 
 npx prisma studio
+
+
+
+
+
+
+
+## prisma new collunm add command
+npx prisma generate
+npx prisma migrate deploy

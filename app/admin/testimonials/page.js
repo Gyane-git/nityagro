@@ -38,6 +38,7 @@ export default function TestimonialsAdmin() {
   const [showYoutubeModal, setShowYoutubeModal] = useState(false);
   const [editingYoutubeItem, setEditingYoutubeItem] = useState(null);
   const [testimonialImageFile, setTestimonialImageFile] = useState(null);
+  const [expandedReviews, setExpandedReviews] = useState({});
 
   const [formData, setFormData] = useState({
     title: "",
@@ -46,6 +47,7 @@ export default function TestimonialsAdmin() {
     profile_image: "",
     rating: 5,
     message: "",
+    socialVideoUrl: "",
     isActive: true,
   });
   const [youtubeForm, setYoutubeForm] = useState({
@@ -74,6 +76,7 @@ export default function TestimonialsAdmin() {
         profile_image: item.profile_image || item.image,
         rating: Number(item.rating || item.starRating || 5),
         message: item.description || item.message,
+        socialVideoUrl: item.socialVideoUrl || item.videoUrl || "",
         isActive: !!item.isActive,
       }));
 
@@ -118,6 +121,7 @@ export default function TestimonialsAdmin() {
     payload.append("name", formData.name || "");
     payload.append("destination", formData.destination || "");
     payload.append("description", formData.message || "");
+    payload.append("socialVideoUrl", formData.socialVideoUrl || "");
     payload.append("rating", String(formData.rating || 5));
     payload.append("isActive", formData.isActive ? "1" : "0");
     payload.append("existingImage", formData.profile_image || "");
@@ -168,6 +172,7 @@ export default function TestimonialsAdmin() {
       profile_image: item.profile_image,
       rating: Number(item.rating || 5),
       message: item.message,
+      socialVideoUrl: item.socialVideoUrl || item.videoUrl || "",
       isActive: item.isActive,
     });
     setTestimonialImageFile(null);
@@ -308,6 +313,7 @@ export default function TestimonialsAdmin() {
       profile_image: "",
       rating: 5,
       message: "",
+      socialVideoUrl: "",
       isActive: true,
     });
     setTestimonialImageFile(null);
@@ -368,15 +374,15 @@ export default function TestimonialsAdmin() {
                 {testimonials.map((item) => (
                   <div
                     key={item.id}
-                    className="flex gap-6 p-5 border rounded-xl bg-linear-to-r from-slate-50 to-white hover:shadow-md"
+                    className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-linear-to-r from-slate-50 to-white p-4 transition-shadow hover:shadow-md sm:flex-row sm:items-start sm:p-5"
                   >
                     <img
                       src={item.profile_image || "/placeholder.png"}
-                      className="w-16 h-16 rounded-full object-cover border"
+                      className="h-16 w-16 shrink-0 rounded-2xl border border-white object-cover shadow-sm"
                       alt=""
                     />
 
-                    <div className="flex-1 min-w-0">
+                    <div className="flex min-w-0 flex-1 flex-col">
                       <div className="flex items-center gap-3">
                         <h3 className="text-lg font-bold truncate">
                           {item.name}
@@ -397,26 +403,36 @@ export default function TestimonialsAdmin() {
                         {item.destination || "Customer"} · {item.rating || 5} Star
                       </p>
 
-                      <p className="mt-2 text-slate-700 line-clamp-2">
+                      <p className={`mt-2 min-h-12 overflow-hidden text-sm leading-6 text-slate-700 ${expandedReviews[item.id] ? "max-h-none" : "line-clamp-2"}`}>
                         {item.title ? <span className="font-semibold">{item.title}: </span> : null}
                         “{item.message}”
                       </p>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEdit(item)}
-                        className="p-3 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100"
-                      >
-                        <Edit2 size={18} />
-                      </button>
-
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="p-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-100"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 pt-3">
+                        <div className="flex flex-wrap items-center gap-3">
+                          {item.message?.length > 140 && (
+                            <button
+                              type="button"
+                              onClick={() => setExpandedReviews((prev) => ({ ...prev, [item.id]: !prev[item.id] }))}
+                              className="text-sm font-semibold text-blue-600 hover:text-blue-800"
+                            >
+                              {expandedReviews[item.id] ? "Show less" : "Read more"}
+                            </button>
+                          )}
+                          {item.socialVideoUrl && (
+                            <a href={item.socialVideoUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700">
+                              <span aria-hidden="true">▶</span> Watch video
+                            </a>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <button type="button" onClick={() => handleEdit(item)} aria-label={`Edit ${item.name}`} className="rounded-lg bg-blue-50 p-2.5 text-blue-600 hover:bg-blue-100">
+                            <Edit2 size={17} />
+                          </button>
+                          <button type="button" onClick={() => handleDelete(item.id)} aria-label={`Delete ${item.name}`} className="rounded-lg bg-red-50 p-2.5 text-red-600 hover:bg-red-100">
+                            <Trash2 size={17} />
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -514,6 +530,21 @@ export default function TestimonialsAdmin() {
                 className="w-full border px-4 py-3 rounded-lg min-h-[120px]"
                 required
               />
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
+                  Instagram / Facebook video link
+                </label>
+                <input
+                  name="socialVideoUrl"
+                  type="text"
+                  placeholder="Paste Instagram/Facebook video URL or iframe code"
+                  value={formData.socialVideoUrl}
+                  onChange={handleInputChange}
+                  className="w-full border px-4 py-3 rounded-lg"
+                />
+                <p className="mt-1 text-xs text-slate-500">Optional. This appears as a video button on the customer side.</p>
+              </div>
 
               <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-lg">
                 <input

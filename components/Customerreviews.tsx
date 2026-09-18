@@ -12,6 +12,27 @@ interface Review {
   name: string;
   timeAgo: string;
   image: string;
+  socialVideoUrl?: string;
+}
+
+function getVideoEmbedUrl(value: string) {
+  const text = String(value || "").trim();
+  const srcMatch = text.match(/src=["']([^"']+)["']/i);
+  const raw = srcMatch?.[1] || text;
+  try {
+    const url = new URL(raw);
+    if (url.hostname.includes("instagram.com")) {
+      if (!url.pathname.endsWith("/embed/")) url.pathname = `${url.pathname.replace(/\/$/, "")}/embed/`;
+      return url.toString();
+    }
+    if (url.hostname.includes("facebook.com") || url.hostname.includes("fb.watch")) {
+      if (url.pathname.startsWith("/plugins/video.php")) return url.toString();
+      return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url.toString())}&show_text=false`;
+    }
+    return url.toString();
+  } catch {
+    return "";
+  }
 }
 
 // ── Data ──────────────────────────────────────────────────────────────
@@ -75,11 +96,11 @@ function StarRating({ rating }: { rating: number }) {
 }
 
 // ── Review Card ───────────────────────────────────────────────────────
-function ReviewCard({ review }: { review: Review }) {
+function ReviewCard({ review, onWatchVideo, onReadMore }: { review: Review; onWatchVideo: (url: string) => void; onReadMore: (body: string) => void }) {
   return (
-    <div className="flex flex-col sm:flex-row bg-white rounded-lg border shadow-sm overflow-hidden w-full min-w-0">
+    <div className="flex min-h-[270px] w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-shadow hover:shadow-md sm:flex-row">
       {/* Image */}
-      <div className="relative w-full h-56 sm:w-44 sm:h-auto overflow-hidden shrink-0">
+      <div className="relative h-52 w-full shrink-0 overflow-hidden sm:h-auto sm:w-44">
         <Image
           src={review.image}
           alt={review.name}
@@ -90,13 +111,25 @@ function ReviewCard({ review }: { review: Review }) {
       </div>
 
       {/* Content */}
-      <div className="flex flex-col justify-between p-4 sm:p-6 gap-3 flex-1 min-w-0">
-        <div className="space-y-2">
+      <div className="flex min-w-0 flex-1 flex-col justify-between gap-4 p-5 sm:p-6">
+        <div className="space-y-2.5">
           <h3 className="text-base font-bold text-gray-900">{review.title}</h3>
 
           <StarRating rating={review.rating} />
 
-          <p className="text-sm text-gray-600 leading-relaxed">{review.body}</p>
+          <p className="min-h-[96px] text-sm leading-6 text-gray-600 line-clamp-4">{review.body}</p>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-3 pt-1">
+            {review.body.length > 180 && (
+              <button type="button" className="font-semibold text-[#235A49] hover:underline" onClick={() => onReadMore(review.body)}>
+                Read more
+              </button>
+            )}
+            {review.socialVideoUrl && (
+              <button type="button" className="inline-flex items-center gap-2 rounded-full bg-[#235A49] px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[#174536]" onClick={() => onWatchVideo(review.socialVideoUrl || "")}>
+                <span aria-hidden="true">▶</span> Watch video
+              </button>
+            )}
+          </div>
         </div>
 
         <div>
@@ -113,6 +146,8 @@ export default function CustomerReviews() {
   const CARDS_PER_PAGE = 2;
   const [page, setPage] = useState(0);
   const [items, setItems] = useState<Review[]>(reviews);
+  const [videoUrl, setVideoUrl] = useState("");
+  const [reviewText, setReviewText] = useState("");
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -136,6 +171,7 @@ export default function CustomerReviews() {
             timeAgo:
               item.destination || item.designation || "Verified customer",
             image: item.image || item.profile_image || "/c1.jpg",
+            socialVideoUrl: item.socialVideoUrl || item.videoUrl || "",
           })),
         );
         setPage(0);
@@ -195,7 +231,7 @@ export default function CustomerReviews() {
         {/* Cards */}
         <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
           {visible.map((r) => (
-            <ReviewCard key={r.id} review={r} />
+            <ReviewCard key={r.id} review={r} onWatchVideo={setVideoUrl} onReadMore={setReviewText} />
           ))}
         </div>
 
@@ -226,6 +262,29 @@ export default function CustomerReviews() {
           />
         ))}
       </div>
+
+      {videoUrl && getVideoEmbedUrl(videoUrl) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setVideoUrl("")}>
+          <div className="relative max-h-[88vh] w-[min(92vw,420px)] overflow-hidden rounded-2xl bg-black shadow-2xl" onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-center justify-between bg-[#173d31] px-4 py-3 text-sm font-semibold text-white">
+              <span>Customer testimonial</span>
+              <button type="button" onClick={() => setVideoUrl("")} className="rounded-full px-2 text-xl leading-none hover:bg-white/15" aria-label="Close video">×</button>
+            </div>
+            <div className="aspect-[9/16] max-h-[calc(88vh-52px)] w-full">
+              <iframe src={getVideoEmbedUrl(videoUrl)} title="Testimonial video" className="h-full w-full border-0 object-contain" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {reviewText && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setReviewText("")}>
+          <div className="max-w-lg rounded-2xl bg-white p-6" onClick={(event) => event.stopPropagation()}>
+            <button type="button" onClick={() => setReviewText("")} className="float-right text-xl">×</button>
+            <p className="pr-6 text-sm leading-7 text-gray-700">{reviewText}</p>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

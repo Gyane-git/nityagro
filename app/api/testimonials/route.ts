@@ -27,6 +27,8 @@ function serialize(item: any) {
     designation: item.designation || "",
     image: item.image || "",
     profile_image: item.image || "",
+    socialVideoUrl: item.socialVideoUrl || "",
+    videoUrl: item.socialVideoUrl || "",
     rating: Number(item.starRating || 0),
     starRating: Number(item.starRating || 0),
     isActive: Boolean(item.testimonialStatus),
@@ -126,6 +128,7 @@ export async function POST(req: Request) {
     const name = String(formData.get("name") || formData.get("userName") || "").trim();
     const message = String(formData.get("description") || formData.get("message") || "").trim();
     const designation = String(formData.get("destination") || formData.get("designation") || "").trim();
+    const socialVideoUrl = String(formData.get("socialVideoUrl") || formData.get("videoUrl") || "").trim();
     const isActive = String(formData.get("isActive") ?? "1") !== "0";
 
     if (name.length < 2) {
@@ -155,6 +158,7 @@ export async function POST(req: Request) {
         message,
         designation,
         image,
+        socialVideoUrl,
         starRating: toRating(formData.get("rating") || formData.get("starRating")),
         testimonialStatus: isActive,
       },
@@ -197,6 +201,7 @@ export async function PUT(req: Request) {
     const name = String(formData.get("name") || formData.get("userName") || "").trim();
     const message = String(formData.get("description") || formData.get("message") || "").trim();
     const designation = String(formData.get("destination") || formData.get("designation") || "").trim();
+    const socialVideoUrl = String(formData.get("socialVideoUrl") || formData.get("videoUrl") || "").trim();
     const isActive = String(formData.get("isActive") ?? "1") !== "0";
     const newImage = await saveImage(
       (formData.get("image") || formData.get("profileImage")) as File | null,
@@ -213,6 +218,7 @@ export async function PUT(req: Request) {
         message,
         designation,
         image,
+        socialVideoUrl,
         starRating: toRating(formData.get("rating") || formData.get("starRating")),
         testimonialStatus: isActive,
       },
