@@ -11,7 +11,8 @@ export default function ShopCTABanner() {
           overflow-visible
           grid grid-cols-1 lg:grid-cols-2
           items-center
-          h-[224px]
+          min-h-[224px]
+          py-8 sm:py-0
           rounded-[24px]
           px-6 sm:px-10 lg:px-14
         "
@@ -51,15 +52,15 @@ export default function ShopCTABanner() {
           <div
             className="
               mt-6
-              flex
+              flex flex-row
               items-center
               bg-white
               rounded-full
               overflow-hidden
               shadow-sm
               border border-gray-200
-              max-w-[440px]
-              h-[36px]
+              w-full max-w-[440px]
+              h-11 sm:h-[36px]
             "
           >
             <input
@@ -68,8 +69,9 @@ export default function ShopCTABanner() {
               className="
                 flex-1
                 h-full
-                px-5
-                text-[14px]
+                min-w-0
+                px-4 sm:px-5
+                text-[13px] sm:text-[14px]
                 font-normal
                 bg-transparent
                 outline-none
@@ -80,8 +82,8 @@ export default function ShopCTABanner() {
 
             <button
               className="
-                w-[165px]
-                h-[36px]
+                w-[120px] sm:w-[165px]
+                h-full
                 rounded-full
                 bg-[#2d6b3f]
                 hover:bg-[#245a34]

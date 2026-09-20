@@ -302,6 +302,50 @@ export default function Footer() {
         </div>
       </footer>
 
+      {/* ── MOBILE FOOTER ── */}
+      <footer className="md:hidden bg-[#00462C] px-6 pb-24 pt-10 text-white">
+        <div className="mx-auto max-w-md">
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold">Nityagro</h2>
+            <p className="mt-3 text-sm leading-6 text-white/80">
+              Premium agricultural products, delivered with care across Nepal.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-x-8 gap-y-8 text-sm">
+            <div>
+              <h3 className="mb-3 font-semibold">Customer Support</h3>
+              <div className="flex flex-col gap-2 text-white/80">
+                {CUSTOMER_SUPPORT.map((item) => <a key={item.label} href={item.href}>{item.label}</a>)}
+              </div>
+            </div>
+            <div>
+              <h3 className="mb-3 font-semibold">Company</h3>
+              <div className="flex flex-col gap-2 text-white/80">
+                {COMPANY.map((item) => <a key={item.label} href={item.href}>{item.label}</a>)}
+              </div>
+            </div>
+            <div>
+              <h3 className="mb-3 font-semibold">Legal</h3>
+              <div className="flex flex-col gap-2 text-white/80">
+                {LEGAL.map((item) => <a key={item.label} href={item.href}>{item.label}</a>)}
+              </div>
+            </div>
+            <div>
+              <h3 className="mb-3 font-semibold">Contact</h3>
+              <div className="flex flex-col gap-2 text-white/80">
+                <a href="tel:9700007400">9700007400</a>
+                <a href="mailto:nityamagro.pvt.ltd@gmail.com" className="break-words">Email us</a>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 border-t border-white/20 pt-5 text-center text-xs text-white/70">
+            © {new Date().getFullYear()}, Nityagro - All rights reserved
+          </div>
+        </div>
+      </footer>
+
       {/* ── MOBILE BOTTOM NAV BAR (below md) ── */}
       <nav
         className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100"
