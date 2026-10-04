@@ -7,6 +7,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { refreshLocalStockFromOms } from "@/lib/omsStock";
+import { toStockBigInt } from "@/lib/stockQuantity";
 import { unstable_noStore as noStore } from "next/cache";
 
 export const dynamic = "force-dynamic";
@@ -77,8 +78,8 @@ export default async function ProductDetailPage({ params }) {
     if (liveQuantity !== undefined) {
       product = {
         ...product,
-        stockQuantity: BigInt(liveQuantity),
-        availableQuantity: BigInt(liveQuantity),
+        stockQuantity: toStockBigInt(liveQuantity),
+        availableQuantity: toStockBigInt(liveQuantity),
       };
     }
   }

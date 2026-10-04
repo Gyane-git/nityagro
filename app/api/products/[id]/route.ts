@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { toStockBigInt } from "@/lib/stockQuantity";
 import { refreshLocalStockFromOms } from "@/lib/omsStock";
 import { applyOmsPriceOverlay, fetchOmsProductPrices } from "@/lib/omsProductPrices";
 import { NextResponse } from "next/server";
@@ -88,8 +89,8 @@ export async function GET(
         ? withPrice
         : {
             ...withPrice,
-            stockQuantity: BigInt(liveQuantity),
-            availableQuantity: BigInt(liveQuantity),
+            stockQuantity: toStockBigInt(liveQuantity),
+            availableQuantity: toStockBigInt(liveQuantity),
             omsAvailableQty: liveQuantity,
           };
     const productImages = Array.isArray(data.images)

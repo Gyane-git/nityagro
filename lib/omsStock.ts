@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { PrismaClient } from "@prisma/client";
+import { toStockBigInt, toStockInteger } from "@/lib/stockQuantity";
 
 const DEFAULT_OMS_STOCK_URL =
   "http://nityamecomapi.globaltech.com.np/api/v1/full-reset";
@@ -309,6 +310,27 @@ function applyRequestedSkuFallback(
   return [{ ...rows[0], PCode: sku, pCode: sku }];
 }
 
+async function fetchMasterStockQuantity(code: string, storeCode?: string) {
+  const url = new URL(env("OMS_STOCK_CODE_URL", DEFAULT_OMS_STOCK_CODE_URL));
+  if (!url.searchParams.has("dbname") && !url.searchParams.has("DbName")) {
+    url.searchParams.set("dbname", getStockStoreCode(storeCode));
+  }
+  if (!url.searchParams.has("Div") && !url.searchParams.has("DivCode")) {
+    url.searchParams.set("Div", getDivisionCode());
+  }
+
+  const response = await fetch(url.toString(), {
+    cache: "no-store",
+    headers: { Accept: "application/json" },
+  });
+  const payload = await parseJsonResponse(response);
+  if (!response.ok) throw createStockError(response.status, payload);
+
+  const rows = normalizeOmsStockRows(payload);
+  const matched = rows.find((row) => rowMatchesCode(row, code));
+  return matched?.availableQuantity;
+}
+
 export async function fetchOmsStockRows(args: FetchOmsStockRowsArgs = {}) {
   const upstreamUrl = new URL(env("OMS_STOCK_URL", DEFAULT_OMS_STOCK_URL));
   const cleanSku = String(args.sku || "").trim();
@@ -406,6 +428,18 @@ export async function fetchOmsStockMap(productCodes: Array<string | null | undef
   const stockEntries = await Promise.all(
     uniqueCodes.map(async (code) => {
       try {
+        const stockUrl = new URL(env("OMS_STOCK_URL", DEFAULT_OMS_STOCK_URL));
+        // ProductListDivisionwise is the authoritative integer stock source.
+        // full-reset remains a fallback for environments where the master API is unavailable.
+        if (!isPublicMasterStockUrl(stockUrl)) {
+          try {
+            const masterQuantity = await fetchMasterStockQuantity(code);
+            if (masterQuantity !== undefined) return [code, masterQuantity] as const;
+          } catch (error) {
+            console.warn(`OMS master stock lookup failed for SKU ${code}`, error);
+          }
+        }
+
         const { rows } = await fetchOmsStockRows({ sku: code });
         const matched = rows.find((row) => rowMatchesCode(row, code));
         return matched ? ([code, matched.availableQuantity] as const) : null;
@@ -454,19 +488,19 @@ export async function persistOmsStockRows(
             ],
           },
           data: {
-            stockQuantity: BigInt(quantity),
-            availableQuantity: BigInt(quantity),
+            stockQuantity: toStockBigInt(quantity),
+            availableQuantity: toStockBigInt(quantity),
           },
         }),
         db.productVariant.updateMany({
           where: { pCode: productCode },
-          data: { stockQuantity: BigInt(quantity) },
+          data: { stockQuantity: toStockBigInt(quantity) },
         }),
       ]),
     ),
   );
 
-  return stockByCode;
+  return new Map(Array.from(stockByCode.entries()).map(([code, quantity]) => [code, toStockInteger(quantity)]));
 }
 
 export async function refreshLocalStockFromOms(

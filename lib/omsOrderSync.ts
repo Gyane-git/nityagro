@@ -83,9 +83,8 @@ const qtyString = (value: unknown) => {
 };
 
 function getPaymentAmount(paymentMode: string, amount: unknown) {
-  const mode = paymentMode.toLowerCase();
-  if (mode === "cod" || mode === "cash on delivery") return "0";
-  return moneyString(amount);
+  // OMS receives zero for both COD and online orders. Local payment records keep the real amount.
+  return "0";
 }
 
 function getCashBankName(paymentMode: string) {
@@ -377,7 +376,7 @@ export async function syncOmsOrderSafely(args: OmsSyncArgs) {
     comment: args.comment || "Website Order",
     localOrderIds: args.localOrderIds,
     paymentMode: args.paymentMode || "COD",
-    paymentAmount: args.paymentAmount || 0,
+    paymentAmount: args.paymentAmount ?? 0,
     deliveryCharge: args.deliveryCharge || 0,
     customer: args.customer,
   });

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { toStockBigInt } from "@/lib/stockQuantity";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
@@ -118,7 +119,7 @@ export async function POST(req: Request) {
           subGroupName: p.subGroupName,
           variationName: p.variationName,
           salesRate: p.MRP,
-          stockQuantity: BigInt(Number(p.stockQuantity ?? 0)),
+          stockQuantity: toStockBigInt(p.stockQuantity),
           imageUrl: p.imageUrl,
         })),
         skipDuplicates: true,
@@ -135,7 +136,7 @@ export async function POST(req: Request) {
           salesRate: row.MRP,
           ...(row.stockQuantity === undefined
             ? {}
-            : { stockQuantity: BigInt(Number(row.stockQuantity ?? 0)) }),
+            : { stockQuantity: toStockBigInt(row.stockQuantity) }),
           ...(row.imageUrl === undefined ? {} : { imageUrl: row.imageUrl }),
         },
       });
