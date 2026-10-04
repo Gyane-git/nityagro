@@ -82,7 +82,8 @@ export async function POST(req: Request) {
           row?.stockQuantity === undefined || row?.stockQuantity === null
             ? undefined
             : Number(row.stockQuantity),
-        imageUrl: row?.imageUrl ? String(row.imageUrl).trim() : null,
+        // OMS sync payloads do not contain images; undefined means preserve the existing upload.
+        imageUrl: row?.imageUrl ? String(row.imageUrl).trim() : undefined,
       });
     }
 
