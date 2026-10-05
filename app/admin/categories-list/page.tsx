@@ -21,6 +21,7 @@ interface Category {
 
 type OmsProduct = {
   PCode: string;
+  Code?: string;
   PDesc: string;
   GroupName: string;
   SubGroupName: string;
@@ -55,6 +56,7 @@ type OmsCategory = {
 
 type ProductSyncPayload = {
   productCode: string;
+  sku?: string;
   categoryId: string;
   userId: string;
   productName: string;
@@ -187,6 +189,7 @@ export default function CategoriesListPage() {
           if (!key) return acc;
           acc[key] = {
             productCode: key,
+            sku: String(item.Code || "").trim() || undefined,
             categoryId: String(item.GroupName || "").trim(),
             userId: "1",
             productName: String(item.PDesc || "").trim(),

@@ -54,6 +54,7 @@ export async function GET(
           select: {
             productId: true,
             productCode: true,
+            sku: true,
             pImage: true,
             sellingPrice: true,
             actualPrice: true,
@@ -80,6 +81,7 @@ export async function GET(
         imageUrl: item.imageUrl,
         omsAvailableQty: liveStock ?? null,
         productId: product?.productId ?? null,
+        sku: product?.sku ?? null,
         productImage: product?.pImage ?? null,
         productSellingPrice: product?.sellingPrice ?? null,
         productActualPrice: product?.actualPrice ?? null,

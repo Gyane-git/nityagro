@@ -23,6 +23,7 @@ export async function OPTIONS() {
 
 type ProductDTO = {
   productCode: string;
+  sku?: string;
   categoryId: string;
   userId: number;
   productName: string;
@@ -194,6 +195,7 @@ export async function GET() {
       select: {
         productId: true,
         productCode: true,
+        sku: true,
         categoryId: true,
         userId: true,
         productName: true,
@@ -256,6 +258,7 @@ export async function POST(req: Request) {
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
       const productCode = toRequiredString(formData.get("productCode"));
+      const sku = toOptionalString(formData.get("sku"));
       const productName = toRequiredString(formData.get("productName"));
       const categoryId = toRequiredString(formData.get("categoryId"));
 
@@ -280,6 +283,7 @@ export async function POST(req: Request) {
       const createdProduct = await prisma.products.create({
         data: {
           productCode,
+          sku,
           categoryId,
           userId: BigInt(toNumber(formData.get("userId"), 1)),
           productName,
@@ -371,6 +375,7 @@ export async function POST(req: Request) {
       });
 
       const createPayload = {
+        sku: toOptionalTrimmedStringOrUndefined(item.sku),
         categoryId: nextCategoryId,
         userId: BigInt(item.userId),
         productName: nextProductName,
@@ -393,6 +398,7 @@ export async function POST(req: Request) {
       };
 
       const updatePayload = {
+        sku: toOptionalTrimmedStringOrUndefined(item.sku),
         categoryId: nextCategoryId,
         userId: BigInt(item.userId),
         productName: nextProductName,

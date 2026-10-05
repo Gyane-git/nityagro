@@ -108,7 +108,13 @@ export default function ProductInfo({ product, onVariantImageChange }) {
       try {
         const response = await fetch(`/api/subcategories/${encodeURIComponent(groupName)}`);
         const result = await response.json();
-        const rows = Array.isArray(result?.data) ? result.data : [];
+        const rows = Array.isArray(result?.data)
+          ? result.data
+          : result?.data && typeof result.data === "object"
+            ? [result.data]
+            : result?.raw && typeof result.raw === "object"
+              ? [result.raw]
+              : [];
 
         const mapped = rows.map((item) => {
           const variantSellingPrice = firstValidPrice(
@@ -131,6 +137,7 @@ export default function ProductInfo({ product, onVariantImageChange }) {
             id: Number(item.productId || p.id),
             variantId: Number(item.variantId),
             productCode: item.pCode || "",
+            sku: item.sku || item.pCode || "",
             image: item.imageUrl || item.productImage || p.image || p.images?.[0] || "/products/mustard-oil.png",
             label: item.variationName || item.pCode || "Variant",
             price: variantSellingPrice,
@@ -165,6 +172,7 @@ export default function ProductInfo({ product, onVariantImageChange }) {
         {
           id: p.id,
           productCode: p.productCode || "",
+          sku: p.sku || p.productCode || "",
           label: p.label || p.name,
           price: p.price,
           actualPrice: p.actualPrice || p.price,
@@ -180,26 +188,29 @@ export default function ProductInfo({ product, onVariantImageChange }) {
   const activeProductCode = String(
     selectedVariant?.productCode || selectedProductCode || p.productCode || "",
   ).trim();
+  const activeStockCode = String(
+    selectedVariant?.sku || p.sku || activeProductCode,
+  ).trim();
 
   useEffect(() => {
     onVariantImageChange?.(selectedVariant?.image || "");
   }, [selectedVariant?.image, onVariantImageChange]);
 
   useEffect(() => {
-    if (!activeProductCode) return;
+    if (!activeStockCode) return;
 
     let cancelled = false;
 
     const fetchLiveAvailableQty = async () => {
       setLiveStockStatusByCode((prev) => ({
         ...prev,
-        [activeProductCode]: "loading",
+        [activeStockCode]: "loading",
       }));
 
       try {
         await fetch("/api/oms/auth", { cache: "no-store" }).catch(() => null);
         const response = await fetch(
-          `/api/oms/stock?Storecode=BKGRP08301&sku=${encodeURIComponent(activeProductCode)}`,
+          `/api/oms/stock?Storecode=BKGRP08301&sku=${encodeURIComponent(activeStockCode)}`,
           { cache: "no-store" },
         );
         if (!response.ok) {
@@ -227,7 +238,7 @@ export default function ProductInfo({ product, onVariantImageChange }) {
                 item?.barcode,
               ];
               return itemCodes.some(
-                (code) => String(code ?? "").trim() === activeProductCode,
+                (code) => String(code ?? "").trim() === activeStockCode,
               );
             },
           ) || rows[0];
@@ -249,18 +260,18 @@ export default function ProductInfo({ product, onVariantImageChange }) {
         if (!cancelled && Number.isFinite(liveQty)) {
           setLiveAvailableQtyByCode((prev) => ({
             ...prev,
-            [activeProductCode]: liveQty,
+            [activeStockCode]: liveQty,
           }));
           setLiveStockStatusByCode((prev) => ({
             ...prev,
-            [activeProductCode]: "success",
+            [activeStockCode]: "success",
           }));
         }
       } catch {
         if (!cancelled) {
           setLiveStockStatusByCode((prev) => ({
             ...prev,
-            [activeProductCode]: "error",
+            [activeStockCode]: "error",
           }));
         }
       }
@@ -271,7 +282,7 @@ export default function ProductInfo({ product, onVariantImageChange }) {
     return () => {
       cancelled = true;
     };
-  }, [activeProductCode]);
+  }, [activeStockCode]);
 
   const currentPrice = Number(selectedVariant?.price ?? p.price ?? 0);
   const currentActualPrice = Number(selectedVariant?.actualPrice ?? p.actualPrice ?? currentPrice);
@@ -284,11 +295,11 @@ export default function ProductInfo({ product, onVariantImageChange }) {
   );
   const hasLiveAvailableQty = Object.prototype.hasOwnProperty.call(
     liveAvailableQtyByCode,
-    activeProductCode,
+    activeStockCode,
   );
-  const stockStatus = liveStockStatusByCode[activeProductCode] || "loading";
+  const stockStatus = liveStockStatusByCode[activeStockCode] || "loading";
   const currentAvailableQty = hasLiveAvailableQty
-    ? Number(liveAvailableQtyByCode[activeProductCode])
+    ? Number(liveAvailableQtyByCode[activeStockCode])
     : fallbackAvailableQty;
   const isOutOfStock = currentAvailableQty <= 0;
   const isStockLoading =

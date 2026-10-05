@@ -67,7 +67,8 @@ export async function GET(
       );
     }
 
-    const liveStock = await refreshLocalStockFromOms([category.productCode]).catch(
+    const stockCode = category.sku || category.productCode;
+    const liveStock = await refreshLocalStockFromOms([stockCode]).catch(
       (error) => {
         console.warn("Live OMS stock refresh for product API failed", error);
         return new Map<string, number>();
@@ -79,7 +80,7 @@ export async function GET(
         return new Map<string, { actualPrice?: number; sellingPrice?: number }>();
       },
     );
-    const liveQuantity = liveStock.get(category.productCode);
+    const liveQuantity = liveStock.get(stockCode);
     const withPrice = applyOmsPriceOverlay(
       category,
       livePrices.get(category.productCode),

@@ -5,13 +5,10 @@ import { toStockBigInt, toStockInteger } from "@/lib/stockQuantity";
 const DEFAULT_OMS_STOCK_URL =
   "http://nityamecomapi.globaltech.com.np/api/v1/full-reset";
 const DEFAULT_OMS_TOKEN_URL = "http://nityamecomapi.globaltech.com.np/token";
-const DEFAULT_OMS_STOCK_CODE_URL =
-  "http://bkgroupapi.globaltech.com.np:802/api/MasterList/ProductListDivisionwise?dbname=BKGRP08301&Div=1";
 const DEFAULT_STORE_CODE = "BKGRP08301";
 const DEFAULT_OMS_DIVISION_CODE = "1";
 let stockTokenCache: { token: string; tokenType: string; expiresAt: number } | null =
   null;
-let stockCodeMapCache: { expiresAt: number; map: Map<string, string> } | null = null;
 
 type StockRow = {
   PCode?: unknown;
@@ -86,59 +83,9 @@ async function parseJsonResponse(response: Response) {
   }
 }
 
-async function getOmsStockCodeMap() {
-  if (stockCodeMapCache && stockCodeMapCache.expiresAt > Date.now()) {
-    return stockCodeMapCache.map;
-  }
-
-  const url = new URL(env("OMS_STOCK_CODE_URL", DEFAULT_OMS_STOCK_CODE_URL));
-  if (!url.searchParams.has("dbname") && !url.searchParams.has("DbName")) {
-    url.searchParams.set("dbname", getStockStoreCode());
-  }
-  if (!url.searchParams.has("Div") && !url.searchParams.has("DivCode")) {
-    url.searchParams.set("Div", getDivisionCode());
-  }
-
-  const response = await fetch(url.toString(), {
-    cache: "no-store",
-    headers: { Accept: "application/json" },
-  });
-  const payload = await parseJsonResponse(response);
-  if (!response.ok) {
-    throw createStockError(response.status, payload);
-  }
-
-  const source = Array.isArray(payload)
-    ? payload
-    : Array.isArray((payload as { data?: unknown[] })?.data)
-      ? (payload as { data: unknown[] }).data
-      : Array.isArray((payload as { Data?: unknown[] })?.Data)
-        ? (payload as { Data: unknown[] }).Data
-        : Array.isArray((payload as { result?: unknown[] })?.result)
-          ? (payload as { result: unknown[] }).result
-          : [];
-  const map = new Map<string, string>();
-
-  for (const row of source) {
-    const item = row as Record<string, unknown>;
-    const productCode = readString(item.PCode, item.pCode, item.productCode);
-    const stockCode = readString(item.Code, item.code, item.sku, item.SKU);
-    if (productCode && stockCode) map.set(productCode, stockCode);
-    if (stockCode) map.set(stockCode, stockCode);
-  }
-
-  stockCodeMapCache = { expiresAt: Date.now() + 5 * 60_000, map };
-  return map;
-}
-
 async function resolveOmsStockSku(localSku: string) {
-  if (!localSku) return localSku;
-  try {
-    return (await getOmsStockCodeMap()).get(localSku) || localSku;
-  } catch (error) {
-    console.warn(`OMS product-code mapping failed for SKU ${localSku}`, error);
-    return localSku;
-  }
+  // full-reset expects the website's Code value, not ProductListDivisionwise PCode.
+  return localSku;
 }
 
 function relabelStockRowsForLocalSku(
@@ -219,15 +166,22 @@ export async function warmOmsStockAuth() {
 }
 
 export function normalizeOmsStockRows(payload: unknown): NormalizedOmsStockRow[] {
-  const source = Array.isArray(payload)
+  const body = payload as {
+    data?: unknown;
+    Data?: unknown;
+    result?: unknown;
+    sku?: unknown;
+    PCode?: unknown;
+    pCode?: unknown;
+  };
+  const sourceValue = Array.isArray(payload)
     ? payload
-    : Array.isArray((payload as { data?: unknown[] })?.data)
-      ? (payload as { data: unknown[] }).data
-      : Array.isArray((payload as { Data?: unknown[] })?.Data)
-        ? (payload as { Data: unknown[] }).Data
-        : Array.isArray((payload as { result?: unknown[] })?.result)
-          ? (payload as { result: unknown[] }).result
-          : [];
+    : body?.data ?? body?.Data ?? body?.result ?? payload;
+  const source = Array.isArray(sourceValue)
+    ? sourceValue
+    : sourceValue && typeof sourceValue === "object"
+      ? [sourceValue]
+      : [];
 
   return source
     .map((row) => {
@@ -310,27 +264,6 @@ function applyRequestedSkuFallback(
   return [{ ...rows[0], PCode: sku, pCode: sku }];
 }
 
-async function fetchMasterStockQuantity(code: string, storeCode?: string) {
-  const url = new URL(env("OMS_STOCK_CODE_URL", DEFAULT_OMS_STOCK_CODE_URL));
-  if (!url.searchParams.has("dbname") && !url.searchParams.has("DbName")) {
-    url.searchParams.set("dbname", getStockStoreCode(storeCode));
-  }
-  if (!url.searchParams.has("Div") && !url.searchParams.has("DivCode")) {
-    url.searchParams.set("Div", getDivisionCode());
-  }
-
-  const response = await fetch(url.toString(), {
-    cache: "no-store",
-    headers: { Accept: "application/json" },
-  });
-  const payload = await parseJsonResponse(response);
-  if (!response.ok) throw createStockError(response.status, payload);
-
-  const rows = normalizeOmsStockRows(payload);
-  const matched = rows.find((row) => rowMatchesCode(row, code));
-  return matched?.availableQuantity;
-}
-
 export async function fetchOmsStockRows(args: FetchOmsStockRowsArgs = {}) {
   const upstreamUrl = new URL(env("OMS_STOCK_URL", DEFAULT_OMS_STOCK_URL));
   const cleanSku = String(args.sku || "").trim();
@@ -371,32 +304,40 @@ export async function fetchOmsStockRows(args: FetchOmsStockRowsArgs = {}) {
   const upstreamSku = await resolveOmsStockSku(cleanSku);
   if (upstreamSku) upstreamUrl.searchParams.set("sku", upstreamSku);
 
-  const { token, tokenType } = await getOmsStockToken();
   const username = env("OMS_USERNAME");
   const password = env("OMS_PASSWORD");
   const grantType = env("OMS_GRANT_TYPE", "password");
-  const authCandidates = Array.from(
-    new Set([
-      `${tokenType} ${token}`,
-      `Bearer ${token}`,
-      `bearer ${token}`,
-      token,
-    ]),
-  );
+  let authCandidates = [""];
+  try {
+    const { token, tokenType } = await getOmsStockToken();
+    authCandidates = Array.from(
+      new Set([
+        `${tokenType} ${token}`,
+        `Bearer ${token}`,
+        `bearer ${token}`,
+        token,
+        "",
+      ]),
+    );
+  } catch (error) {
+    console.warn("OMS token unavailable; trying direct full-reset request", error);
+  }
 
   let payload: unknown = null;
   let lastStatus = 500;
 
   for (const authorization of authCandidates) {
+    const headers: Record<string, string> = {
+      Accept: "application/json",
+      username,
+      password,
+      grant_type: grantType,
+    };
+    if (authorization) headers.Authorization = authorization;
+
     const response = await fetch(upstreamUrl.toString(), {
       cache: "no-store",
-      headers: {
-        Accept: "application/json",
-        Authorization: authorization,
-        username,
-        password,
-        grant_type: grantType,
-      },
+      headers,
     });
 
     payload = await parseJsonResponse(response);
@@ -428,18 +369,7 @@ export async function fetchOmsStockMap(productCodes: Array<string | null | undef
   const stockEntries = await Promise.all(
     uniqueCodes.map(async (code) => {
       try {
-        const stockUrl = new URL(env("OMS_STOCK_URL", DEFAULT_OMS_STOCK_URL));
-        // ProductListDivisionwise is the authoritative integer stock source.
-        // full-reset remains a fallback for environments where the master API is unavailable.
-        if (!isPublicMasterStockUrl(stockUrl)) {
-          try {
-            const masterQuantity = await fetchMasterStockQuantity(code);
-            if (masterQuantity !== undefined) return [code, masterQuantity] as const;
-          } catch (error) {
-            console.warn(`OMS master stock lookup failed for SKU ${code}`, error);
-          }
-        }
-
+        // Stock is checked with the local Code directly (for example sku=25).
         const { rows } = await fetchOmsStockRows({ sku: code });
         const matched = rows.find((row) => rowMatchesCode(row, code));
         return matched ? ([code, matched.availableQuantity] as const) : null;

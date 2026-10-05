@@ -67,14 +67,15 @@ export default async function ProductDetailPage({ params }) {
     notFound();
   }
 
-  if (product.productCode) {
-    const liveStock = await refreshLocalStockFromOms([product.productCode]).catch(
+  const stockCode = product.sku || product.productCode;
+  if (stockCode) {
+    const liveStock = await refreshLocalStockFromOms([stockCode]).catch(
       (error) => {
         console.warn("Live OMS stock refresh for product detail failed", error);
         return new Map();
       },
     );
-    const liveQuantity = liveStock.get(product.productCode);
+    const liveQuantity = liveStock.get(stockCode);
     if (liveQuantity !== undefined) {
       product = {
         ...product,
@@ -91,6 +92,7 @@ export default async function ProductDetailPage({ params }) {
   const normalizedProduct = {
     id: Number(safeProduct.productId),
     productCode: safeProduct.productCode || "",
+    sku: safeProduct.sku || safeProduct.productCode || "",
     name: safeProduct.subGroupName || safeProduct.productName || "Unnamed Product",
     label: safeProduct.productName || "",
     image: safeProduct.pImage || "/products/mustard-oil.png",
