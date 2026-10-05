@@ -17,6 +17,7 @@ export async function GET() {
         zipCode: true,
         country: true,
         role: true,
+        rolePermission: true,
         status: true,
       },
     });
@@ -34,6 +35,7 @@ export async function GET() {
         ...user,
         userId: user.userId.toString(),
         type: auth.type,
+        rolePermission: user.rolePermission,
       },
     });
   } catch {

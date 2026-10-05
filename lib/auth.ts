@@ -1,5 +1,7 @@
 import { cookies, headers } from "next/headers";
 import { verifyToken } from "./jwt";
+import { canAccessAdminPermission } from "./adminPermissions";
+import { prisma } from "./prisma";
 
 export const requireAuth = async () => {
   const headersList = await headers();
@@ -42,4 +44,18 @@ export const requireAdminRole = async (...roles: string[]) => {
   }
 
   return user;
+};
+
+export const requireAdminPermission = async (permission: string) => {
+  const auth = await requireAdminRole();
+  const user = await prisma.users.findUnique({
+    where: { userId: BigInt(auth.sub) },
+    select: { role: true, rolePermission: true, status: true },
+  });
+
+  if (!user?.status || !canAccessAdminPermission(user.role, user.rolePermission, permission)) {
+    throw new Error("FORBIDDEN");
+  }
+
+  return { ...auth, role: user.role, rolePermission: user.rolePermission };
 };

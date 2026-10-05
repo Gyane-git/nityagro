@@ -18,9 +18,11 @@ import {
   BarChart3,
   MapPin,
 } from "lucide-react";
+import { canAccessAdminPermission } from "@/lib/adminPermissions";
 
 export default function SideHeaderBar() {
   const pathname = usePathname();
+  const [access, setAccess] = useState({ role: "", rolePermission: null });
 
   const [expandedItems, setExpandedItems] = useState({
     Products: false,
@@ -28,6 +30,17 @@ export default function SideHeaderBar() {
     Banners: false,
     
   });
+
+  React.useEffect(() => {
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((payload) => {
+        if (payload?.data) setAccess(payload.data);
+      })
+      .catch(() => null);
+  }, []);
+
+  const allowed = (permission) => canAccessAdminPermission(access.role, access.rolePermission, permission);
 
   const toggleExpand = (label) => {
     setExpandedItems((prev) => ({
@@ -37,11 +50,12 @@ export default function SideHeaderBar() {
   };
 
   const menuItems = [
-    { icon: LayoutDashboard, label: "Dashboard", path: "/admin/dashboard" },
+    { icon: LayoutDashboard, label: "Dashboard", path: "/admin/dashboard", permission: "dashboard" },
 
     {
       icon: Package,
       label: "Products",
+      permission: "products",
       expandable: true,
       children: [
         { name: "View All", path: "/admin/product-list" },
@@ -53,6 +67,7 @@ export default function SideHeaderBar() {
     {
       icon: Package,
       label: "Combo Products",
+      permission: "combo-products",
       expandable: true,
       children: [
         { name: "View All", path: "/admin/combo-list" },
@@ -63,6 +78,7 @@ export default function SideHeaderBar() {
     {
       icon: FolderTree,
       label: "Categories",
+      permission: "categories",
       expandable: true,
       children: [
         { name: "View All", path: "/admin/categories-list" },
@@ -73,6 +89,7 @@ export default function SideHeaderBar() {
     {
       icon: Flag,
       label: "Banners",
+      permission: "banners",
       expandable: true,
       children: [
         { name: "View All", path: "/admin/banner-list" },
@@ -80,9 +97,10 @@ export default function SideHeaderBar() {
       ],
     },
 
-    { icon: Tag, label: "Popup Ads", path: "/admin/popup-ads" },
+    { icon: Tag, label: "Popup Ads", path: "/admin/popup-ads", permission: "popup-ads" },
     { icon: ShoppingCart,
       label: "Manage Orders",
+      permission: "orders",
       expandable: true,
       children: [
         { name: "Orders", path: "/admin/ordermanagement" },
@@ -91,19 +109,21 @@ export default function SideHeaderBar() {
       ],
       path: "/admin/ordermanagement" },
 
-    { icon: Users, label: "Customers", path: "/admin/customers" },
+    { icon: Users, label: "Customers", path: "/admin/customers", permission: "customers" },
 
-    { icon: BarChart3, label: "Returns", path: "/admin/returns" },
+    { icon: BarChart3, label: "Returns", path: "/admin/returns", permission: "returns" },
 
     {
       icon: MapPin,
       label: "Set Shipping charges",
       path: "/admin/shipping",
+      permission: "shipping",
     },
 
-    { icon: FileText, label: "Grievances", path: "/admin/grievances" },
-    { icon: FileText, label: "FAQs", path: "/admin/faqs" },
-    { icon: MessageSquare, label: "Testimonials", path: "/admin/testimonials" },
+    { icon: FileText, label: "Grievances", path: "/admin/grievances", permission: "grievances" },
+    { icon: FileText, label: "FAQs", path: "/admin/faqs", permission: "faqs" },
+    { icon: MessageSquare, label: "Testimonials", path: "/admin/testimonials", permission: "testimonials" },
+    { icon: Users, label: "Admin Users", path: "/admin/users", permission: "users" },
   ];
 
   if (pathname === "/login-admin") return null;
@@ -111,7 +131,7 @@ export default function SideHeaderBar() {
   return (
     <aside className="w-64 bg-white border-r border-gray-200 h-screen sticky top-0 overflow-hidden">
       <div className="h-full overflow-y-auto py-4">
-        {menuItems.map((item) => {
+        {menuItems.filter((item) => allowed(item.permission)).map((item) => {
           const Icon = item.icon;
 
           return (
