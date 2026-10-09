@@ -290,7 +290,17 @@ export default function EditProductPage() {
         method: "POST",
         body: data,
       });
-      const result = await response.json();
+      const responseText = await response.text();
+      let result: { success?: boolean; imageUrl?: string; message?: string } = {};
+      try {
+        result = responseText ? JSON.parse(responseText) : {};
+      } catch {
+        throw new Error(
+          response.status === 413
+            ? "Image is too large. Please choose an image smaller than 5MB."
+            : "Image upload service returned an invalid response. Please refresh and try again.",
+        );
+      }
       if (!response.ok || !result?.success) {
         throw new Error(result?.message || "Variant image upload failed");
       }

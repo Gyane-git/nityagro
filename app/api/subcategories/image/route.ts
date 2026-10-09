@@ -4,6 +4,11 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+
 const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 
 function safeName(value: string) {
@@ -18,6 +23,9 @@ export async function POST(req: Request) {
 
     if (!pCode || !(image instanceof File) || image.size === 0) {
       return NextResponse.json({ success: false, message: "pCode and image are required" }, { status: 400 });
+    }
+    if (image.size > MAX_IMAGE_SIZE) {
+      return NextResponse.json({ success: false, message: "Image must be smaller than 5MB" }, { status: 413 });
     }
     if (!allowedTypes.has(image.type)) {
       return NextResponse.json({ success: false, message: "Invalid image type" }, { status: 400 });
@@ -40,6 +48,7 @@ export async function POST(req: Request) {
     }
     return NextResponse.json({ success: true, imageUrl });
   } catch (error) {
-    return NextResponse.json({ success: false, message: String(error) }, { status: 500 });
+    console.error("Variant image upload failed", error);
+    return NextResponse.json({ success: false, message: "Unable to save variant image" }, { status: 500 });
   }
 }
