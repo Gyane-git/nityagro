@@ -19,7 +19,7 @@ export default function HeroSection({ imageSrc = "", imageAlt = "", objectPositi
   }, []);
 
   const resolvedImage = useMemo(() => {
-    const source = imageSrc || heroImage || "/herosection.jpg";
+    const source = imageSrc || heroImage || "/banner21.jpg";
     if (/^https?:\/\//i.test(source)) return source;
     return source.startsWith("/") ? source : `/${source}`;
   }, [heroImage, imageSrc]);
